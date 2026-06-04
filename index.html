@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenitVPN — Статус Системы</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <script>
+        /* ==========================================================================
+           АДМИН-ПАНЕЛЬ НАСТРОЙКИ ТЕКУЩЕГО ИНЦИДЕНТА (Меняйте значения тут)
+           ========================================================================== */
+        const VPN_INCIDENT_CONFIG = {
+            // Тип инцидента. Доступно: 'critical' (авария), 'warning' (нестабильно), 'info' (техработы), 'success' (все ок)
+            statusType: 'critical', 
+
+            // Крупный текст в цветной плашке сверху
+            bannerTitle: 'Зафиксирован критический сбой системы',
+
+            // Главный заголовок описания проблемы
+            incidentTitle: 'Проблемы с подключением к узлу во Франции',
+
+            // Уникальный ID инцидента и время для пользователей
+            incidentID: '#ZNT-912',
+            incidentTime: '04.06.2026, 19:10 UTC',
+
+            // ТЕКСТ ВАШЕГО ИНЦИДЕНТА (Сюда пишите любое уведомление)
+            incidentMessage: 'На локации Франция (Paris DC) зафиксирована авария на магистральной линии связи. Наблюдается полная потеря пакетов. Наша команда инженеров уже перенаправляет трафик через резервные каналы в Германии. Рекомендуем временно переподключиться к серверам в Финляндии или Нидерландах для стабильной скорости.',
+
+            // Статусы трех конкретных серверов. Доступно: 'online', 'warning', 'offline'
+            servers: {
+                finland: 'online',      // Финляндия
+                netherlands: 'online',  // Нидерланды
+                france: 'offline'       // Франция
+            }
+        };
+    </script>
+
+    <div class="container">
+        <!-- Главная панель уведомления -->
+        <div class="status-panel" id="mainPanel">
+            
+            <!-- Логотип -->
+            <div class="logo">
+                <div style="width: 8px; height: 22px; background: #3b82f6; border-radius: 2px;"></div>
+                Zenit<span>VPN</span>
+            </div>
+
+            <!-- Цветной баннер статуса -->
+            <div class="alert-banner" id="alertBanner">
+                <div class="pulse"></div>
+                <span id="bannerText">Загрузка...</span>
+            </div>
+
+            <!-- Детали инцидента -->
+            <div class="incident-details">
+                <h2 id="incTitle">Заголовок инцидента</h2>
+                
+                <div class="meta-info">
+                    <span>ID инцидента: <strong id="incID" style="color: var(--text-main);">--</strong></span>
+                    <span>Обновлено: <strong id="incTime" style="color: var(--text-main);">--</strong></span>
+                </div>
+
+                <!-- Основной текст уведомления -->
+                <p class="incident-text" id="incMessage">Текст сообщения...</p>
+            </div>
+
+            <!-- Виджет 3-х серверов -->
+            <p class="servers-section-title">Состояние узлов VPN</p>
+            <div class="mini-servers-list">
+                <div class="mini-server-badge">
+                    <span>Финляндия</span>
+                    <div class="dot-indicator" id="dot-finland"></div>
+                </div>
+                <div class="mini-server-badge">
+                    <span>Нидерланды</span>
+                    <div class="dot-indicator" id="dot-netherlands"></div>
+                </div>
+                <div class="mini-server-badge">
+                    <span>Франция</span>
+                    <div class="dot-indicator" id="dot-france"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Автоматический скрипт-обработчик (Не менять, он управляет визуал-переменными) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cfg = VPN_INCIDENT_CONFIG;
+            
+            // Настройка главного статуса и стилей темы
+            document.getElementById('mainPanel').classList.add(`panel-${cfg.statusType}`);
+            document.getElementById('alertBanner').classList.add(`banner-${cfg.statusType}`);
+            document.getElementById('bannerText').innerText = cfg.bannerTitle;
+            
+            // Настройка текстов
+            document.getElementById('incTitle').innerText = cfg.incidentTitle;
+            document.getElementById('incID').innerText = cfg.incidentID;
+            document.getElementById('incTime').innerText = cfg.incidentTime;
+            document.getElementById('incMessage').innerText = cfg.incidentMessage;
+
+            // Настройка статус-точек серверов
+            const setServerDot = (id, status) => {
+                const dot = document.getElementById(`dot-${id}`);
+                if(status === 'online') dot.classList.add('dot-online');
+                if(status === 'warning') dot.classList.add('dot-warning');
+                if(status === 'offline') dot.classList.add('dot-offline');
+            };
+
+            setServerDot('finland', cfg.servers.finland);
+            setServerDot('netherlands', cfg.servers.netherlands);
+            setServerDot('france', cfg.servers.france);
+        });
+    </script>
+</body>
+</html>
