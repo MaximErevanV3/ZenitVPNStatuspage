@@ -1,33 +1,30 @@
 /* ==========================================================================
-   РАСШИРЕННАЯ АДМИН-ПАНЕЛЬ КАСТОМИЗАЦИИ (CSS-переменные)
+   УЛЬТРА-КАСТОМИЗАЦИЯ: ВСЕ ВИЗУАЛЬНЫЕ ПЕРЕМЕННЫЕ
    ========================================================================== */
 :root {
-    /* 1. Настройки фонов и панелей */
-    --bg-main-color: #030408;      /* Самый глубокий фон страницы */
-    --panel-bg: rgba(10, 14, 26, 0.55); /* Фон стеклянной карточки (Glassmorphism) */
-    --panel-radius: 24px;          /* Радиус скругления углов главной панели */
-    --badge-radius: 14px;          /* Скругление углов для карточек серверов */
-    --panel-padding: 50px;         /* Внутренние отступы панели (для мобильных уменьшится) */
+    /* 1. Цветовая схема интерфейса */
+    --bg-dark: #020306;             /* Цвет бесконечного космоса (фон) */
+    --panel-surface: rgba(8, 11, 21, 0.55); /* Матовое стекло карточки */
+    --border-base: rgba(255, 255, 255, 0.03); /* Начальный контур блоков */
     
-    /* 2. Настройки шрифтов и текста */
-    --font-global: 'Inter', system-ui, -apple-system, sans-serif;
-    --text-color-main: #ffffff;    /* Цвет основных заголовков */
-    --text-color-sub: #8491a8;     /* Цвет описаний и мета-данных */
-    --text-size-title: 32px;       /* Размер главного заголовка инцидента */
-    --text-size-body: 16px;        /* Размер шрифта текста сообщения */
-    
-    /* 3. Фирменные цвета статусов (HEX) */
-    --status-success-rgb: 0, 255, 163;   /* Кибер-зеленый (пишется через запятую для альфа-каналов) */
-    --status-warning-rgb: 255, 170, 0;   /* Неоново-желтый */
-    --status-danger-rgb: 255, 46, 81;    /* Ярко-красный */
-    --status-info-rgb: 0, 170, 255;      /* Электрик-синий */
+    /* 2. Высококонтрастные неоновые статусы (RGB для поддержки прозрачности) */
+    --rgb-success: 0, 255, 170;     /* #00ffaa — Активен */
+    --rgb-warning: 255, 170, 0;     /* #ffaa00 — Перегружен */
+    --rgb-danger: 255, 46, 81;      /* #ff2e51 — Авария */
+    --rgb-info: 0, 183, 255;        /* #00b7ff — Техработы */
 
-    /* 4. Анимация индикаторов */
-    --pulse-speed: 1.6s;           /* Скорость мигания лампочек (например: 1s, 2s, 800ms) */
+    /* 3. Типографика и размеры */
+    --font-cyber: 'Inter', system-ui, -apple-system, sans-serif;
+    --text-title-size: 32px;
+    --text-body-size: 16px;
+    --panel-blur: 40px;             /* Сила размытия заднего плана */
+    
+    /* 4. Тайминги пульсации (Мигания) */
+    --blink-speed: 1.4s;            /* Скорость дыхания индикаторов */
 }
 
 /* ==========================================================================
-   СИСТЕМНЫЕ СТИЛИ (НЕ ТРЕБУЮТ РЕДАКТИРОВАНИЯ)
+   ФОНОВЫЕ СЕТКИ И ГЕОМЕТРИЯ
    ========================================================================== */
 * {
     box-sizing: border-box;
@@ -36,138 +33,169 @@
 }
 
 body {
-    background-color: var(--bg-main-color);
-    color: var(--text-color-main);
-    font-family: var(--font-global);
+    background-color: var(--bg-dark);
+    color: #ffffff;
+    font-family: var(--font-cyber);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 30px;
+    padding: 40px 20px;
     overflow-x: hidden;
     position: relative;
 }
 
-/* Анимированный глубокий бэкграунд */
-body::before, body::after {
+/* Эффект матрицы / Цифровой сетки */
+body::before {
     content: '';
     position: absolute;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    filter: blur(150px);
-    z-index: -1;
-    opacity: 0.15;
-    animation: floatGlow 14s infinite alternate ease-in-out;
+    inset: 0;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+    background-size: 30px 30px;
+    mask-image: radial-gradient(circle at 50% 50%, #000 20%, transparent 80%);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 20%, transparent 80%);
+    z-index: -2;
 }
-body::before { background: radial-gradient(circle, rgb(var(--status-info-rgb)), transparent); top: -10%; left: -10%; }
-body::after { background: radial-gradient(circle, rgb(var(--status-danger-rgb)), transparent); bottom: -10%; right: -10%; animation-delay: -7s; }
 
-@keyframes floatGlow {
+/* Размытые неоновые туманности */
+.space-glow-1, .space-glow-2 {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(160px);
+    opacity: 0.1;
+    z-index: -1;
+    animation: orbit 20s infinite alternate ease-in-out;
+}
+.space-glow-1 { background: radial-gradient(circle, rgb(var(--rgb-info)), transparent); top: -20%; left: -10%; }
+.space-glow-2 { background: radial-gradient(circle, rgb(var(--rgb-danger)), transparent); bottom: -20%; right: -10%; animation-delay: -10s; }
+
+@keyframes orbit {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(90px, 40px) scale(1.2); }
+    100% { transform: translate(100px, -60px) scale(1.2); }
 }
 
 .container {
     width: 100%;
-    max-width: 720px;
+    max-width: 740px;
     position: relative;
-    z-index: 1;
 }
 
 /* ==========================================================================
-   СТИЛИ ПАНЕЛИ
+   КОРПУС КАРТОЧКИ (HIGH-END GLASSMORPHISM)
    ========================================================================== */
 .status-panel {
-    background: var(--panel-bg);
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    border-radius: var(--panel-radius);
-    padding: var(--panel-padding);
-    backdrop-filter: blur(35px) saturate(200%);
-    -webkit-backdrop-filter: blur(35px) saturate(200%);
-    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8);
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--panel-surface);
+    border: 1px solid var(--border-base);
+    border-radius: 28px;
+    padding: 56px;
+    backdrop-filter: blur(var(--panel-blur)) saturate(220%);
+    -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(220%);
+    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8);
+    transition: border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Динамические темы граней на основе выбранного инцидента */
-.panel-critical { border-color: rgba(var(--status-danger-rgb), 0.2); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8), 0 0 60px rgba(var(--status-danger-rgb), 0.05); }
-.panel-warning { border-color: rgba(var(--status-warning-rgb), 0.2); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8), 0 0 60px rgba(var(--status-warning-rgb), 0.05); }
-.panel-info { border-color: rgba(var(--status-info-rgb), 0.2); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8), 0 0 60px rgba(var(--status-info-rgb), 0.05); }
-.panel-success { border-color: rgba(var(--status-success-rgb), 0.15); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8), 0 0 60px rgba(var(--status-success-rgb), 0.03); }
+/* Динамическая подсветка */
+.panel-critical { border-color: rgba(var(--rgb-danger), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-danger), 0.03), 0 0 60px rgba(var(--rgb-danger), 0.04); }
+.panel-warning { border-color: rgba(var(--rgb-warning), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-warning), 0.03), 0 0 60px rgba(var(--rgb-warning), 0.04); }
+.panel-info { border-color: rgba(var(--rgb-info), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-info), 0.03), 0 0 60px rgba(var(--rgb-info), 0.04); }
+.panel-success { border-color: rgba(var(--rgb-success), 0.18); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-success), 0.02), 0 0 60px rgba(var(--rgb-success), 0.02); }
 
 /* Логотип */
 .logo {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 900;
-    letter-spacing: 2px;
-    margin-bottom: 40px;
+    letter-spacing: 3px;
+    margin-bottom: 44px;
     text-transform: uppercase;
 }
-.logo span { color: rgb(var(--status-info-rgb)); font-weight: 400; opacity: 0.8; }
+.logo span { background: linear-gradient(135deg, #fff, #99aaff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.logo b { color: rgb(var(--rgb-info)); font-weight: 900; text-shadow: 0 0 15px rgba(var(--rgb-info), 0.4); }
 
-/* Дизайнерский верхний баннер статуса */
+/* ==========================================================================
+   ФУТУРИСТИЧНЫЙ ВЕРХНИЙ БАННЕР С МИГАНИЕМ
+   ========================================================================== */
 .alert-banner {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 18px 24px;
-    border-radius: calc(var(--panel-radius) / 1.7);
-    font-weight: 700;
-    font-size: 14px;
-    margin-bottom: 40px;
+    gap: 16px;
+    padding: 20px 26px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 13px;
+    margin-bottom: 44px;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
 }
-.banner-critical { background: rgba(var(--status-danger-rgb), 0.05); color: rgb(var(--status-danger-rgb)); border: 1px solid rgba(var(--status-danger-rgb), 0.15); }
-.banner-warning { background: rgba(var(--status-warning-rgb), 0.05); color: rgb(var(--status-warning-rgb)); border: 1px solid rgba(var(--status-warning-rgb), 0.15); }
-.banner-info { background: rgba(var(--status-info-rgb), 0.05); color: rgb(var(--status-info-rgb)); border: 1px solid rgba(var(--status-info-rgb), 0.15); }
-.banner-success { background: rgba(var(--status-success-rgb), 0.04); color: rgb(var(--status-success-rgb)); border: 1px solid rgba(var(--status-success-rgb), 0.12); }
 
-.pulse-core { width: 7px; height: 7px; border-radius: 50%; background-color: currentColor; box-shadow: 0 0 14px 2px currentColor; }
+.banner-critical { background: rgba(var(--rgb-danger), 0.04); color: rgb(var(--rgb-danger)); border: 1px solid rgba(var(--rgb-danger), 0.15); }
+.banner-warning { background: rgba(var(--rgb-warning), 0.04); color: rgb(var(--rgb-warning)); border: 1px solid rgba(var(--rgb-warning), 0.15); }
+.banner-info { background: rgba(var(--rgb-info), 0.04); color: rgb(var(--rgb-info)); border: 1px solid rgba(var(--rgb-info), 0.15); }
+.banner-success { background: rgba(var(--rgb-success), 0.03); color: rgb(var(--rgb-success)); border: 1px solid rgba(var(--rgb-success), 0.12); }
 
-/* Тексты инцидента */
+/* Исправленный и засинхронизированный индикатор */
+.pulse-core { 
+    width: 8px; 
+    height: 8px; 
+    border-radius: 50%; 
+    background-color: currentColor; 
+}
+.banner-critical .pulse-core { animation: fluidBlinkRed var(--blink-speed) infinite ease-in-out; }
+.banner-warning .pulse-core { animation: fluidBlinkYellow var(--blink-speed) infinite ease-in-out; }
+.banner-info .pulse-core { animation: fluidBlinkBlue var(--blink-speed) infinite ease-in-out; }
+.banner-success .pulse-core { animation: fluidBlinkGreen var(--blink-speed) infinite ease-in-out; }
+
+/* ==========================================================================
+   КОНТЕНТНАЯ ТЕКСТОВАЯ ЗОНА
+   ========================================================================== */
 .incident-details h2 {
-    font-size: var(--text-size-title);
+    font-size: var(--text-title-size);
     font-weight: 800;
     margin-bottom: 16px;
     line-height: 1.25;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.8px;
+    background: linear-gradient(180deg, #ffffff 60%, #a5b4fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .meta-info {
-    font-size: 12px;
-    color: var(--text-color-sub);
+    font-size: 11px;
+    color: #525a6c;
     display: flex;
-    gap: 24px;
-    margin-bottom: 30px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    padding-bottom: 20px;
+    gap: 28px;
+    margin-bottom: 36px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding-bottom: 24px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
 }
-.meta-info strong { color: var(--text-color-main); font-weight: 600; }
+.meta-info strong { color: #f8fafc; font-weight: 600; }
 
 .incident-text {
-    font-size: var(--text-size-body);
-    color: #a1a1aa;
-    line-height: 1.7;
-    margin-bottom: 50px;
+    font-size: var(--text-body-size);
+    color: #94a3b8;
+    line-height: 1.75;
+    margin-bottom: 56px;
     white-space: pre-line;
 }
 
 /* ==========================================================================
-   УЗЛЫ И ИХ ИСПРАВЛЕННОЕ МИГАНИЕ
+   ИНДИКАТОРЫ УЗЛОВ С НЕОНОВЫМ ДЫХАНИЕМ
    ========================================================================== */
 .servers-section-title {
     font-size: 11px;
-    color: var(--text-color-sub);
+    color: #525a6c;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 700;
-    margin-bottom: 18px;
+    letter-spacing: 2px;
+    font-weight: 800;
+    margin-bottom: 20px;
 }
 
 .mini-servers-list {
@@ -178,51 +206,47 @@ body::after { background: radial-gradient(circle, rgb(var(--status-danger-rgb)),
 .mini-server-badge {
     flex: 1;
     background: rgba(255, 255, 255, 0.01);
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    padding: 18px 24px;
-    border-radius: var(--badge-radius);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 20px 24px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-size: 14px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .mini-server-badge:hover {
     background: rgba(255, 255, 255, 0.03);
     border-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
 }
 .mini-server-badge span { color: #cbd5e1; }
 
-/* Конфигурация анимации точек */
 .dot-indicator {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    position: relative;
 }
 
-/* Подключение исправленных анимаций */
-.dot-online { background-color: rgb(var(--status-success-rgb)); animation: neonGlowGreen var(--pulse-speed) infinite ease-in-out; }
-.dot-warning { background-color: rgb(var(--status-warning-rgb)); animation: neonGlowYellow var(--pulse-speed) infinite ease-in-out; }
-.dot-offline { background-color: rgb(var(--status-danger-rgb)); animation: neonGlowRed var(--pulse-speed) infinite ease-in-out; }
+.dot-online { background-color: rgb(var(--rgb-success)); animation: fluidBlinkGreen var(--blink-speed) infinite ease-in-out; }
+.dot-warning { background-color: rgb(var(--rgb-warning)); animation: fluidBlinkYellow var(--blink-speed) infinite ease-in-out; }
+.dot-offline { background-color: rgb(var(--rgb-danger)); animation: fluidBlinkRed var(--blink-speed) infinite ease-in-out; }
 
-/* Исправленные и перепроверенные Keyframes анимаций пульсации */
-@keyframes neonGlowGreen {
-    0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--status-success-rgb)), 0 0 12px 2px rgba(var(--status-success-rgb), 0.2); opacity: 0.6; transform: scale(0.95); }
-    50% { box-shadow: 0 0 16px 5px rgb(var(--status-success-rgb)), 0 0 26px 7px rgba(var(--status-success-rgb), 0.4); opacity: 1; transform: scale(1.1); }
+/* Системные ключевые кадры для анимаций мигания */
+@keyframes fluidBlinkGreen {
+    0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-success)), 0 0 14px 2px rgba(var(--rgb-success), 0.2); opacity: 0.65; transform: scale(0.95); }
+    50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-success)), 0 0 28px 8px rgba(var(--rgb-success), 0.45); opacity: 1; transform: scale(1.1); }
 }
-@keyframes neonGlowYellow {
-    0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--status-warning-rgb)), 0 0 12px 2px rgba(var(--status-warning-rgb), 0.2); opacity: 0.6; transform: scale(0.95); }
-    50% { box-shadow: 0 0 16px 5px rgb(var(--status-warning-rgb)), 0 0 26px 7px rgba(var(--status-warning-rgb), 0.4); opacity: 1; transform: scale(1.1); }
+@keyframes fluidBlinkYellow {
+    0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-warning)), 0 0 14px 2px rgba(var(--rgb-warning), 0.2); opacity: 0.65; transform: scale(0.95); }
+    50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-warning)), 0 0 28px 8px rgba(var(--rgb-warning), 0.45); opacity: 1; transform: scale(1.1); }
 }
-@keyframes neonGlowRed {
-    0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--status-danger-rgb)), 0 0 12px 2px rgba(var(--status-danger-rgb), 0.2); opacity: 0.6; transform: scale(0.95); }
-    50% { box-shadow: 0 0 16px 5px rgb(var(--status-danger-rgb)), 0 0 26px 7px rgba(var(--status-danger-rgb), 0.4); opacity: 1; transform: scale(1.1); }
+@keyframes fluidBlinkRed {
+    0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-danger)), 0 0 14px 2px rgba(var(--rgb-danger), 0.2); opacity: 0.65; transform: scale(0.95); }
+    50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-danger)), 0 0 28px 8px rgba(var(--rgb-danger), 0.45); opacity: 1; transform: scale(1.1); }
 }
-
-@media (max-width: 680px) {
-    :root { --panel-padding: 30px 20px; }
-    .mini-servers-list { flex-direction: column; gap: 10px; }
-    .meta-info { flex-direction: column; gap: 8px; }
-}
+@keyframes fluidBlinkBlue {
+    0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-info)), 0 0 14px 2px rgba(var(--rgb-info), 0.2); opacity: 0.65; transform: scale(0.95); }
+50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-info)), 0 0 28px 8px rgba(var(--rgb-info), 0.45); opacity: 1; transform: scale(1.1); }}@media (max-width: 680px) {.status-panel { padding: 40px 24px; }.mini-servers-list { flex-direction: column; gap: 12px; }.meta-info { flex-direction: column; gap: 10px; }}
