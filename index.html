@@ -14,34 +14,52 @@
 
     <script>
         /* ==========================================================================
-           ПАНЕЛЬ УПРАВЛЕНИЯ КОНТЕНТОМ (Пишите свой текст внутри кавычек)
+           ГЛАВНЫЙ ТУМБЛЕР АДМИНИСТРАТОРА (Отдельная переменная)
            ========================================================================== */
-        const VPN_STATUS_CONFIG = {
-            // Тип глобальной аварии: 'critical' (красный), 'warning' (желтый), 'info' (синий), 'success' (зеленый)
-            globalStatusType: 'critical', 
+        // Укажите 'success', чтобы включить режим "Всё работает штатно" (БАННЕР СКРОЕТСЯ)
+        // Укажите 'critical', чтобы включить режим "Критический сбой" (БАННЕР ПОЯВИТСЯ)
+        const CURRENT_SYSTEM_MODE = 'success'; 
 
-            // Названия заголовков и мета-данные
-            bannerMessage: 'Технический инцидент сети',
-            mainTitle: 'Авария на стороне магистрального провайдера',
-            incidentID: '#ZNT-0001',
-            lastUpdatedTime: '04.06.2026, 19:50 MSK',
 
-            // ВАШ ЛИЧНЫЙ ТЕКСТ УВЕДОМЛЕНИЯ ПОЛЬЗОВАТЕЛЯМ (\n — это перенос строки)
-            customMessage: 'Зафиксирован сбой в работе дата-центра в Финляндии. Проблема вызвана техническим сбоем на стороне вышестоящего провайдера связи.\n\nВ связи с этим узел в Финляндии полностью изолирован.\nЧто делать пользователям:\n1. Вручную переключитесь на сервер Франция — трафик этого узла идет по изолированной кабельной системе, он полностью стабилен.\n2. При возникновении проблем с подключением, активируйте альтернативные протоколы в настройках вашего приложения.\n\nНаши специалисты совместно с инженерами ДЦ уже занимаются восстановлением Дата-центра.',
-
-            // Имена для трех ваших локаций
-            serverNames: {
-                node1: 'Финляндия (HEL1)',
-                node2: 'Нидерланды (AMS-1)',
-                node3: 'Франция (PR-1)'
+        /* ==========================================================================
+           ГОТОВЫЕ НАСТРОЕННЫЕ ПРЕСЕТЫ (Текст внутри можно кастомизировать)
+           ========================================================================== */
+        const VPN_STATUS_PRESETS = {
+            
+            // 🟢 ПРЕСЕТ: ВСЁ РАБОТАЕТ ИДЕАЛЬНО
+            success: {
+                globalStatusType: 'success',
+                bannerMessage: '', // Оставляем пустым, так как баннер скрывается
+                mainTitle: 'Все системы работают в штатном режиме',
+                incidentID: 'N/A',
+                customMessage: 'В настоящее время критических сбоев или плановых технических работ не зафиксировано. Все магистральные каналы связи функционируют на максимальной пропускной способности.\n\nСеть полностью стабильна. Вы можете использовать любую удобную локацию для подключения. Средний пинг и скорость скачивания находятся в пределах идеальных операционных показателей.',
+                serverStatuses: {
+                    node1Status: 'online',     
+                    node2Status: 'online', 
+                    node3Status: 'online'      
+                }
             },
 
-            // Индивидуальные статусы мигания узлов: 'online' (зеленый), 'warning' (желтый), 'offline' (красный)
-            serverStatuses: {
-                node1Status: 'offline',     
-                node2Status: 'online', 
-                node3Status: 'online'      
+            // 🔴 ПРЕСЕТ: КРИТИЧЕСКИЙ СБОЙ
+            critical: {
+                globalStatusType: 'critical',
+                bannerMessage: 'Технический инцидент сети',
+                mainTitle: 'Авария на стороне магистрального провайдера',
+                incidentID: '#ZNT-8840',
+                customMessage: 'Зафиксирован сбой в работе дата-центра в Финляндии. Проблема вызвана техническим сбоем на стороне вышестоящего провайдера связи.\n\nВ связи с этим узел в Финляндии полностью изолирован.\nЧто делать пользователям:\n1. Вручную переключитесь на сервер Франция или Нидерланды — трафик этих узлов идет по изолированной кабельной системе, он полностью стабилен.\n2. При возникновении проблем с подключением, активируйте альтернативные протоколы в настройках вашего приложения.\n\nНаши специалисты совместно с инженерами ДЦ уже занимаются восстановлением Дата-центра',
+                serverStatuses: {
+                    node1Status: 'offline',     
+                    node2Status: 'online', 
+                    node3Status: 'online'      
+                }
             }
+        };
+
+        // Статические имена ваших локаций
+        const VPN_SERVER_NAMES = {
+            node1: 'Финляндия (HEL-1)',
+            node2: 'Нидерланды (AMS-1)',
+            node3: 'Франция (PR-1)'
         };
     </script>
 
@@ -95,23 +113,44 @@
     <!-- Автоматический конфигуратор темы -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const data = VPN_STATUS_CONFIG;
+            // Считываем режим из отдельной переменной
+            const activeMode = CURRENT_SYSTEM_MODE;
+            const data = VPN_STATUS_PRESETS[activeMode] || VPN_STATUS_PRESETS['success'];
             
-            // Сборка стилей контейнеров и баннера
+            // Автоматическое форматирование текущей даты и времени
+            const now = new Date();
+            const formattedTime = now.toLocaleString('ru-RU', { 
+                day: '2digit', 
+                month: '2digit', 
+                year: 'numeric', 
+                hour: '2digit', 
+                minute: '2digit',
+                timeZoneName: 'short'
+            });
+
+            // Настройка отображения баннера
+            const banner = document.getElementById('alertBanner');
+            if (activeMode === 'success') {
+                banner.style.display = 'none'; // Полностью убираем баннер, если всё ок
+            } else {
+                banner.style.display = 'flex'; // Показываем баннер, если есть инцидент
+                banner.className = `alert-banner banner-${data.globalStatusType}`;
+                document.getElementById('bannerText').innerText = data.bannerMessage;
+            }
+
+            // Сборка стилей главного контейнера
             document.getElementById('mainPanel').className = `status-panel panel-${data.globalStatusType}`;
-            document.getElementById('alertBanner').className = `alert-banner banner-${data.globalStatusType}`;
-            document.getElementById('bannerText').innerText = data.bannerMessage;
             
             // Отрендерить тексты
             document.getElementById('incTitle').innerText = data.mainTitle;
             document.getElementById('incID').innerText = data.incidentID;
-            document.getElementById('incTime').innerText = data.lastUpdatedTime;
+            document.getElementById('incTime').innerText = formattedTime;
             document.getElementById('incMessage').innerText = data.customMessage;
 
             // Назначить имена серверам
-            document.getElementById('name-node1').innerText = data.serverNames.node1;
-            document.getElementById('name-node2').innerText = data.serverNames.node2;
-            document.getElementById('name-node3').innerText = data.serverNames.node3;
+            document.getElementById('name-node1').innerText = VPN_SERVER_NAMES.node1;
+            document.getElementById('name-node2').innerText = VPN_SERVER_NAMES.node2;
+            document.getElementById('name-node3').innerText = VPN_SERVER_NAMES.node3;
 
             // Подключить классы мигания точкам
             document.getElementById('dot-node1').className = `dot-indicator dot-${data.serverStatuses.node1Status}`;
@@ -121,3 +160,4 @@
     </script>
 </body>
 </html>
+
