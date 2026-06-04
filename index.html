@@ -69,7 +69,7 @@
         .container { width: 100%; max-width: 740px; position: relative; }
 
         /* ==========================================================================
-           КОРПУС КАРТОЧКИ
+           КОРПУС КАРТОЧКИ И БАННЕРЫ
            ========================================================================== */
         .status-panel {
             background: var(--panel-surface); border: 1px solid var(--border-base); border-radius: 28px; padding: 56px;
@@ -82,14 +82,10 @@
         .panel-warning { border-color: rgba(var(--rgb-warning), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-warning), 0.03), 0 0 60px rgba(var(--rgb-warning), 0.04); }
         .panel-info { border-color: rgba(var(--rgb-info), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-info), 0.03), 0 0 60px rgba(var(--rgb-info), 0.04); }
         .panel-success { border-color: rgba(var(--rgb-success), 0.18); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-success), 0.02), 0 0 60px rgba(var(--rgb-success), 0.02); }
-
         .logo { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 900; letter-spacing: 3px; margin-bottom: 44px; text-transform: uppercase; }
         .logo span { background: linear-gradient(135deg, #fff, #99aaff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .logo b { color: rgb(var(--rgb-info)); font-weight: 900; text-shadow: 0 0 15px rgba(var(--rgb-info), 0.4); }
 
-        /* ==========================================================================
-           ВЕРХНИЙ БАННЕР (ОШИБКА МИГАНИЯ ИСПРАВЛЕНА ПОЛНОСТЬЮ)
-           ========================================================================== */
         .alert-banner { display: flex; align-items: center; gap: 16px; padding: 20px 26px; border-radius: 16px; font-weight: 800; font-size: 13px; margin-bottom: 44px; text-transform: uppercase; letter-spacing: 1px; }
         .banner-critical { background: rgba(var(--rgb-danger), 0.04); color: rgb(var(--rgb-danger)); border: 1px solid rgba(var(--rgb-danger), 0.15); }
         .banner-warning { background: rgba(var(--rgb-warning), 0.04); color: rgb(var(--rgb-warning)); border: 1px solid rgba(var(--rgb-warning), 0.15); }
@@ -102,9 +98,6 @@
         .banner-info .pulse-core { animation: fluidBlinkBlue var(--blink-speed) infinite ease-in-out; }
         .banner-success .pulse-core { animation: fluidBlinkGreen var(--blink-speed) infinite ease-in-out; }
 
-        /* ==========================================================================
-           ТЕКСТОВАЯ ЗОНА И УЗЛЫ
-           ========================================================================== */
         .incident-details h2 {
             font-size: var(--text-title-size); font-weight: 800; margin-bottom: 16px; line-height: 1.25; letter-spacing: -0.8px;
             background: linear-gradient(180deg, #ffffff 60%, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -139,30 +132,33 @@
             50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-danger)), 0 0 28px 8px rgba(var(--rgb-danger), 0.45); opacity: 1; transform: scale(1.1); }
         }
         @keyframes fluidBlinkBlue {
-    <!-- Дополнение CSS-анимаций, чтобы ничего не терялось -->
-    <style>
-        @keyframes fluidBlinkBlue {
             0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-info)), 0 0 14px 2px rgba(var(--rgb-info), 0.2); opacity: 0.65; transform: scale(0.95); }
             50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-info)), 0 0 28px 8px rgba(var(--rgb-info), 0.45); opacity: 1; transform: scale(1.1); }
         }
+
         @media (max-width: 680px) {
             .status-panel { padding: 40px 24px; }
             .mini-servers-list { flex-direction: column; gap: 12px; }
             .meta-info { flex-direction: column; gap: 10px; }
         }
     </style>
+</head>
+<body>
+    <div class="space-glow-1"></div>
+    <div class="space-glow-2"></div>
+
     <script>
         /* ==========================================================================
-           ГЛАВНЫЙ ТУМБЛЕР АДМИНИСТРАТОРА
+           ГЛАВНЫЙ ТУМБЛЕР АДМИНИСТРАТОРА (Отдельная переменная)
            ========================================================================== */
         // Доступные режимы:
-        // 'success'      — Всё работает идеально (Зеленый режим, баннер скрыт)
-        // 'maintenance'  — Плановые техработы (Синий режим, баннер скрыт)
-        // 'critical'     — Экстренная авария сети (Красный режим, баннер активен)
+        // 'success'      — Всё работает идеально (Сайт зеленый, баннер скрыт)
+        // 'maintenance'  — Плановые техработы (Сайт синий, баннер скрыт)
+        // 'critical'     — Экстренная авария сети (Сайт красный, баннер активен)
         const CURRENT_SYSTEM_MODE = 'success'; 
 
         /* ==========================================================================
-           ГОТОВЫЕ НАСТРОЕННЫЕ ПРЕСЕТЫ (Тексты зашиты внутри)
+           ГОТОВЫЕ НАСТРОЕННЫЕ ПРЕСЕТЫ (Тексты внутри можно кастомизировать)
            ========================================================================== */
         const VPN_STATUS_PRESETS = {
             
@@ -197,25 +193,25 @@
             // 🔴 ПРЕСЕТ: КРИТИЧЕСКИЙ СБОЙ
             critical: {
                 globalStatusType: 'critical',
-                bannerMessage: 'Технический инцидент сети',
-                mainTitle: 'Авария на стороне магистрального провайдера',
-                incidentID: '#ZNT-0001',
-                customMessage: 'Зафиксирован сбой в работе дата-центра в Финляндии. Проблема вызвана техническим сбоем на стороне вышестоящего провайдера связи.\n\nВ связи с этим узел в Финляндии полностью изолирован.\nЧто делать пользователям:\n1. Вручную переключитесь на сервер Франция — трафик этого узла идет по изолированной кабельной системе, он полностью стабилен.\n2. При возникновении проблем с подключением, активируйте альтернативные протоколы в настройках вашего приложения.\n\nНаши специалисты совместно с инженерами ДЦ уже занимаются восстановлением Дата-центра',
+                bannerMessage: 'Глобальный технический инцидент сети',
+                mainTitle: 'Авария на стороне магистрального провайдера Tier-1',
+                incidentID: '#ZNT-8840',
+                customMessage: 'Зафиксировано аварийное отключение сетевых маршрутов на стыке европейских дата-центров. Проблема вызвана техническим сбоем на стороне вышестоящего провайдера связи.\n\nВ связи с этим узел во Франции полностью изолирован. На сервере в Нидерландах наблюдается критическая деградация каналов: потеря пакетов составляет до 45%, а пинг увеличен в 4 раза.\n\nЧто делать пользователям:\n1. Вручную переключитесь на сервер Финляндия — трафик этого узла идет по изолированной кабельной системе, он полностью стабилен.\n2. При возникновении проблем с подключением, активируйте альтернативные протоколы в настройках вашего приложения.\n\nНаши специалисты совместно с инженерами ДЦ уже занимаются перемаршрутизацией сессий.',
                 serverStatuses: {
-                    node1Status: 'offline',     
-                    node2Status: 'online', 
-                    node3Status: 'online'      
+                    node1Status: 'online',     
+                    node2Status: 'warning', 
+                    node3Status: 'offline'      
                 }
             }
         };
 
+        // Статические имена ваших локаций
         const VPN_SERVER_NAMES = {
-            node1: 'Финляндия (Helsinki)',
-            node2: 'Нидерланды (Amsterdam)',
-            node3: 'Франция (Paris)'
+            node1: 'Финляндия (HEL-1)',
+            node2: 'Нидерланды (AMS-1)',
+            node3: 'Франция (PR-1)'
         };
     </script>
-
     <div class="container">
         <div class="status-panel" id="mainPanel">
             
@@ -231,7 +227,7 @@
                 <span id="bannerText"></span>
             </div>
 
-            <!-- Секция описания -->
+            <!-- Секция описания инцидента -->
             <div class="incident-details">
                 <h2 id="incTitle"></h2>
                 
@@ -263,18 +259,20 @@
         </div>
     </div>
 
-    <!-- Автоматический конфигуратор темы -->
+    <!-- Автоматический конфигуратор темы и сборщик страницы -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const activeMode = CURRENT_SYSTEM_MODE;
             const data = VPN_STATUS_PRESETS[activeMode] || VPN_STATUS_PRESETS['success'];
             
+            // Вычисление локального времени пользователя при открытии страницы
             const now = new Date();
             const formattedTime = now.toLocaleString('ru-RU', { 
                 day: '2digit', month: '2digit', year: 'numeric', 
                 hour: '2digit', minute: '2digit', timeZoneName: 'short'
             });
 
+            // Настройка отображения верхнего баннера аварии
             const banner = document.getElementById('alertBanner');
             if (activeMode === 'success' || activeMode === 'maintenance') {
                 banner.style.display = 'none'; 
@@ -284,17 +282,21 @@
                 document.getElementById('bannerText').innerText = data.bannerMessage;
             }
 
+            // Назначение темы (цвета рамки и свечений) главной панели
             document.getElementById('mainPanel').className = `status-panel panel-${data.globalStatusType}`;
             
+            // Отрендерить тексты на странице
             document.getElementById('incTitle').innerText = data.mainTitle;
             document.getElementById('incID').innerText = data.incidentID;
             document.getElementById('incTime').innerText = formattedTime;
             document.getElementById('incMessage').innerText = data.customMessage;
 
+            // Присвоить названия локациям серверов
             document.getElementById('name-node1').innerText = VPN_SERVER_NAMES.node1;
             document.getElementById('name-node2').innerText = VPN_SERVER_NAMES.node2;
             document.getElementById('name-node3').innerText = VPN_SERVER_NAMES.node3;
 
+            // Активировать правильные стили мигания для индикаторов узлов
             document.getElementById('dot-node1').className = `dot-indicator dot-${data.serverStatuses.node1Status}`;
             document.getElementById('dot-node2').className = `dot-indicator dot-${data.serverStatuses.node2Status}`;
             document.getElementById('dot-node3').className = `dot-indicator dot-${data.serverStatuses.node3Status}`;
