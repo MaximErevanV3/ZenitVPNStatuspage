@@ -2,25 +2,25 @@
    АДМИН-ПАНЕЛЬ ВИЗУАЛЬНЫХ ПЕРЕМЕННЫХ
    ========================================================================== */
 :root {
-    --bg-main: #02040a;          
-    --bg-card: rgba(10, 15, 30, 0.45); 
-    --border-color: rgba(255, 255, 255, 0.04);
+    --bg-dark: #050508;
+    --card-surface: rgba(13, 17, 28, 0.45);
+    --border-alpha: rgba(255, 255, 255, 0.04);
     
-    /* Цвета статусов */
-    --color-success: #00ffaa;    /* Кибер-зеленый */
-    --color-warning: #ffb700;    /* Неоново-желтый */
-    --color-danger: #ff4a4a;     /* Ярко-красный */
-    --color-info: #00bfff;       /* Электрик-синий */
+    /* Цвета статусов (Высокая контрастность) */
+    --clr-success: #00ffb3;   
+    --clr-warning: #ffaa00;   
+    --clr-danger: #ff3344;    
+    --clr-info: #00a2ff;      
 
-    /* Текст и геометрия */
-    --text-main: #ffffff;        
-    --text-muted: #62697a;       
-    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    --radius: 24px;
+    /* Свечения */
+    --glow-danger: cubic-bezier(0.16, 1, 0.3, 1);
+    --text-main: #ffffff;
+    --text-sub: #7e889b;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 /* ==========================================================================
-   БАЗОВЫЕ СТИЛИ И ЖИВОЙ ФОН
+   ФУТУРИСТИЧЕСКИЙ ЖИВОЙ ФОН И АНИМАЦИИ ВХОДА
    ========================================================================== */
 * {
     box-sizing: border-box;
@@ -29,223 +29,210 @@
 }
 
 body {
-    background-color: var(--bg-main);
+    background-color: var(--bg-dark);
     color: var(--text-main);
-    font-family: var(--font-family);
+    font-family: var(--font);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 30px;
+    padding: 40px 20px;
     overflow-x: hidden;
     position: relative;
 }
 
-/* Задний неоновый фон (Движущиеся сферы) */
-body::before, body::after {
+/* Эффект цифровой сетки на бэкграунде */
+body::before {
     content: '';
     position: absolute;
-    width: 400px;
-    height: 400px;
+    inset: 0;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+    z-index: -2;
+}
+
+/* Размытые неоновые сферы */
+.bg-glow-1, .bg-glow-2 {
+    position: absolute;
+    width: 500px;
+    height: 500px;
     border-radius: 50%;
-    filter: blur(140px);
+    filter: blur(160px);
+    opacity: 0.12;
     z-index: -1;
-    opacity: 0.15;
-    animation: floatBg 12s infinite alternate ease-in-out;
+    mix-blend-mode: screen;
+    animation: floatGlow 18s infinite alternate ease-in-out;
 }
-body::before {
-    background: radial-gradient(circle, #3b82f6, transparent);
-    top: -10%;
-    left: -10%;
-}
-body::after {
-    background: radial-gradient(circle, #ff4a4a, transparent);
-    bottom: -10%;
-    right: -10%;
-    animation-delay: -6s;
-}
+.bg-glow-1 { background: #3b82f6; top: -10%; left: 15%; }
+.bg-glow-2 { background: #ff3344; bottom: -5%; right: 15%; animation-delay: -9s; }
 
-@keyframes floatBg {
+@keyframes floatGlow {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(80px, 50px) scale(1.2); }
-}
-
-.container {
-    width: 100%;
-    max-width: 680px;
-    position: relative;
-    z-index: 1;
+    100% { transform: translate(60px, -40px) scale(1.15); }
 }
 
 /* ==========================================================================
-   ГЛАВНЫЙ СТЭК-КОНТЕЙНЕР (GLASSMORPHISM)
+   ГЛАВНЫЙ КОРПУС СТАТУС-ПАНЕЛИ (КИБЕРПАНК ЛЮКС)
    ========================================================================== */
 .status-panel {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 48px;
-    backdrop-filter: blur(30px) saturate(190%);
-    -webkit-backdrop-filter: blur(30px) saturate(190%);
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
-    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+    background: var(--card-surface);
+    border: 1px solid var(--border-alpha);
+    border-radius: 28px;
+    padding: 56px;
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: panelIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Свечение контура в зависимости от статуса инцидента */
-.panel-critical { border-color: rgba(255, 74, 74, 0.15); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7), 0 0 50px rgba(255, 74, 74, 0.05); }
-.panel-warning { border-color: rgba(255, 183, 0, 0.15); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7), 0 0 50px rgba(255, 183, 0, 0.05); }
-.panel-info { border-color: rgba(0, 191, 255, 0.15); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7), 0 0 50px rgba(0, 191, 255, 0.05); }
-.panel-success { border-color: rgba(0, 255, 170, 0.12); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7), 0 0 50px rgba(0, 255, 170, 0.03); }
+@keyframes panelIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Контурные подсветки граней при разных авариях */
+.panel-critical { border-color: rgba(255, 51, 68, 0.2); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 0 24px rgba(255, 51, 68, 0.03); }
+.panel-warning { border-color: rgba(255, 170, 0, 0.2); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 0 24px rgba(255, 170, 0, 0.03); }
+.panel-info { border-color: rgba(0, 162, 255, 0.2); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 0 24px rgba(0, 162, 255, 0.03); }
+.panel-success { border-color: rgba(0, 255, 179, 0.15); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 0 24px rgba(0, 255, 179, 0.02); }
 
 /* Логотип */
 .logo {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 800;
-    letter-spacing: -0.5px;
-    margin-bottom: 40px;
+    letter-spacing: 2px;
+    margin-bottom: 48px;
     text-transform: uppercase;
+    color: var(--text-main);
 }
+.logo span { color: var(--clr-info); font-weight: 400; opacity: 0.7; }
 
-.logo-cube {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #3b82f6;
-    border-radius: 6px;
-    position: relative;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-}
-
-.logo span {
-    background: linear-gradient(120deg, #ffffff, #8da2fb);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Главный футуристичный баннер */
+/* Дизайнерский верхний баннер */
 .alert-banner {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px 24px;
-    border-radius: 16px;
+    gap: 14px;
+    padding: 18px 24px;
+    border-radius: 14px;
     font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 35px;
-    letter-spacing: -0.2px;
+    font-size: 14px;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+.banner-critical { background: rgba(255, 51, 68, 0.04); color: var(--clr-danger); border: 1px solid rgba(255, 51, 68, 0.12); }
+.banner-warning { background: rgba(255, 170, 0, 0.04); color: var(--clr-warning); border: 1px solid rgba(255, 170, 0, 0.12); }
+.banner-info { background: rgba(0, 162, 255, 0.04); color: var(--clr-info); border: 1px solid rgba(0, 162, 255, 0.12); }
+.banner-success { background: rgba(0, 255, 179, 0.03); color: var(--clr-success); border: 1px solid rgba(0, 255, 179, 0.1); }
 
-.banner-critical { background: rgba(255, 74, 74, 0.06); color: var(--color-danger); border: 1px solid rgba(255, 74, 74, 0.15); }
-.banner-warning { background: rgba(255, 183, 0, 0.06); color: var(--color-warning); border: 1px solid rgba(255, 183, 0, 0.15); }
-.banner-info { background: rgba(0, 191, 255, 0.06); color: var(--color-info); border: 1px solid rgba(0, 191, 255, 0.15); }
-.banner-success { background: rgba(0, 255, 170, 0.05); color: var(--color-success); border: 1px solid rgba(0, 255, 170, 0.12); }
-
-/* Дыхание точки на баннере */
-.pulse { width: 8px; height: 8px; border-radius: 50%; background-color: currentColor; box-shadow: 0 0 12px 2px currentColor; }
+.pulse { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; box-shadow: 0 0 14px 2px currentColor; }
 
 /* ==========================================================================
-   ТЕКСТОВЫЙ БЛОК ИНЦИДЕНТА
+   БЛОК ТЕКСТА И ОПИСАНИЯ
    ========================================================================== */
 .incident-details h2 {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 14px;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 16px;
     line-height: 1.25;
     letter-spacing: -0.5px;
 }
 
 .meta-info {
-    font-size: 13px;
-    color: var(--text-muted);
+    font-size: 12px;
+    color: var(--text-sub);
     display: flex;
     gap: 24px;
-    margin-bottom: 28px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    padding-bottom: 20px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-
-.meta-info strong {
-    color: #e2e8f0;
-    font-weight: 500;
-}
+.meta-info strong { color: #f1f5f9; font-weight: 600; }
 
 .incident-text {
     font-size: 16px;
-    color: #94a3b8;
-    line-height: 1.65;
-    margin-bottom: 45px;
+    color: #a1a1aa;
+    line-height: 1.7;
+    margin-bottom: 56px;
+    white-space: pre-line; /* Позволяет делать переносы строк в JS */
 }
 
 /* ==========================================================================
-   УЗЛЫ И ИХ МИГАНИЕ (ПРЕМИУМ АНИМАЦИЯ)
+   УЗЛЫ И ИХ МИГАНИЕ (АКТИВНАЯ НЕОНОВАЯ ВОЛНА)
    ========================================================================== */
 .servers-section-title {
     font-size: 11px;
-    color: var(--text-muted);
+    color: var(--text-sub);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .mini-servers-list {
     display: flex;
-    gap: 14px;
+    gap: 16px;
 }
 
 .mini-server-badge {
     flex: 1;
     background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.03);
-    padding: 16px 20px;
-    border-radius: 14px;
+    padding: 18px 24px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-size: 14px;
-    font-weight: 500;
-    transition: background 0.3s, border-color 0.3s;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    transition: all 0.3s ease;
 }
-
 .mini-server-badge:hover {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.06);
 }
+.mini-server-badge span { color: #cbd5e1; }
 
-.mini-server-badge span {
-    color: #cbd5e1;
-}
-
-/* Свечение статус-точек */
+/* Точки индикаторов */
 .dot-indicator {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     position: relative;
 }
 
-.dot-online { background-color: var(--color-success); animation: neonGlowGreen 1.8s infinite ease-in-out; }
-.dot-warning { background-color: var(--color-warning); animation: neonGlowYellow 1.8s infinite ease-in-out; }
-.dot-offline { background-color: var(--color-danger); animation: neonGlowRed 1.8s infinite ease-in-out; }
+.dot-online { background-color: var(--clr-success); animation: fluidGreen 2s infinite ease-in-out; }
+.dot-warning { background-color: var(--clr-warning); animation: fluidYellow 2s infinite ease-in-out; }
+.dot-offline { background-color: var(--clr-danger); animation: fluidRed 2s infinite ease-in-out; }
 
-/* Улучшенные плавные волновые анимации для мигания */
-@keyframes neonGlowGreen {
-    0%, 100% { box-shadow: 0 0 6px 1px var(--color-success), 0 0 14px 2px rgba(0, 255, 170, 0.2); opacity: 0.8; }
-    50% { box-shadow: 0 0 14px 4px var(--color-success), 0 0 25px 6px rgba(0, 255, 170, 0.4); opacity: 1; transform: scale(1.05); }
+/* Прогрессивные волновые анимации затухания и вспышек */
+@keyframes fluidGreen {
+    0%, 100% { box-shadow: 0 0 6px 1px var(--clr-success), 0 0 16px 2px rgba(0, 255, 179, 0.2); opacity: 0.7; }
+    50% { box-shadow: 0 0 16px 5px var(--clr-success), 0 0 28px 7px rgba(0, 255, 179, 0.4); opacity: 1; transform: scale(1.1); }
 }
-@keyframes neonGlowYellow {
-    0%, 100% { box-shadow: 0 0 6px 1px var(--color-warning), 0 0 14px 2px rgba(255, 183, 0, 0.2); opacity: 0.8; }
-    50% { box-shadow: 0 0 14px 4px var(--color-warning), 0 0 25px 6px rgba(255, 183, 0, 0.4); opacity: 1; transform: scale(1.05); }
+@keyframes fluidYellow {
+    0%, 100% { box-shadow: 0 0 6px 1px var(--clr-warning), 0 0 16px 2px rgba(255, 170, 0, 0.2); opacity: 0.7; }
+    50% { box-shadow: 0 0 16px 5px var(--clr-warning), 0 0 28px 7px rgba(255, 170, 0, 0.4); opacity: 1; transform: scale(1.1); }
 }
-@keyframes neonGlowRed {
-    0%, 100% { box-shadow: 0 0 6px 1px var(--color-danger), 0 0 14px 2px rgba(255, 74, 74, 0.2); opacity: 0.8; }
-    50% { box-shadow: 0 0 14px 4px var(--color-danger), 0 0 25px 6px rgba(255, 74, 74, 0.4); opacity: 1; transform: scale(1.05); }
+@keyframes fluidRed {
+    0%, 100% { box-shadow: 0 0 6px 1px var(--clr-danger), 0 0 16px 2px rgba(255, 51, 68, 0.2); opacity: 0.7; }
+    50% { box-shadow: 0 0 16px 5px var(--clr-danger), 0 0 28px 7px rgba(255, 51, 68, 0.4); opacity: 1; transform: scale(1.1); }
 }
 
-@media (max-width: 650px) {
-    .status-panel { padding: 32px 24px; }
-    .mini-servers-list { flex-direction: column; gap: 10px; }
-    .meta-info { flex-direction: column; gap: 8px; }
+@media (max-width: 680px) {
+    .status-panel { padding: 40px 24px; }
+    .mini-servers-list { flex-direction: column; gap: 12px; }
+    .meta-info { flex-direction: column; gap: 10px; }
 }
