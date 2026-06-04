@@ -1,0 +1,193 @@
+/* ==========================================================================
+   АДМИН-ПАНЕЛЬ ВИЗУАЛЬНЫХ ПЕРЕМЕННЫХ
+   ========================================================================== */
+:root {
+    /* Цветовая палитра */
+    --bg-main: #030712;          /* Ультра-темный фон */
+    --bg-card: rgba(17, 24, 39, 0.7); /* Стеклянный фон блоков */
+    --border-glow: rgba(59, 130, 246, 0.15);
+    
+    /* Цвета статусов аварии */
+    --color-success: #10b981;    /* Зеленый (Система стабильна) */
+    --color-warning: #f59e0b;    /* Желтый (Частичный сбой) */
+    --color-danger: #ef4444;     /* Красный (Критическая авария) */
+    --color-info: #3b82f6;       /* Синий (Технические работы) */
+
+    /* Шрифты и текст */
+    --text-main: #f9fafb;        /* Яркий белый */
+    --text-muted: #9ca3af;       /* Приглушенный серый */
+    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --radius: 16px;
+}
+
+/* ==========================================================================
+   БАЗОВЫЕ СТИЛИ
+   ========================================================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-main);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.03) 0px, transparent 50%);
+    color: var(--text-main);
+    font-family: var(--font-family);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   КОНТЕЙНЕР УВЕДОМЛЕНИЯ (ГЛАВНЫЙ БЛОК)
+   ========================================================================== */
+.status-panel {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    padding: 40px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px var(--border-glow);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Динамические стили свечения панели в зависимости от статуса */
+.panel-critical { var(--border-glow): rgba(239, 68, 68, 0.15); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(239, 68, 68, 0.15); }
+.panel-warning { var(--border-glow): rgba(245, 158, 111, 0.15); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(245, 158, 111, 0.15); }
+.panel-info { var(--border-glow): rgba(59, 130, 246, 0.15); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.15); }
+.panel-success { var(--border-glow): rgba(16, 185, 129, 0.15); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.15); }
+
+/* Логотип */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 35px;
+}
+
+.logo span {
+    color: #3b82f6;
+    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Главная плашка статуса */
+.alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 30px;
+}
+
+.banner-critical { background: rgba(239, 68, 68, 0.1); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, 0.15); }
+.banner-warning { background: rgba(245, 158, 111, 0.1); color: var(--color-warning); border: 1px solid rgba(245, 158, 111, 0.15); }
+.banner-info { background: rgba(59, 130, 246, 0.1); color: var(--color-info); border: 1px solid rgba(59, 130, 246, 0.15); }
+.banner-success { background: rgba(16, 185, 129, 0.1); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.15); }
+
+/* Точка пульсации */
+.pulse {
+    width: 10px;
+    height: 10px;
+    background-color: currentColor;
+    border-radius: 50%;
+}
+.banner-critical .pulse { animation: pulse-red 2s infinite; }
+.banner-warning .pulse { animation: pulse-yellow 2s infinite; }
+.banner-info .pulse { animation: pulse-blue 2s infinite; }
+.banner-success .pulse { animation: pulse-green 2s infinite; }
+
+@keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+@keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 111, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 111, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 111, 0); } }
+@keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+@keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+/* ==========================================================================
+   ОПИСАНИЕ ИНЦИДЕНТА
+   ========================================================================== */
+.incident-details h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.meta-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 16px;
+}
+
+.incident-text {
+    font-size: 15px;
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 35px;
+}
+
+/* ==========================================================================
+   МИНИ-ИНДИКАТОРЫ 3 СЕРВЕРОВ
+   ========================================================================== */
+.servers-section-title {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.mini-servers-list {
+    display: flex;
+    gap: 12px;
+}
+
+.mini-server-badge {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.dot-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+.dot-online { background-color: var(--color-success); box-shadow: 0 0 8px var(--color-success); }
+.dot-warning { background-color: var(--color-warning); box-shadow: 0 0 8px var(--color-warning); }
+.dot-offline { background-color: var(--color-danger); box-shadow: 0 0 8px var(--color-danger); }
+
+@media (max-width: 600px) {
+    .status-panel { padding: 25px; }
+    .mini-servers-list { flex-direction: column; }
+    .meta-info { flex-direction: column; gap: 6px; }
+}
