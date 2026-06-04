@@ -3,114 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenitVPN — Сервисный Статус</title>
+    <title>ZenitVPN — Статус</title>
     <style>
-        /* ==========================================================================
-           УЛЬТРА-КАСТОМИЗАЦИЯ: ВСЕ ВИЗУАЛЬНЫЕ ПЕРЕМЕННЫЕ
-           ========================================================================== */
         :root {
             --bg-dark: #020306;             
-            --panel-surface: rgba(8, 11, 21, 0.45); 
-            --border-base: rgba(255, 255, 255, 0.03); 
-            
+            --panel-surface: rgba(8, 11, 21, 0.65); 
+            --border-base: rgba(255, 255, 255, 0.04); 
             --rgb-success: 0, 255, 170;     
             --rgb-warning: 255, 170, 0;     
             --rgb-danger: 255, 46, 81;      
             --rgb-info: 0, 183, 255;        
-
-            --font-cyber: 'Inter', system-ui, -apple-system, sans-serif;
-            --text-title-size: 32px;
-            --text-body-size: 16px;
-            --panel-blur: 40px;             
             --blink-speed: 1.4s;            
         }
-
-        /* ==========================================================================
-           ФОНОВЫЕ СЕТКИ И ГЕОМЕТРИЯ
-           ========================================================================== */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             background-color: var(--bg-dark);
             color: #ffffff;
-            font-family: var(--font-cyber);
+            font-family: system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
-            overflow-x: hidden;
-            position: relative;
+            padding: 20px;
         }
-
-        body::before {
-            content: ''; position: absolute; inset: 0;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
-            background-size: 30px 30px;
-            mask-image: radial-gradient(circle at 50% 50%, #000 20%, transparent 80%);
-            -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 20%, transparent 80%);
-            z-index: -2;
-        }
-
-        .space-glow-1, .space-glow-2 {
-            position: absolute; width: 600px; height: 600px; border-radius: 50%; filter: blur(160px); opacity: 0.1; z-index: -1;
-            animation: orbit 20s infinite alternate ease-in-out;
-        }
-        .space-glow-1 { background: radial-gradient(circle, rgb(var(--rgb-info)), transparent); top: -20%; left: -10%; }
-        .space-glow-2 { background: radial-gradient(circle, rgb(var(--rgb-danger)), transparent); bottom: -20%; right: -10%; animation-delay: -10s; }
-
-        @keyframes orbit {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(100px, -60px) scale(1.2); }
-        }
-
-        .container { width: 100%; max-width: 740px; position: relative; }
-
-        /* ==========================================================================
-           КОРПУС КАРТОЧКИ И БАННЕРЫ
-           ========================================================================== */
+        .container { width: 100%; max-width: 700px; }
         .status-panel {
-            background: var(--panel-surface); border: 1px solid var(--border-base); border-radius: 28px; padding: 56px;
-            backdrop-filter: blur(var(--panel-blur)) saturate(220%); -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(220%);
-            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8);
-            transition: border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--panel-surface); border: 1px solid var(--border-base); border-radius: 24px; padding: 45px;
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7);
         }
+        .panel-critical { border-color: rgba(var(--rgb-danger), 0.3); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(var(--rgb-danger), 0.05); }
+        .panel-warning { border-color: rgba(var(--rgb-warning), 0.3); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(var(--rgb-warning), 0.05); }
+        .panel-info { border-color: rgba(var(--rgb-info), 0.3); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(var(--rgb-info), 0.05); }
+        .panel-success { border-color: rgba(var(--rgb-success), 0.2); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(var(--rgb-success), 0.03); }
+        
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 900; letter-spacing: 2px; margin-bottom: 35px; text-transform: uppercase; }
+        .logo span { color: #fff; }
+        .logo b { color: rgb(var(--rgb-info)); }
 
-        .panel-critical { border-color: rgba(var(--rgb-danger), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-danger), 0.03), 0 0 60px rgba(var(--rgb-danger), 0.04); }
-        .panel-warning { border-color: rgba(var(--rgb-warning), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-warning), 0.03), 0 0 60px rgba(var(--rgb-warning), 0.04); }
-        .panel-info { border-color: rgba(var(--rgb-info), 0.25); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-info), 0.03), 0 0 60px rgba(var(--rgb-info), 0.04); }
-        .panel-success { border-color: rgba(var(--rgb-success), 0.18); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(var(--rgb-success), 0.02), 0 0 60px rgba(var(--rgb-success), 0.02); }
-        .logo { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 900; letter-spacing: 3px; margin-bottom: 44px; text-transform: uppercase; }
-        .logo span { background: linear-gradient(135deg, #fff, #99aaff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .logo b { color: rgb(var(--rgb-info)); font-weight: 900; text-shadow: 0 0 15px rgba(var(--rgb-info), 0.4); }
+        .alert-banner { display: flex; align-items: center; gap: 14px; padding: 18px 24px; border-radius: 14px; font-weight: 800; font-size: 13px; margin-bottom: 35px; text-transform: uppercase; }
+        .banner-critical { background: rgba(var(--rgb-danger), 0.05); color: rgb(var(--rgb-danger)); border: 1px solid rgba(var(--rgb-danger), 0.2); }
 
-        .alert-banner { display: flex; align-items: center; gap: 16px; padding: 20px 26px; border-radius: 16px; font-weight: 800; font-size: 13px; margin-bottom: 44px; text-transform: uppercase; letter-spacing: 1px; }
-        .banner-critical { background: rgba(var(--rgb-danger), 0.04); color: rgb(var(--rgb-danger)); border: 1px solid rgba(var(--rgb-danger), 0.15); }
-        .banner-warning { background: rgba(var(--rgb-warning), 0.04); color: rgb(var(--rgb-warning)); border: 1px solid rgba(var(--rgb-warning), 0.15); }
-        .banner-info { background: rgba(var(--rgb-info), 0.04); color: rgb(var(--rgb-info)); border: 1px solid rgba(var(--rgb-info), 0.15); }
-        .banner-success { background: rgba(var(--rgb-success), 0.03); color: rgb(var(--rgb-success)); border: 1px solid rgba(var(--rgb-success), 0.12); }
+        .pulse-core { width: 8px; height: 8px; border-radius: 50%; background-color: currentColor; animation: fluidBlinkRed var(--blink-speed) infinite ease-in-out; }
 
-        .pulse-core { width: 8px; height: 8px; border-radius: 50%; background-color: currentColor; }
-        .banner-critical .pulse-core { animation: fluidBlinkRed var(--blink-speed) infinite ease-in-out; }
-        .banner-warning .pulse-core { animation: fluidBlinkYellow var(--blink-speed) infinite ease-in-out; }
-        .banner-info .pulse-core { animation: fluidBlinkBlue var(--blink-speed) infinite ease-in-out; }
-        .banner-success .pulse-core { animation: fluidBlinkGreen var(--blink-speed) infinite ease-in-out; }
+        .incident-details h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+        .meta-info { font-size: 11px; color: #525a6c; display: flex; gap: 24px; margin-bottom: 28px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); padding-bottom: 16px; text-transform: uppercase; }
+        .meta-info strong { color: #f8fafc; }
+        .incident-text { font-size: 15px; color: #94a3b8; line-height: 1.7; margin-bottom: 40px; white-space: pre-line; }
 
-        .incident-details h2 {
-            font-size: var(--text-title-size); font-weight: 800; margin-bottom: 16px; line-height: 1.25; letter-spacing: -0.8px;
-            background: linear-gradient(180deg, #ffffff 60%, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .meta-info { font-size: 11px; color: #525a6c; display: flex; gap: 28px; margin-bottom: 36px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 24px; text-transform: uppercase; letter-spacing: 0.8px; }
-        .meta-info strong { color: #f8fafc; font-weight: 600; }
-        .incident-text { font-size: var(--text-body-size); color: #94a3b8; line-height: 1.75; margin-bottom: 56px; white-space: pre-line; }
-
-        .servers-section-title { font-size: 11px; color: #525a6c; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 20px; }
-        .mini-servers-list { display: flex; gap: 16px; }
-        .mini-server-badge { flex: 1; background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.02); padding: 20px 24px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .mini-server-badge:hover { background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+        .servers-section-title { font-size: 11px; color: #525a6c; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 15px; }
+        .mini-servers-list { display: flex; gap: 14px; }
+        .mini-server-badge { flex: 1; background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.03); padding: 16px 20px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
         .mini-server-badge span { color: #cbd5e1; }
 
         .dot-indicator { width: 8px; height: 8px; border-radius: 50%; }
@@ -120,159 +62,96 @@
         .dot-maintenance { background-color: rgb(var(--rgb-info)); animation: fluidBlinkBlue var(--blink-speed) infinite ease-in-out; }
 
         @keyframes fluidBlinkGreen {
-            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-success)), 0 0 14px 2px rgba(var(--rgb-success), 0.2); opacity: 0.65; transform: scale(0.95); }
-            50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-success)), 0 0 28px 8px rgba(var(--rgb-success), 0.45); opacity: 1; transform: scale(1.1); }
+            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-success)); opacity: 0.6; }
+            50% { box-shadow: 0 0 16px 4px rgb(var(--rgb-success)); opacity: 1; }
         }
         @keyframes fluidBlinkYellow {
-            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-warning)), 0 0 14px 2px rgba(var(--rgb-warning), 0.2); opacity: 0.65; transform: scale(0.95); }
-            50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-warning)), 0 0 28px 8px rgba(var(--rgb-warning), 0.45); opacity: 1; transform: scale(1.1); }
+            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-warning)); opacity: 0.6; }
+            50% { box-shadow: 0 0 16px 4px rgb(var(--rgb-warning)); opacity: 1; }
         }
         @keyframes fluidBlinkRed {
-            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-danger)), 0 0 14px 2px rgba(var(--rgb-danger), 0.2); opacity: 0.65; transform: scale(0.95); }
-            50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-danger)), 0 0 28px 8px rgba(var(--rgb-danger), 0.45); opacity: 1; transform: scale(1.1); }
+            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-danger)); opacity: 0.6; }
+            50% { box-shadow: 0 0 16px 4px rgb(var(--rgb-danger)); opacity: 1; }
         }
         @keyframes fluidBlinkBlue {
-            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-info)), 0 0 14px 2px rgba(var(--rgb-info), 0.2); opacity: 0.65; transform: scale(0.95); }
-            50% { box-shadow: 0 0 16px 5px rgb(var(--rgb-info)), 0 0 28px 8px rgba(var(--rgb-info), 0.45); opacity: 1; transform: scale(1.1); }
+            0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--rgb-info)); opacity: 0.6; }
+            50% { box-shadow: 0 0 16px 4px rgb(var(--rgb-info)); opacity: 1; }
         }
-
-        @media (max-width: 680px) {
-            .status-panel { padding: 40px 24px; }
-            .mini-servers-list { flex-direction: column; gap: 12px; }
-            .meta-info { flex-direction: column; gap: 10px; }
-        }
+        @media (max-width: 600px) { .mini-servers-list { flex-direction: column; gap: 10px; } }
     </style>
 </head>
 <body>
-    <div class="space-glow-1"></div>
-    <div class="space-glow-2"></div>
 
-    <script>
-        /* ==========================================================================
-           ГЛАВНЫЙ ТУМБЛЕР АДМИНИСТРАТОРА (Отдельная переменная)
-           ========================================================================== */
-        // Доступные режимы:
-        // 'success'      — Всё работает идеально (Сайт зеленый, баннер скрыт)
-        // 'maintenance'  — Плановые техработы (Сайт синий, баннер скрыт)
-        // 'critical'     — Экстренная авария сети (Сайт красный, баннер активен)
-        const CURRENT_SYSTEM_MODE = 'success'; 
-
-        /* ==========================================================================
-           ГОТОВЫЕ НАСТРОЕННЫЕ ПРЕСЕТЫ (Тексты внутри можно кастомизировать)
-           ========================================================================== */
-        const VPN_STATUS_PRESETS = {
-            
-            // 🟢 ПРЕСЕТ: ВСЁ РАБОТАЕТ ИДЕАЛЬНО
-            success: {
-                globalStatusType: 'success',
-                bannerMessage: '', 
-                mainTitle: 'Операционный статус инфраструктуры в норме',
-                incidentID: 'N/A',
-                customMessage: 'В настоящее время критических сбоев или плановых технических работ не зафиксировано. Все магистральные каналы связи функционируют на максимальной пропускной способности.\n\nСеть полностью стабильна. Вы можете использовать любую удобную локацию для подключения. Средний пинг и скорость скачивания находятся в пределах идеальных операционных показателей.',
-                serverStatuses: {
-                    node1Status: 'online',     
-                    node2Status: 'online', 
-                    node3Status: 'online'      
-                }
-            },
-
-            // 🔵 ПРЕСЕТ: ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ
-            maintenance: {
-                globalStatusType: 'info',
-                bannerMessage: '', 
-                mainTitle: 'Проводятся плановые технические работы',
-                incidentID: '#MNT-404',
-                customMessage: 'В данный момент инженеры проводят плановую модернизацию серверного ПО и оптимизацию таблиц маршрутизации для улучшения стабильности протоколов.\n\nВ связи с этим узел в Нидерландах временно переведен в режим обслуживания и может быть недоступен для новых сессий. Локации во Франции и Финляндии работают без ограничений.\n\nПлановое время окончания работ: в течение 1 часа. Приносим извинения за временные неудобства.',
-                serverStatuses: {
-                    node1Status: 'online',     
-                    node2Status: 'maintenance', 
-                    node3Status: 'online'      
-                }
-            },
-
-            // 🔴 ПРЕСЕТ: КРИТИЧЕСКИЙ СБОЙ
-            critical: {
-                globalStatusType: 'critical',
-                bannerMessage: 'Глобальный технический инцидент сети',
-                mainTitle: 'Авария на стороне магистрального провайдера Tier-1',
-                incidentID: '#ZNT-8840',
-                customMessage: 'Зафиксировано аварийное отключение сетевых маршрутов на стыке европейских дата-центров. Проблема вызвана техническим сбоем на стороне вышестоящего провайдера связи.\n\nВ связи с этим узел во Франции полностью изолирован. На сервере в Нидерландах наблюдается критическая деградация каналов: потеря пакетов составляет до 45%, а пинг увеличен в 4 раза.\n\nЧто делать пользователям:\n1. Вручную переключитесь на сервер Финляндия — трафик этого узла идет по изолированной кабельной системе, он полностью стабилен.\n2. При возникновении проблем с подключением, активируйте альтернативные протоколы в настройках вашего приложения.\n\nНаши специалисты совместно с инженерами ДЦ уже занимаются перемаршрутизацией сессий.',
-                serverStatuses: {
-                    node1Status: 'online',     
-                    node2Status: 'warning', 
-                    node3Status: 'offline'      
-                }
-            }
-        };
-
-        // Статические имена ваших локаций
-        const VPN_SERVER_NAMES = {
-            node1: 'Финляндия (HEL-1)',
-            node2: 'Нидерланды (AMS-1)',
-            node3: 'Франция (PR-1)'
-        };
-    </script>
     <div class="container">
         <div class="status-panel" id="mainPanel">
             
-            <!-- Логотип компании -->
             <div class="logo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:2px; color:rgb(var(--rgb-info)); filter:drop-shadow(0 0 8px rgba(0,183,255,0.4));"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 <span>Zenit<b>VPN</b></span>
             </div>
 
-            <!-- Главный статус-баннер -->
             <div class="alert-banner" id="alertBanner">
                 <div class="pulse-core"></div>
                 <span id="bannerText"></span>
             </div>
 
-            <!-- Секция описания инцидента -->
             <div class="incident-details">
                 <h2 id="incTitle"></h2>
-                
                 <div class="meta-info">
                     <span>ID операции: <strong id="incID"></strong></span>
                     <span>Обновлено: <strong id="incTime"></strong></span>
                 </div>
-
                 <p class="incident-text" id="incMessage"></p>
             </div>
 
-            <!-- Сетка 3-х серверов -->
             <p class="servers-section-title">Состояние узлов инфраструктуры</p>
             <div class="mini-servers-list">
-                <div class="mini-server-badge">
-                    <span id="name-node1"></span>
-                    <div class="dot-indicator" id="dot-node1"></div>
-                </div>
-                <div class="mini-server-badge">
-                    <span id="name-node2"></span>
-                    <div class="dot-indicator" id="dot-node2"></div>
-                </div>
-                <div class="mini-server-badge">
-                    <span id="name-node3"></span>
-                    <div class="dot-indicator" id="dot-node3"></div>
-                </div>
+                <div class="mini-server-badge"><span id="name-node1"></span><div class="dot-indicator" id="dot-node1"></div></div>
+                <div class="mini-server-badge"><span id="name-node2"></span><div class="dot-indicator" id="dot-node2"></div></div>
+                <div class="mini-server-badge"><span id="name-node3"></span><div class="dot-indicator" id="dot-node3"></div></div>
             </div>
 
         </div>
     </div>
 
-    <!-- Автоматический конфигуратор темы и сборщик страницы -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+        /* ==========================================================================
+           ГЛАВНЫЙ ТУМБЛЕР АДМИНИСТРАТОРА
+           ========================================================================== */
+        // Напишите 'success' — режим "Всё ок"
+        // Напишите 'maintenance' — режим "Техработы"
+        // Напишите 'critical' — режим "Авария"
+        const CURRENT_SYSTEM_MODE = 'success'; 
+
+        const VPN_STATUS_PRESETS = {
+            success: {
+                globalStatusType: 'success', bannerMessage: '', 
+                mainTitle: 'Все системы работают штатно', incidentID: 'N/A',
+                customMessage: 'Критических сбоев не зафиксировано. Магистральные каналы функционируют на максимальной пропускной способности. Сеть полностью стабильна.',
+                serverStatuses: { node1Status: 'online', node2Status: 'online', node3Status: 'online' }
+            },
+            maintenance: {
+                globalStatusType: 'info', bannerMessage: '', 
+                mainTitle: 'Проводятся плановые технические работы', incidentID: '#MNT-404',
+                customMessage: 'Проводим оптимизацию маршрутизации для улучшения стабильности протоколов. Узел в Нидерландах временно переведен в режим обслуживания.',
+                serverStatuses: { node1Status: 'online', node2Status: 'maintenance', node3Status: 'online' }
+            },
+            critical: {
+                globalStatusType: 'critical', bannerMessage: 'Глобальный технический инцидент сети',
+                mainTitle: 'Авария на стороне магистрального провайдера', incidentID: '#ZNT-8840',
+                customMessage: 'Зафиксировано аварийное отключение сетевых маршрутов. Франция полностью изолирована. В Нидерландах наблюдается потеря пакетов до 45%.\n\nРекомендуем вручную переключиться на Финляндию.',
+                serverStatuses: { node1Status: 'online', node2Status: 'warning', node3Status: 'offline' }
+            }
+        };
+
+        const VPN_SERVER_NAMES = { node1: 'Финляндия (Helsinki)', node2: 'Нидерланды (Amsterdam)', node3: 'Франция (Paris)' };
+
+        function updateStatusDisplay() {
             const activeMode = CURRENT_SYSTEM_MODE;
             const data = VPN_STATUS_PRESETS[activeMode] || VPN_STATUS_PRESETS['success'];
             
-            // Вычисление локального времени пользователя при открытии страницы
-            const now = new Date();
-            const formattedTime = now.toLocaleString('ru-RU', { 
-                day: '2digit', month: '2digit', year: 'numeric', 
-                hour: '2digit', minute: '2digit', timeZoneName: 'short'
-            });
+            const formattedTime = new Date().toLocaleString('ru-RU', { day: '2digit', month: '2digit', year: 'numeric', hour: '2digit', minute: '2digit', timeZoneName: 'short' });
 
-            // Настройка отображения верхнего баннера аварии
             const banner = document.getElementById('alertBanner');
             if (activeMode === 'success' || activeMode === 'maintenance') {
                 banner.style.display = 'none'; 
@@ -282,24 +161,29 @@
                 document.getElementById('bannerText').innerText = data.bannerMessage;
             }
 
-            // Назначение темы (цвета рамки и свечений) главной панели
             document.getElementById('mainPanel').className = `status-panel panel-${data.globalStatusType}`;
-            
-            // Отрендерить тексты на странице
             document.getElementById('incTitle').innerText = data.mainTitle;
             document.getElementById('incID').innerText = data.incidentID;
             document.getElementById('incTime').innerText = formattedTime;
             document.getElementById('incMessage').innerText = data.customMessage;
-
-            // Присвоить названия локациям серверов
+            
             document.getElementById('name-node1').innerText = VPN_SERVER_NAMES.node1;
             document.getElementById('name-node2').innerText = VPN_SERVER_NAMES.node2;
             document.getElementById('name-node3').innerText = VPN_SERVER_NAMES.node3;
-
-            // Активировать правильные стили мигания для индикаторов узлов
+            
             document.getElementById('dot-node1').className = `dot-indicator dot-${data.serverStatuses.node1Status}`;
             document.getElementById('dot-node2').className = `dot-indicator dot-${data.serverStatuses.node2Status}`;
             document.getElementById('dot-node3').className = `dot-indicator dot-${data.serverStatuses.node3Status}`;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateStatusDisplay();
+            
+            // Обновление времени каждую минуту
+            setInterval(() => {
+                const formattedTime = new Date().toLocaleString('ru-RU', { day: '2digit', month: '2digit', year: 'numeric', hour: '2digit', minute: '2digit', timeZoneName: 'short' });
+                document.getElementById('incTime').innerText = formattedTime;
+            }, 60000);
         });
     </script>
 </body>
