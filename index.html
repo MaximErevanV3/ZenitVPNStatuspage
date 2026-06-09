@@ -4,233 +4,608 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZenitVPN — Статус Систем</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* ==========================================================================
-           ДИЗАЙН И СТИЛИ ИНТЕРФЕЙСА (Все в одном файле)
-           ========================================================================== */
         :root {
-            --bg-dark: #020306;             
-            --panel-surface: rgba(8, 11, 21, 0.65); 
-            --border-base: rgba(255, 255, 255, 0.04); 
-            --color-success: #00ffaa;     
-            --color-warning: #ffaa00;     
-            --color-danger: #ff2e51;      
-            --color-info: #00b7ff;        
-            --blink-speed: 1.4s;            
+            --bg: #04060f;
+            --surface: rgba(8, 12, 26, 0.8);
+            --surface-raised: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.06);
+            --border-strong: rgba(255,255,255,0.1);
+
+            --green: #00dda0;
+            --yellow: #ffb020;
+            --red: #ff3358;
+            --blue: #4da6ff;
+            --purple: #a78bfa;
+
+            --text-1: #eef2ff;
+            --text-2: #8892aa;
+            --text-3: #404866;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg-dark);
-            color: #ffffff;
-            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-1);
+            font-family: 'Inter', system-ui, sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        /* ── Scanline texture ── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.07) 2px,
+                rgba(0,0,0,0.07) 4px
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Background ── */
+        .bg-layer {
+            position: fixed; inset: 0;
+            z-index: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+        }
+        .bg-orb-1 { width:700px;height:700px; background:rgba(77,166,255,0.055); top:-250px;left:-200px; }
+        .bg-orb-2 { width:500px;height:500px; background:rgba(0,221,160,0.04); bottom:-200px;right:-100px; }
+        .bg-orb-3 { width:300px;height:300px; background:rgba(167,139,250,0.035); top:40%;left:50%;transform:translateX(-50%); }
+
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%);
+        }
+
+        /* ── Container ── */
+        .container {
+            width: 100%; max-width: 700px;
+            position: relative; z-index: 1;
+            animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        @keyframes fadeUp {
+            from { opacity:0; transform: translateY(18px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+
+        /* ── Top bar (outside card) ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 9px;
+        }
+        .logo-shield {
+            width: 28px; height: 28px;
+            background: linear-gradient(135deg, rgba(77,166,255,0.18), rgba(77,166,255,0.06));
+            border: 1px solid rgba(77,166,255,0.22);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--blue);
+        }
+        .logo-name {
+            font-size: 12.5px; font-weight: 800;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--text-1);
+        }
+        .logo-name b { color: var(--blue); }
+
+        .topbar-right {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 10.5px; font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
+        }
+        .live-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--green);
+            animation: livepulse 2.2s ease-in-out infinite;
+        }
+        @keyframes livepulse {
+            0%,100% { opacity:.5; box-shadow: 0 0 0 0 rgba(0,221,160,0.5); }
+            50%      { opacity:1; box-shadow: 0 0 0 4px rgba(0,221,160,0); }
+        }
+
+        /* ── Main Card ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.025) inset,
+                0 40px 100px rgba(0,0,0,0.7),
+                0 8px 30px rgba(0,0,0,0.4);
+            transition: border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+        .card.theme-success  { border-color: rgba(0,221,160,0.14);  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(0,221,160,0.04); }
+        .card.theme-warning  { border-color: rgba(255,176,32,0.2);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(255,176,32,0.05); }
+        .card.theme-critical { border-color: rgba(255,51,88,0.22);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(255,51,88,0.06); }
+        .card.theme-info     { border-color: rgba(77,166,255,0.2);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(77,166,255,0.05); }
+
+        /* ── Alert Banner (top strip of card) ── */
+        .alert-strip {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 28px;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 1.2px; text-transform: uppercase;
+            border-bottom: 1px solid transparent;
+        }
+        .alert-strip.visible { display: flex; }
+        .alert-strip.strip-critical {
+            background: rgba(255,51,88,0.07);
+            border-bottom-color: rgba(255,51,88,0.15);
+            color: var(--red);
+        }
+        .alert-strip.strip-warning {
+            background: rgba(255,176,32,0.07);
+            border-bottom-color: rgba(255,176,32,0.15);
+            color: var(--yellow);
+        }
+        .strip-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: currentColor; flex-shrink: 0;
+            animation: pulse-strip 1.4s ease-in-out infinite;
+        }
+        @keyframes pulse-strip {
+            0%,100% { opacity:.5; }
+            50% { opacity:1; box-shadow: 0 0 8px 3px currentColor; }
+        }
+
+        /* ── Card Body ── */
+        .card-body { padding: 32px 36px 28px; }
+
+        /* ── Overall status pill ── */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 0.8px; text-transform: uppercase;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+        }
+        .pill-success  { background: rgba(0,221,160,0.08);  border-color: rgba(0,221,160,0.18);  color: var(--green); }
+        .pill-warning  { background: rgba(255,176,32,0.08); border-color: rgba(255,176,32,0.2);  color: var(--yellow); }
+        .pill-critical { background: rgba(255,51,88,0.08);  border-color: rgba(255,51,88,0.2);   color: var(--red); }
+        .pill-info     { background: rgba(77,166,255,0.08); border-color: rgba(77,166,255,0.2);  color: var(--blue); }
+        .pill-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: currentColor;
+            animation: livepulse 2s ease-in-out infinite;
+        }
+
+        .incident-title {
+            font-size: 24px; font-weight: 800;
+            line-height: 1.2; letter-spacing: -0.5px;
+            color: var(--text-1);
+            margin-bottom: 10px;
+        }
+        .incident-body {
+            font-size: 13.5px; color: var(--text-2);
+            line-height: 1.75; margin-bottom: 28px;
+            white-space: pre-line;
+            max-width: 560px;
+        }
+
+        /* ── Meta strip ── */
+        .meta-strip {
+            display: flex; gap: 0;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+        .meta-cell {
+            flex: 1; padding: 12px 18px;
+            border-right: 1px solid var(--border);
+        }
+        .meta-cell:last-child { border-right: none; }
+        .meta-label {
+            font-size: 9.5px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 4px;
+        }
+        .meta-value {
+            font-size: 12px; font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-2);
+        }
+
+        /* ── Servers ── */
+        .servers-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .servers-label {
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-3);
+        }
+        .servers-count {
+            font-size: 10px; font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
+        }
+
+        .servers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .server-card {
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
             position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s, background 0.3s;
+            animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .server-card:nth-child(1) { animation-delay: 0.05s; }
+        .server-card:nth-child(2) { animation-delay: 0.10s; }
+        .server-card:nth-child(3) { animation-delay: 0.15s; }
+
+        /* Thin top accent line per status */
+        .server-card::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 1px;
+        }
+        .server-card.status-online::after    { background: linear-gradient(90deg, transparent, rgba(0,221,160,0.5), transparent); }
+        .server-card.status-warning::after   { background: linear-gradient(90deg, transparent, rgba(255,176,32,0.5), transparent); }
+        .server-card.status-offline::after   { background: linear-gradient(90deg, transparent, rgba(255,51,88,0.5), transparent); }
+        .server-card.status-maintenance::after { background: linear-gradient(90deg, transparent, rgba(77,166,255,0.5), transparent); }
+
+        .server-card.status-online      { border-color: rgba(0,221,160,0.12); }
+        .server-card.status-warning     { border-color: rgba(255,176,32,0.18); background: rgba(255,176,32,0.025); }
+        .server-card.status-offline     { border-color: rgba(255,51,88,0.18);  background: rgba(255,51,88,0.025); }
+        .server-card.status-maintenance { border-color: rgba(77,166,255,0.18); background: rgba(77,166,255,0.025); }
+
+        .server-top {
+            display: flex; align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .server-flag { font-size: 20px; line-height: 1; }
+        .server-dot {
+            width: 7px; height: 7px; border-radius: 50%; margin-top: 2px;
+        }
+        .status-online    .server-dot { background: var(--green);  animation: glow-g 1.8s ease-in-out infinite; }
+        .status-warning   .server-dot { background: var(--yellow); animation: glow-y 1.4s ease-in-out infinite; }
+        .status-offline   .server-dot { background: var(--red);    animation: glow-r 1.2s ease-in-out infinite; }
+        .status-maintenance .server-dot { background: var(--blue); animation: glow-b 2s ease-in-out infinite; }
+
+        @keyframes glow-g { 0%,100%{box-shadow:0 0 4px 1px rgba(0,221,160,0.4);opacity:.6}50%{box-shadow:0 0 10px 4px rgba(0,221,160,0.7);opacity:1} }
+        @keyframes glow-y { 0%,100%{box-shadow:0 0 4px 1px rgba(255,176,32,0.4);opacity:.6}50%{box-shadow:0 0 10px 4px rgba(255,176,32,0.7);opacity:1} }
+        @keyframes glow-r { 0%,100%{box-shadow:0 0 4px 1px rgba(255,51,88,0.4);opacity:.6}50%{box-shadow:0 0 10px 4px rgba(255,51,88,0.7);opacity:1} }
+        @keyframes glow-b { 0%,100%{box-shadow:0 0 4px 1px rgba(77,166,255,0.4);opacity:.6}50%{box-shadow:0 0 10px 4px rgba(77,166,255,0.7);opacity:1} }
+
+        .server-name {
+            font-size: 12.5px; font-weight: 700;
+            color: var(--text-1); margin-bottom: 2px;
+        }
+        .server-code {
+            font-size: 10px; font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
         }
 
-        /* Фоновые неоновые сферы */
-        body::before, body::after {
-            content: ''; position: absolute; width: 450px; height: 450px; border-radius: 50%; filter: blur(140px); opacity: 0.08; z-index: -1;
+        /* Uptime bar */
+        .uptime-bar-wrap {
+            margin-top: 12px;
         }
-        body::before { background: radial-gradient(circle, var(--color-info), transparent); top: -10%; left: -10%; }
-        body::after { background: radial-gradient(circle, var(--color-danger), transparent); bottom: -10%; right: -10%; }
+        .uptime-bar-label {
+            display: flex; justify-content: space-between;
+            font-size: 9.5px; color: var(--text-3);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+        }
+        .uptime-bar-track {
+            height: 3px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .uptime-bar-fill {
+            height: 100%; border-radius: 2px;
+            transition: width 1s cubic-bezier(0.22,1,0.36,1);
+        }
+        .status-online    .uptime-bar-fill { background: var(--green); width: 99.8%; }
+        .status-warning   .uptime-bar-fill { background: var(--yellow); width: 81%; }
+        .status-offline   .uptime-bar-fill { background: var(--red); width: 0%; }
+        .status-maintenance .uptime-bar-fill { background: var(--blue); width: 100%; }
 
-        .container { width: 100%; max-width: 700px; }
+        .status-label-text {
+            font-size: 10px; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.3px; margin-top: 6px;
+        }
+        .status-online    .status-label-text { color: var(--green); }
+        .status-warning   .status-label-text { color: var(--yellow); }
+        .status-offline   .status-label-text { color: var(--red); }
+        .status-maintenance .status-label-text { color: var(--blue); }
 
-        /* Главный стеклянный корпус */
-        .status-panel {
-            background: var(--panel-surface); 
-            border: 1px solid var(--border-base); 
-            border-radius: 24px; 
-            padding: 45px;
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7);
-            transition: all 0.5s ease;
+        /* ── Footer ── */
+        .card-footer {
+            padding: 14px 36px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(0,0,0,0.15);
+        }
+        .footer-left {
+            font-size: 10px; font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
+        }
+        .footer-right {
+            display: flex; align-items: center; gap: 16px;
+        }
+        .footer-badge {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 10px; font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
+        }
+        .footer-badge-dot {
+            width: 5px; height: 5px; border-radius: 50%;
         }
 
-        /* Динамические рамки под каждый статус */
-        .panel-critical { border-color: rgba(255, 46, 81, 0.3); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(255, 46, 81, 0.05); }
-        .panel-warning { border-color: rgba(255, 170, 0, 0.3); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(255, 170, 0, 0.05); }
-        .panel-info { border-color: rgba(0, 183, 255, 0.3); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 183, 255, 0.05); }
-        .panel-success { border-color: rgba(0, 255, 170, 0.2); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 255, 170, 0.03); }
-        
-        .logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 900; letter-spacing: 2px; margin-bottom: 35px; text-transform: uppercase; }
-        .logo span { color: #fff; }
-        .logo b { color: var(--color-info); }
-
-        /* Верхний экстренный баннер */
-        .alert-banner { display: flex; align-items: center; gap: 14px; padding: 18px 24px; border-radius: 14px; font-weight: 800; font-size: 13px; margin-bottom: 35px; text-transform: uppercase; }
-        .banner-critical { background: rgba(255, 46, 81, 0.05); color: var(--color-danger); border: 1px solid rgba(255, 46, 81, 0.2); }
-
-        .pulse-core { width: 8px; height: 8px; border-radius: 50%; background-color: currentColor; animation: blinkRed var(--blink-speed) infinite ease-in-out; }
-
-        .incident-details h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.5px; }
-        .meta-info { font-size: 11px; color: #525a6c; display: flex; gap: 24px; margin-bottom: 28px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); padding-bottom: 16px; text-transform: uppercase; }
-        .meta-info strong { color: #f8fafc; }
-        .incident-text { font-size: 15px; color: #94a3b8; line-height: 1.7; margin-bottom: 40px; white-space: pre-line; }
-
-        .servers-section-title { font-size: 11px; color: #525a6c; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 15px; }
-        .mini-servers-list { display: flex; gap: 14px; }
-        .mini-server-badge { flex: 1; background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.03); padding: 16px 20px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
-        .mini-server-badge span { color: #cbd5e1; }
-
-        /* Лампочки серверов и их анимации пульсации */
-        .dot-indicator { width: 8px; height: 8px; border-radius: 50%; }
-        .dot-online { background-color: var(--color-success); animation: blinkGreen var(--blink-speed) infinite ease-in-out; }
-        .dot-warning { background-color: var(--color-warning); animation: blinkYellow var(--blink-speed) infinite ease-in-out; }
-        .dot-offline { background-color: var(--color-danger); animation: blinkRed var(--blink-speed) infinite ease-in-out; }
-        .dot-maintenance { background-color: var(--color-info); animation: blinkBlue var(--blink-speed) infinite ease-in-out; }
-
-        @keyframes blinkGreen { 0%, 100% { box-shadow: 0 0 6px 1px var(--color-success); opacity: 0.6; } 50% { box-shadow: 0 0 16px 4px var(--color-success); opacity: 1; } }
-        @keyframes blinkYellow { 0%, 100% { box-shadow: 0 0 6px 1px var(--color-warning); opacity: 0.6; } 50% { box-shadow: 0 0 16px 4px var(--color-warning); opacity: 1; } }
-        @keyframes blinkRed { 0%, 100% { box-shadow: 0 0 6px 1px var(--color-danger); opacity: 0.6; } 50% { box-shadow: 0 0 16px 4px var(--color-danger); opacity: 1; } }
-        @keyframes blinkBlue { 0%, 100% { box-shadow: 0 0 6px 1px var(--color-info); opacity: 0.6; } 50% { box-shadow: 0 0 16px 4px var(--color-info); opacity: 1; } }
-
-        @media (max-width: 600px) { .mini-servers-list { flex-direction: column; gap: 10px; } }
+        @media (max-width: 580px) {
+            .card-body { padding: 24px 20px 20px; }
+            .card-footer { padding: 12px 20px; }
+            .servers-grid { grid-template-columns: 1fr; }
+            .incident-title { font-size: 20px; }
+            .meta-strip { flex-direction: column; }
+            .meta-cell { border-right: none; border-bottom: 1px solid var(--border); }
+            .meta-cell:last-child { border-bottom: none; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
     </style>
 </head>
 <body>
 
-    <script>
-        /* ==========================================================================
-           ГЛАВНЫЙ ТУМБЛЕР АДМИНИСТРАТОРА (Укажите нужный режим здесь)
-           ========================================================================== */
-        // 'success'      — Всё работает отлично (Зеленый режим, верхний баннер скрыт)
-        // 'maintenance'  — Плановое техобслуживание (Синий режим, верхний баннер скрыт)
-        // 'critical'     — Экстренный сбой / Авария (Красный режим, верхний баннер активен)
-        const CURRENT_SYSTEM_MODE = 'success'; 
+<div class="bg-layer">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+</div>
+<div class="bg-grid"></div>
 
-        /* ==========================================================================
-           БАЗА ДАННЫХ ДЛЯ ПРЕСЕТОВ
-           ========================================================================== */
-        const VPN_STATUS_PRESETS = {
-            success: {
-                theme: 'success',
-                bannerText: '', 
-                title: 'Операционный статус инфраструктуры в норме',
-                id: 'N/A',
-                message: 'В настоящее время критических сбоев или плановых технических работ не зафиксировано. Все магистральные каналы связи функционируют на максимальной пропускной способности. Сеть полностью стабильна.',
-                statuses: { node1: 'online', node2: 'online', node3: 'online' }
-            },
-            maintenance: {
-                theme: 'info',
-                bannerText: '', 
-                title: 'Проводятся плановые технические работы',
-                id: '#MNT-404',
-                message: 'В данный момент инженеры проводят плановую модернизацию серверного ПО и оптимизацию таблиц маршрутизации для улучшения стабильности протоколов. Узел в Нидерландах временно переведен в режим обслуживания.',
-                statuses: { node1: 'online', node2: 'maintenance', node3: 'online' }
-            },
-            critical: {
-                theme: 'critical',
-                bannerText: 'Повышенная нагрузка на сеть',
-                title: 'Замедление сетевых узлов',
-                id: '#ZNT-0002',
-                message: 'Зафиксирована повышенная нагрузка на сетевые узлы всех трех серверов.Возможно замедление сети и недоступность серверов',
-                statuses: { node1: 'warning', node2: 'warning', node3: 'warning' }
-            }
-        };
+<!-- =====================================================
+     ТУМБЛЕР РЕЖИМА — ИЗМЕНИТЬ ЗДЕСЬ
+     'success' | 'maintenance' | 'critical' | 'warning'
+     ===================================================== -->
+<script>
+    const CURRENT_SYSTEM_MODE = 'success';
 
-        const VPN_SERVER_NAMES = {
-            node1: 'Финляндия (HEL-1)',
-            node2: 'Нидерланды (AMS-1)',
-            node3: 'Франция (PR-1)'
-        };
-    </script>
+    const PRESETS = {
+        success: {
+            theme: 'success',
+            pill: { cls: 'pill-success', text: 'Все системы работают' },
+            banner: null,
+            title: 'Инфраструктура в норме',
+            id: '—',
+            message: 'Критических сбоев и плановых технических работ не зафиксировано. Все магистральные каналы функционируют на максимальной пропускной способности.',
+            nodes: { node1: 'online', node2: 'online', node3: 'online' }
+        },
+        maintenance: {
+            theme: 'info',
+            pill: { cls: 'pill-info', text: 'Техническое обслуживание' },
+            banner: null,
+            title: 'Плановые технические работы',
+            id: '#MNT-404',
+            message: 'Инженеры проводят модернизацию серверного ПО и оптимизацию таблиц маршрутизации. Узел в Нидерландах временно переведён в режим обслуживания.',
+            nodes: { node1: 'online', node2: 'maintenance', node3: 'online' }
+        },
+        critical: {
+            theme: 'critical',
+            pill: { cls: 'pill-critical', text: 'Критический сбой' },
+            banner: { cls: 'strip-critical', text: 'Зафиксирован критический сбой' },
+            title: 'Аварийное отключение узла',
+            id: '#ZNT-0001',
+            message: 'Узел в Финляндии недоступен. Трафик перенаправлен на резервные серверы. Инженеры устанавливают причину инцидента.',
+            nodes: { node1: 'offline', node2: 'online', node3: 'online' }
+        },
+        warning: {
+            theme: 'warning',
+            pill: { cls: 'pill-warning', text: 'Повышенная нагрузка' },
+            banner: { cls: 'strip-warning', text: 'Повышенная нагрузка на сеть' },
+            title: 'Замедление сетевых узлов',
+            id: '#ZNT-0002',
+            message: 'Зафиксирована повышенная нагрузка на все три узла. Возможны замедления и кратковременная недоступность серверов.',
+            nodes: { node1: 'warning', node2: 'warning', node3: 'warning' }
+        }
+    };
 
-    <div class="container">
-        <div class="status-panel" id="mainPanel">
-            
-            <!-- Логотип -->
-            <div class="logo">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>Zenit<b>VPN</b></span>
+    const NODE_NAMES = {
+        node1: { name: 'Финляндия', code: 'HEL-1', flag: '🇫🇮' },
+        node2: { name: 'Нидерланды', code: 'AMS-1', flag: '🇳🇱' },
+        node3: { name: 'Франция',    code: 'CDG-1', flag: '🇫🇷' }
+    };
+
+    const STATUS_LABELS = {
+        online:      'Online',
+        offline:     'Offline',
+        warning:     'Degraded',
+        maintenance: 'Maintenance'
+    };
+
+    const UPTIME_VALUES = {
+        online:      '99.8%',
+        offline:     '0.0%',
+        warning:     '81.3%',
+        maintenance: '100%'
+    };
+</script>
+
+<div class="container">
+
+    <!-- Top bar outside card -->
+    <div class="topbar">
+        <div class="logo">
+            <div class="logo-shield">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <div class="logo-name">Zenit<b>VPN</b></div>
+        </div>
+        <div class="topbar-right">
+            <div class="live-dot"></div>
+            <span id="topTime"></span>
+        </div>
+    </div>
+
+    <div class="card" id="mainCard">
+
+        <!-- Alert strip (top of card) -->
+        <div class="alert-strip" id="alertStrip">
+            <div class="strip-dot"></div>
+            <span id="stripText"></span>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+
+            <div class="status-pill" id="statusPill">
+                <div class="pill-dot"></div>
+                <span id="pillText"></span>
             </div>
 
-            <!-- Баннер ошибки -->
-            <div class="alert-banner" id="alertBanner">
-                <div class="pulse-core"></div>
-                <span id="bannerText"></span>
+            <h1 class="incident-title" id="incTitle"></h1>
+            <p class="incident-body" id="incBody"></p>
+
+            <!-- Meta cells -->
+            <div class="meta-strip">
+                <div class="meta-cell">
+                    <div class="meta-label">ID инцидента</div>
+                    <div class="meta-value" id="incID"></div>
+                </div>
+                <div class="meta-cell">
+                    <div class="meta-label">Обновлено</div>
+                    <div class="meta-value" id="incTime"></div>
+                </div>
+                <div class="meta-cell">
+                    <div class="meta-label">Всего узлов</div>
+                    <div class="meta-value">3 / 3</div>
+                </div>
             </div>
 
-            <!-- Текстовый блок -->
-            <div class="incident-details">
-                <h2 id="incTitle"></h2>
-                <div class="meta-info">
-                    <span>ID операции: <strong id="incID"></strong></span>
-                    <span>Обновлено: <strong id="incTime"></strong></span>
-                </div>
-                <p class="incident-text" id="incMessage"></p>
+            <!-- Servers -->
+            <div class="servers-header">
+                <span class="servers-label">Состояние узлов</span>
+                <span class="servers-count" id="nodesOnlineCount"></span>
             </div>
+            <div class="servers-grid" id="serversGrid"></div>
+        </div>
 
-            <!-- Локации -->
-            <p class="servers-section-title">Состояние узлов инфраструктуры</p>
-            <div class="mini-servers-list">
-                <div class="mini-server-badge">
-                    <span id="name-node1">Финляндия (Helsinki)</span>
-                    <div class="dot-indicator" id="dot-node1"></div>
-                </div>
-                <div class="mini-server-badge">
-                    <span id="name-node2">Нидерланды (Amsterdam)</span>
-                    <div class="dot-indicator" id="dot-node2"></div>
-                </div>
-                <div class="mini-server-badge">
-                    <span id="name-node3">Франция (Paris)</span>
-                    <div class="dot-indicator" id="dot-node3"></div>
+        <!-- Footer -->
+        <div class="card-footer">
+            <span class="footer-left">zenitVPN infrastructure monitor</span>
+            <div class="footer-right">
+                <div class="footer-badge">
+                    <div class="footer-badge-dot" style="background:var(--green); animation: glow-g 2s ease-in-out infinite;"></div>
+                    <span>автообновление</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const mode = CURRENT_SYSTEM_MODE;
-            const data = VPN_STATUS_PRESETS[mode] || VPN_STATUS_PRESETS['success'];
-            
-            // Текущее системное время обновления
-            const formattedTime = new Date().toLocaleString('ru-RU', {
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit', 
-                minute: '2-digit', 
-                timeZoneName: 'short'
-            });
-            
-            // Показ/скрытие верхнего баннера
-            const banner = document.getElementById('alertBanner');
-            if (mode === 'success' || mode === 'maintenance') {
-                banner.style.display = 'none';
-            } else {
-                banner.style.display = 'flex';
-                banner.className = `alert-banner banner-${data.theme}`;
-                document.getElementById('bannerText').innerText = data.bannerText;
-            }
-            
-            // Применение классов оформления к главной панели
-            document.getElementById('mainPanel').className = `status-panel panel-${data.theme}`;
-            
-            // Вывод текстов
-            document.getElementById('incTitle').innerText = data.title;
-            document.getElementById('incID').innerText = data.id;
-            document.getElementById('incTime').innerText = formattedTime;
-            document.getElementById('incMessage').innerText = data.message;
-            
-            // Вывод имен серверов
-            document.getElementById('name-node1').innerText = VPN_SERVER_NAMES.node1;
-            document.getElementById('name-node2').innerText = VPN_SERVER_NAMES.node2;
-            document.getElementById('name-node3').innerText = VPN_SERVER_NAMES.node3;
-            
-            // Подключение классов мигания лампочек
-            document.getElementById('dot-node1').className = `dot-indicator dot-${data.statuses.node1}`;
-            document.getElementById('dot-node2').className = `dot-indicator dot-${data.statuses.node2}`;
-            document.getElementById('dot-node3').className = `dot-indicator dot-${data.statuses.node3}`;
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const mode = CURRENT_SYSTEM_MODE;
+        const data = PRESETS[mode] || PRESETS.success;
+
+        const now = new Date();
+        const timeStr = now.toLocaleString('ru-RU', {
+            day:'2-digit', month:'2-digit', year:'numeric',
+            hour:'2-digit', minute:'2-digit'
         });
-    </script>
+        document.getElementById('topTime').textContent = timeStr;
+
+        // Card theme
+        document.getElementById('mainCard').className = `card theme-${data.theme}`;
+
+        // Alert strip
+        const strip = document.getElementById('alertStrip');
+        if (data.banner) {
+            strip.classList.add('visible', data.banner.cls);
+            document.getElementById('stripText').textContent = data.banner.text;
+        }
+
+        // Status pill
+        const pill = document.getElementById('statusPill');
+        pill.className = `status-pill ${data.pill.cls}`;
+        document.getElementById('pillText').textContent = data.pill.text;
+
+        // Text
+        document.getElementById('incTitle').textContent = data.title;
+        document.getElementById('incBody').textContent  = data.message;
+        document.getElementById('incID').textContent    = data.id;
+        document.getElementById('incTime').textContent  = timeStr;
+
+        // Online count
+        const onlineCount = Object.values(data.nodes).filter(s => s === 'online').length;
+        document.getElementById('nodesOnlineCount').textContent = `${onlineCount} из 3 онлайн`;
+
+        // Build server cards
+        const grid = document.getElementById('serversGrid');
+        Object.entries(data.nodes).forEach(([id, status]) => {
+            const node = NODE_NAMES[id];
+            const card = document.createElement('div');
+            card.className = `server-card status-${status}`;
+            card.innerHTML = `
+                <div class="server-top">
+                    <div class="server-flag">${node.flag}</div>
+                    <div class="server-dot"></div>
+                </div>
+                <div class="server-name">${node.name}</div>
+                <div class="server-code">${node.code}</div>
+                <div class="uptime-bar-wrap">
+                    <div class="uptime-bar-label">
+                        <span>uptime</span>
+                        <span>${UPTIME_VALUES[status]}</span>
+                    </div>
+                    <div class="uptime-bar-track">
+                        <div class="uptime-bar-fill"></div>
+                    </div>
+                </div>
+                <div class="status-label-text">${STATUS_LABELS[status]}</div>
+            `;
+            grid.appendChild(card);
+        });
+    });
+</script>
+
 </body>
-</html>
+    </html>
