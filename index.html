@@ -405,7 +405,7 @@
      'success' | 'maintenance' | 'critical' | 'warning'
      ===================================================== -->
 <script>
-    const CURRENT_SYSTEM_MODE = 'success';
+    const CURRENT_SYSTEM_MODE = 'maintenance';
 
     const PRESETS = {
         success: {
@@ -423,8 +423,8 @@
             banner: null,
             title: 'Плановые технические работы',
             id: '#MNT-404',
-            message: 'Инженеры проводят модернизацию серверного ПО и оптимизацию таблиц маршрутизации. Узел в Нидерландах временно переведён в режим обслуживания.',
-            nodes: { node1: 'online', node2: 'maintenance', node3: 'online' }
+            message: 'Инженеры проводят модернизацию серверного ПО и обновление SSL-сертефикатов. Узел в Нидерландах и Финляндии временно переведён в режим обслуживания.',
+            nodes: { node1: 'maintenance', node2: 'maintenance', node3: 'online' }
         },
         critical: {
             theme: 'critical',
