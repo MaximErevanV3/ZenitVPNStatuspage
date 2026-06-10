@@ -81,6 +81,7 @@
 
         async function checkSession() {
             const { data: { session } } = await supabase.auth.getSession();
+            console.log('Сессия:', session);
             if (session) { showAdmin(); } else { showLogin(); }
         }
         function showLogin() {
@@ -96,9 +97,14 @@
         window.signIn = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) { document.getElementById('loginError').textContent = error.message; }
-            else { showAdmin(); }
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                console.error('Ошибка входа:', error);
+                document.getElementById('loginError').textContent = error.message;
+            } else {
+                console.log('Успешный вход, сессия:', data.session);
+                showAdmin();
+            }
         };
 
         window.signOut = async () => {
@@ -121,21 +127,30 @@
                 return;
             }
 
-            // Сбрасываем активность у всех
-            const { error: updateError } = await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
+            console.log('Попытка создать инцидент:', { status, title, message, nodes });
+
+            // Сбрасываем is_active у всех
+            const { error: updateError } = await supabase
+                .from('incidents')
+                .update({ is_active: false })
+                .eq('is_active', true);
+
             if (updateError) {
                 console.error('Ошибка сброса is_active:', updateError);
                 document.getElementById('createError').textContent = 'Ошибка сброса старых: ' + updateError.message;
                 return;
             }
 
-            const { error: insertError } = await supabase.from('incidents').insert([{
-                title, message, status, affected_nodes: nodes, is_active: true
-            }]);
+            const { data, error: insertError } = await supabase
+                .from('incidents')
+                .insert([{ title, message, status, affected_nodes: nodes, is_active: true }])
+                .select();
+
             if (insertError) {
-                console.error('Ошибка создания инцидента:', insertError);
-                document.getElementById('createError').textContent = insertError.message;
+                console.error('Ошибка вставки инцидента:', insertError);
+                document.getElementById('createError').textContent = 'Ошибка создания: ' + insertError.message;
             } else {
+                console.log('Инцидент создан:', data);
                 document.getElementById('createError').textContent = '';
                 document.getElementById('incTitle').value = '';
                 document.getElementById('incMessage').value = '';
@@ -144,10 +159,24 @@
         };
 
         async function loadIncidents() {
-            const { data: active } = await supabase.from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false });
-            document.getElementById('activeList').innerHTML = (active && active.length) ? active.map(inc => incidentHTML(inc)).join('') : '<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
+            const { data: active, error: activeError } = await supabase
+                .from('incidents')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false });
+            if (activeError) console.error('Ошибка загрузки активных:', activeError);
 
-            const { data: all } = await supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
+            document.getElementById('activeList').innerHTML = (active && active.length)
+                ? active.map(inc => incidentHTML(inc)).join('')
+                : '<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
+
+            const { data: all, error: allError } = await supabase
+                .from('incidents')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
+            if (allError) console.error('Ошибка загрузки истории:', allError);
+
             document.getElementById('allList').innerHTML = (all || []).map(inc => incidentHTML(inc)).join('');
         }
 
@@ -166,7 +195,9 @@
         }
 
         window.toggleActive = async (id, setActive) => {
-            if (setActive) await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
+            if (setActive) {
+                await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
+            }
             const { error } = await supabase.from('incidents').update({ is_active: setActive }).eq('id', id);
             if (error) alert('Ошибка: ' + error.message);
             loadIncidents();
