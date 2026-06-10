@@ -34,6 +34,8 @@
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); } .btn-outline:hover { background: rgba(255,255,255,0.04); }
         .btn-danger { background: var(--red); color: white; } .btn-danger:hover { background: #e02a4a; }
         .btn-sm { padding: 4px 12px; font-size: 11px; border-radius: 6px; }
+        .btn-delete { background: rgba(255,51,88,0.15); border: 1px solid rgba(255,51,88,0.3); color: var(--red); }
+        .btn-delete:hover { background: rgba(255,51,88,0.25); }
         input, select, textarea {
             width: 100%; padding: 10px 14px; background: #0b101f; border: 1px solid var(--border);
             border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px;
@@ -44,11 +46,15 @@
         .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .error { color: var(--red); font-size: 12px; margin-top: 8px; }
         .hidden { display: none; }
-        .incident-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+        .incident-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 0; border-bottom: 1px solid var(--border); gap: 12px;
+        }
         .incident-item:last-child { border-bottom: none; }
         .incident-info { flex: 1; }
         .incident-title { font-weight: 600; font-size: 14px; }
         .incident-meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+        .button-group { display: flex; gap: 8px; align-items: center; }
         .back-link { position: absolute; top: 20px; left: 24px; font-size: 12px; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 4px; z-index: 10; }
     </style>
 </head>
@@ -161,9 +167,14 @@
                         <div class="incident-title">${inc.title} <span style="font-size:11px;color:var(--text-secondary)">(${inc.status})</span></div>
                         <div class="incident-meta">${date} ${inc.is_active ? '🟢 Активен' : ''}</div>
                     </div>
-                    <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">
-                        ${inc.is_active ? 'Деактивировать' : 'Сделать активным'}
-                    </button>
+                    <div class="button-group">
+                        <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">
+                            ${inc.is_active ? 'Деактивировать' : 'Сделать активным'}
+                        </button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteIncident(${inc.id})" title="Удалить инцидент">
+                            🗑️
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -172,6 +183,17 @@
             if (setActive) { await supabase.from('incidents').update({ is_active: false }).eq('is_active', true); }
             await supabase.from('incidents').update({ is_active: setActive }).eq('id', id);
             loadIncidents();
+        };
+
+        window.deleteIncident = async (id) => {
+            if (!confirm('Вы уверены, что хотите удалить этот инцидент?')) return;
+            
+            const { error } = await supabase.from('incidents').delete().eq('id', id);
+            if (error) {
+                alert('Ошибка при удалении: ' + error.message);
+            } else {
+                loadIncidents();
+            }
         };
 
         window.addEventListener('load', checkSession);
