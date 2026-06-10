@@ -9,106 +9,58 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #04060f;
-            --surface: #0c1226;
-            --border: #1a223a;
-            --text: #dce3f0;
-            --text-secondary: #8892aa;
-            --accent: #4da6ff;
-            --red: #ff3358;
-            --green: #00dda0;
-            --yellow: #ffb020;
+            --bg: #04060f; --surface: #0c1226; --border: #1a223a;
+            --text: #dce3f0; --text-secondary: #8892aa; --accent: #4da6ff;
+            --red: #ff3358; --green: #00dda0; --yellow: #ffb020;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
+            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
         }
         body::before {
-            content: '';
-            position: fixed; inset: 0;
+            content: ''; position: fixed; inset: 0;
             background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
             pointer-events: none; z-index: 0;
         }
-        .container {
-            width: 100%; max-width: 720px;
-            position: relative; z-index: 1;
-        }
+        .container { width: 100%; max-width: 720px; position: relative; z-index: 1; }
         .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 32px;
-            backdrop-filter: blur(40px);
-            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
-            margin-bottom: 24px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+            padding: 32px; backdrop-filter: blur(40px); box-shadow: 0 40px 100px rgba(0,0,0,0.6); margin-bottom: 24px;
         }
-        h2 {
-            font-size: 18px; font-weight: 700; margin-bottom: 24px;
-            color: white; display: flex; align-items: center; gap: 8px;
-        }
-        .btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 10px 20px; border-radius: 10px;
-            font-size: 13px; font-weight: 600; border: none;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-primary:hover { background: #3d8edb; }
-        .btn-outline {
-            background: transparent; border: 1px solid var(--border);
-            color: var(--text);
-        }
-        .btn-outline:hover { background: rgba(255,255,255,0.04); }
-        .btn-danger { background: var(--red); color: white; }
-        .btn-danger:hover { background: #e02a4a; }
+        h2 { font-size: 18px; font-weight: 700; margin-bottom: 24px; color: white; display: flex; align-items: center; gap: 8px; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--accent); color: white; } .btn-primary:hover { background: #3d8edb; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); } .btn-outline:hover { background: rgba(255,255,255,0.04); }
+        .btn-danger { background: var(--red); color: white; } .btn-danger:hover { background: #e02a4a; }
         .btn-sm { padding: 4px 12px; font-size: 11px; border-radius: 6px; }
         .btn-delete { background: rgba(255,51,88,0.15); border: 1px solid rgba(255,51,88,0.3); color: var(--red); }
         .btn-delete:hover { background: rgba(255,51,88,0.25); }
-
         input, select, textarea {
-            width: 100%; padding: 10px 14px;
-            background: #0b101f; border: 1px solid var(--border);
-            border-radius: 10px; color: var(--text);
-            font-family: 'JetBrains Mono', monospace; font-size: 13px;
+            width: 100%; padding: 10px 14px; background: #0b101f; border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px;
             margin-bottom: 16px; outline: none;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-        label {
-            display: block; font-size: 11px; font-weight: 600;
-            letter-spacing: 0.8px; text-transform: uppercase;
-            color: var(--text-secondary); margin-bottom: 6px;
-        }
+        label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; }
         .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .error { color: var(--red); font-size: 12px; margin-top: 8px; }
         .hidden { display: none; }
         .incident-item {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 0; border-bottom: 1px solid var(--border);
-            gap: 12px;
+            padding: 14px 0; border-bottom: 1px solid var(--border); gap: 12px;
         }
         .incident-item:last-child { border-bottom: none; }
         .incident-info { flex: 1; }
         .incident-title { font-weight: 600; font-size: 14px; }
         .incident-meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
-        .back-link {
-            position: absolute; top: 20px; left: 24px;
-            font-size: 12px; color: var(--accent); text-decoration: none;
-            display: flex; align-items: center; gap: 4px;
-            z-index: 10;
-        }
+        .button-group { display: flex; gap: 8px; align-items: center; }
+        .back-link { position: absolute; top: 20px; left: 24px; font-size: 12px; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 4px; z-index: 10; }
     </style>
 </head>
 <body>
 <a href="index.html" class="back-link">← На главную</a>
 <div class="container">
-    <!-- Форма входа -->
     <div id="loginBlock" class="card">
         <h2>🔐 Вход в админ‑панель</h2>
         <input type="email" id="email" placeholder="Email" />
@@ -117,7 +69,6 @@
         <div id="loginError" class="error"></div>
     </div>
 
-    <!-- Админ‑панель (скрыта до входа) -->
     <div id="adminBlock" class="hidden">
         <div class="card">
             <h2>📝 Создать инцидент</h2>
@@ -137,48 +88,9 @@
             <button class="btn btn-primary" onclick="createIncident()">Создать</button>
             <div id="createError" class="error"></div>
         </div>
-
-        <div class="card">
-            <h2>⚡ Активные инциденты</h2>
-            <div id="activeList"></div>
-        </div>
-
-        <div class="card">
-            <h2>📋 Последние инциденты</h2>
-            <div id="allList"></div>
-        </div>
-
-        <div class="card">
-            <h2>⚙️ Системные операции</h2>
-            <button class="btn btn-warning" onclick="resetIncidentIDs()">🔄 Обнулить счётчик ID</button>
-            <div id="systemMessage" style="margin-top:12px;"></div>
-        </div>
-
+        <div class="card"><h2>⚡ Активные инциденты</h2><div id="activeList"></div></div>
+        <div class="card"><h2>📋 Последние инциденты</h2><div id="allList"></div></div>
         <button class="btn btn-outline" onclick="signOut()">🚪 Выйти</button>
-    </div>
-</div>
-
-<!-- Модальное окно редактирования -->
-<div id="editModal" class="modal hidden">
-    <div class="card">
-        <h2>✏️ Редактировать инцидент #<span id="editId"></span></h2>
-        <input type="hidden" id="editIncId" />
-        <label>Заголовок</label>
-        <input type="text" id="editTitle" />
-        <label>Описание</label>
-        <textarea id="editMessage" rows="3"></textarea>
-        <label>Статус</label>
-        <select id="editStatus">
-            <option value="maintenance">Тех. обслуживание</option>
-            <option value="critical">Критический сбой</option>
-            <option value="warning">Предупреждение</option>
-            <option value="success">Информация</option>
-        </select>
-        <div class="row">
-            <button class="btn btn-primary" onclick="saveEdit()">Сохранить</button>
-            <button class="btn btn-outline" onclick="closeEdit()">Отмена</button>
-        </div>
-        <div id="editError" class="error"></div>
     </div>
 </div>
 
@@ -190,8 +102,7 @@
 
         async function checkSession() {
             const { data: { session } } = await supabase.auth.getSession();
-            if (session) showAdmin();
-            else showLogin();
+            if (session) { showAdmin(); } else { showLogin(); }
         }
 
         function showLogin() {
@@ -209,11 +120,8 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) {
-                document.getElementById('loginError').textContent = error.message;
-            } else {
-                showAdmin();
-            }
+            if (error) { document.getElementById('loginError').textContent = error.message; }
+            else { showAdmin(); }
         };
 
         window.signOut = async () => {
@@ -226,22 +134,14 @@
             const title = document.getElementById('incTitle').value;
             const message = document.getElementById('incMessage').value;
             let nodes;
-            try {
-                nodes = JSON.parse(document.getElementById('incNodes').value);
-            } catch {
-                document.getElementById('createError').textContent = 'Неверный JSON узлов';
-                return;
-            }
+            try { nodes = JSON.parse(document.getElementById('incNodes').value); }
+            catch { document.getElementById('createError').textContent = 'Неверный JSON узлов'; return; }
 
             await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
+            const { error } = await supabase.from('incidents').insert([{ title, message, status, affected_nodes: nodes, is_active: true }]);
 
-            const { error } = await supabase.from('incidents').insert([{
-                title, message, status, affected_nodes: nodes, is_active: true
-            }]);
-
-            if (error) {
-                document.getElementById('createError').textContent = error.message;
-            } else {
+            if (error) { document.getElementById('createError').textContent = error.message; }
+            else {
                 document.getElementById('createError').textContent = '';
                 document.getElementById('incTitle').value = '';
                 document.getElementById('incMessage').value = '';
@@ -250,20 +150,12 @@
         };
 
         async function loadIncidents() {
-            const { data: active } = await supabase
-                .from('incidents')
-                .select('*')
-                .eq('is_active', true)
-                .order('created_at', { ascending: false });
+            const { data: active } = await supabase.from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false });
             document.getElementById('activeList').innerHTML = (active || []).length
                 ? active.map(inc => incidentHTML(inc)).join('')
                 : '<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
 
-            const { data: all } = await supabase
-                .from('incidents')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(20);
+            const { data: all } = await supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
             document.getElementById('allList').innerHTML = (all || []).map(inc => incidentHTML(inc)).join('');
         }
 
@@ -275,71 +167,31 @@
                         <div class="incident-title">${inc.title} <span style="font-size:11px;color:var(--text-secondary)">(${inc.status})</span></div>
                         <div class="incident-meta">${date} ${inc.is_active ? '🟢 Активен' : ''}</div>
                     </div>
-                    <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">
-                        ${inc.is_active ? 'Деактивировать' : 'Сделать активным'}
-                    </button>
-                    <button class="btn btn-sm btn-outline" onclick="openEdit(${inc.id})">✏️</button>
-                    <button class="btn btn-sm btn-delete" onclick="deleteIncident(${inc.id})">🗑️</button>
+                    <div class="button-group">
+                        <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">
+                            ${inc.is_active ? 'Деактивировать' : 'Сделать активным'}
+                        </button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteIncident(${inc.id})" title="Удалить инцидент">
+                            🗑️
+                        </button>
+                    </div>
                 </div>
             `;
         }
 
         window.toggleActive = async (id, setActive) => {
-            if (setActive) {
-                await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
-            }
+            if (setActive) { await supabase.from('incidents').update({ is_active: false }).eq('is_active', true); }
             await supabase.from('incidents').update({ is_active: setActive }).eq('id', id);
             loadIncidents();
         };
 
         window.deleteIncident = async (id) => {
-            if (!confirm('Удалить инцидент #' + id + '?')) return;
+            if (!confirm('Вы уверены, что хотите удалить этот инцидент?')) return;
+            
             const { error } = await supabase.from('incidents').delete().eq('id', id);
-            if (error) alert('Ошибка при удалении: ' + error.message);
-            else loadIncidents();
-        };
-
-        window.openEdit = async (id) => {
-            const { data, error } = await supabase.from('incidents').select('*').eq('id', id).single();
-            if (error || !data) return alert('Инцидент не найден');
-            document.getElementById('editIncId').value = data.id;
-            document.getElementById('editId').textContent = data.id;
-            document.getElementById('editTitle').value = data.title;
-            document.getElementById('editMessage').value = data.message || '';
-            document.getElementById('editStatus').value = data.status;
-            document.getElementById('editModal').classList.remove('hidden');
-        };
-
-        window.closeEdit = () => {
-            document.getElementById('editModal').classList.add('hidden');
-            document.getElementById('editError').textContent = '';
-        };
-
-        window.saveEdit = async () => {
-            const id = document.getElementById('editIncId').value;
-            const title = document.getElementById('editTitle').value;
-            const message = document.getElementById('editMessage').value;
-            const status = document.getElementById('editStatus').value;
-            const { error } = await supabase.from('incidents')
-                .update({ title, message, status })
-                .eq('id', id);
-            if (error) document.getElementById('editError').textContent = error.message;
-            else { closeEdit(); loadIncidents(); }
-        };
-
-        window.resetIncidentIDs = async () => {
-            if (!confirm('⚠️ Это удалит ВСЕ инциденты и сбросит счётчик ID. Продолжить?')) return;
-            const msgDiv = document.getElementById('systemMessage');
-            msgDiv.className = '';
-            msgDiv.textContent = 'Выполняется...';
-
-            const { error } = await supabase.rpc('reset_incidents_table');
             if (error) {
-                msgDiv.className = 'error';
-                msgDiv.textContent = 'Ошибка: ' + error.message;
+                alert('Ошибка при удалении: ' + error.message);
             } else {
-                msgDiv.className = 'success';
-                msgDiv.textContent = '✅ Таблица очищена, счётчик ID сброшен';
                 loadIncidents();
             }
         };
