@@ -142,11 +142,41 @@
             .meta-strip { flex-direction: column; } .meta-cell { border-right: none; border-bottom: 1px solid var(--border); }
             .meta-cell:last-child { border-bottom: none; } .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
+
+        /* Экран загрузки */
+        .loader-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 20px;
+            transition: opacity 0.3s ease;
+        }
+        .loader-overlay.hidden {
+            opacity: 0; pointer-events: none;
+        }
+        .loader-text {
+            font-size: 14px; font-weight: 500; letter-spacing: 1px;
+            color: var(--text-2); text-transform: uppercase;
+        }
+        .loader-spinner {
+            width: 32px; height: 32px;
+            border: 2px solid rgba(77,166,255,0.2);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 <div class="bg-layer"><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div><div class="bg-orb bg-orb-3"></div></div>
 <div class="bg-grid"></div>
+
+<!-- Экран загрузки -->
+<div id="loader" class="loader-overlay">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Загрузка данных...</div>
+</div>
 
 <script>
     (function() {
@@ -195,21 +225,14 @@
         const UPTIME_VALUES = { online:'99.8%', offline:'0.0%', warning:'81.3%', maintenance:'100%' };
 
         function safeStatus(rawStatus) {
-            if (typeof rawStatus === 'string' && PRESETS[rawStatus]) {
-                return rawStatus;
-            }
-            console.warn('⚠️ Некорректный статус инцидента, используется success:', rawStatus);
+            if (typeof rawStatus === 'string' && PRESETS[rawStatus]) return rawStatus;
+            console.warn('⚠️ Некорректный статус, используется success:', rawStatus);
             return 'success';
         }
-
         function safeNodes(rawNodes) {
-            if (rawNodes && typeof rawNodes === 'object' && !Array.isArray(rawNodes)) {
-                const keys = Object.keys(rawNodes);
-                if (keys.some(k => NODE_NAMES[k])) {
-                    return rawNodes;
-                }
-            }
-            console.warn('⚠️ Некорректные affected_nodes, используются значения по умолчанию:', rawNodes);
+            if (rawNodes && typeof rawNodes === 'object' && !Array.isArray(rawNodes) &&
+                Object.keys(rawNodes).some(k => NODE_NAMES[k])) return rawNodes;
+            console.warn('⚠️ Некорректные affected_nodes, используются по умолчанию:', rawNodes);
             return { node1:'online', node2:'online', node3:'online' };
         }
 
@@ -217,10 +240,7 @@
             try {
                 let mode = 'success';
                 let nodes = { node1:'online', node2:'online', node3:'online' };
-                let incidentId = '—';
-                let title = PRESETS.success.defaultTitle;
-                let message = PRESETS.success.defaultMessage;
-
+                let incidentId = '—', title = PRESETS.success.defaultTitle, message = PRESETS.success.defaultMessage;
                 if (incidentData) {
                     mode = safeStatus(incidentData.status);
                     nodes = safeNodes(incidentData.affected_nodes);
@@ -228,41 +248,31 @@
                     title = incidentData.title || PRESETS[mode].defaultTitle;
                     message = incidentData.message || PRESETS[mode].defaultMessage;
                 }
-
                 const data = PRESETS[mode];
                 const now = new Date();
                 const timeStr = now.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
                 document.getElementById('topTime').textContent = timeStr;
                 document.getElementById('mainCard').className = `card theme-${data.theme}`;
-
                 const strip = document.getElementById('alertStrip');
                 strip.classList.remove('visible', 'strip-critical', 'strip-warning');
                 if (data.banner) {
                     strip.classList.add('visible', data.banner.cls);
                     document.getElementById('stripText').textContent = data.banner.text;
                 }
-
-                const pill = document.getElementById('statusPill');
-                pill.className = `status-pill ${data.pill.cls}`;
+                document.getElementById('statusPill').className = `status-pill ${data.pill.cls}`;
                 document.getElementById('pillText').textContent = data.pill.text;
-
                 document.getElementById('incTitle').textContent = title;
                 document.getElementById('incBody').textContent = message;
                 document.getElementById('incID').textContent = incidentId;
                 document.getElementById('incTime').textContent = timeStr;
-
-                const onlineCount = Object.values(nodes).filter(s => s === 'online').length;
-                document.getElementById('nodesOnlineCount').textContent = `${onlineCount} из 3 онлайн`;
+                document.getElementById('nodesOnlineCount').textContent = `${Object.values(nodes).filter(s => s === 'online').length} из 3 онлайн`;
 
                 const grid = document.getElementById('serversGrid');
                 grid.innerHTML = '';
                 Object.entries(nodes).forEach(([id, status]) => {
                     const node = NODE_NAMES[id];
-                    if (!node) {
-                        console.warn('⚠️ Неизвестный узел:', id);
-                        return;
-                    }
+                    if (!node) return;
                     const card = document.createElement('div');
                     card.className = `server-card status-${status}`;
                     card.innerHTML = `
@@ -276,54 +286,21 @@
                     `;
                     grid.appendChild(card);
                 });
-            } catch (e) {
-                console.error('💥 Ошибка в renderStatus:', e);
-                try {
-                    document.getElementById('mainCard').className = 'card theme-success';
-                    document.getElementById('alertStrip').classList.remove('visible', 'strip-critical', 'strip-warning');
-                    document.getElementById('statusPill').className = 'status-pill pill-success';
-                    document.getElementById('pillText').textContent = 'Все системы работают';
-                    document.getElementById('incTitle').textContent = 'Инфраструктура в норме';
-                    document.getElementById('incBody').textContent = 'Критических сбоев и плановых технических работ не зафиксировано.';
-                    document.getElementById('incID').textContent = '—';
-                    document.getElementById('incTime').textContent = new Date().toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                    document.getElementById('nodesOnlineCount').textContent = '3 из 3 онлайн';
-                    const grid = document.getElementById('serversGrid');
-                    grid.innerHTML = '';
-                    ['node1','node2','node3'].forEach((id) => {
-                        const node = NODE_NAMES[id];
-                        const card = document.createElement('div');
-                        card.className = 'server-card status-online';
-                        card.innerHTML = `
-                            <div class="server-top"><div class="server-flag">${node.flag}</div><div class="server-dot"></div></div>
-                            <div class="server-name">${node.name}</div><div class="server-code">${node.code}</div>
-                            <div class="uptime-bar-wrap">
-                                <div class="uptime-bar-label"><span>uptime</span><span>99.8%</span></div>
-                                <div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div>
-                            </div>
-                            <div class="status-label-text">Online</div>
-                        `;
-                        grid.appendChild(card);
-                    });
-                } catch (fallbackError) {
-                    console.error('Даже резервный рендер сломался:', fallbackError);
-                }
+            } catch(e) {
+                console.error('renderStatus error', e);
+                // fallback минимальный, чтобы не оставлять пустую страницу
+                document.getElementById('statusPill').className = 'status-pill pill-success';
+                document.getElementById('pillText').textContent = 'Все системы работают';
+                document.getElementById('incTitle').textContent = 'Инфраструктура в норме';
+                document.getElementById('incBody').textContent = 'Данные временно недоступны.';
             }
         }
 
         async function loadHistory() {
             try {
                 const { data: incidents, error } = await supabase
-                    .from('incidents')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-
-                if (error) {
-                    console.error('History error:', error);
-                    return;
-                }
-
+                    .from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
+                if (error) { console.error('History error:', error); return; }
                 const container = document.getElementById('historyList');
                 container.innerHTML = (incidents || []).map(inc => {
                     const date = new Date(inc.created_at);
@@ -333,48 +310,31 @@
                     const dotColor = inc.status === 'critical' ? 'var(--red)' :
                                      inc.status === 'warning' ? 'var(--yellow)' :
                                      inc.status === 'maintenance' ? 'var(--blue)' : 'var(--green)';
-                    return `
-                        <div class="history-item">
-                            <div class="history-dot" style="background:${dotColor}"></div>
-                            <div class="history-content">
-                                <div class="history-title">${inc.title || 'Без названия'}</div>
-                                <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
-                            </div>
+                    return `<div class="history-item">
+                        <div class="history-dot" style="background:${dotColor}"></div>
+                        <div class="history-content">
+                            <div class="history-title">${inc.title || 'Без названия'}</div>
+                            <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
                         </div>
-                    `;
+                    </div>`;
                 }).join('');
-            } catch (e) {
-                console.error('Ошибка загрузки истории:', e);
-            }
+            } catch(e) { console.error(e); }
         }
 
         async function refreshData() {
             console.log('🔄 Загрузка данных...');
             try {
                 const { data: activeIncidents, error } = await supabase
-                    .from('incidents')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-
-                if (error) {
-                    console.error('Ошибка запроса активного инцидента:', error);
-                    renderStatus(null);
-                } else {
-                    const activeIncident = activeIncidents?.[0] || null;
-                    renderStatus(activeIncident);
-                }
-
+                    .from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1);
+                if (error) { console.error('Ошибка запроса активного инцидента:', error); renderStatus(null); }
+                else { renderStatus(activeIncidents?.[0] || null); }
                 await loadHistory();
                 console.log('✅ Данные загружены');
-            } catch (e) {
-                console.error('💥 Критическая ошибка в refreshData:', e);
-                renderStatus(null);
-            }
+            } catch(e) { console.error(e); renderStatus(null); }
+            // Скрываем экран загрузки
+            document.getElementById('loader').classList.add('hidden');
         }
 
-        // Загружаем данные ОДИН раз при открытии страницы, автообновления НЕТ
         document.addEventListener('DOMContentLoaded', refreshData);
     })();
 </script>
