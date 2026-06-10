@@ -134,14 +134,42 @@
             const title = document.getElementById('incTitle').value;
             const message = document.getElementById('incMessage').value;
             let nodes;
-            try { nodes = JSON.parse(document.getElementById('incNodes').value); }
-            catch { document.getElementById('createError').textContent = 'Неверный JSON узлов'; return; }
+            try {
+                nodes = JSON.parse(document.getElementById('incNodes').value);
+                // Убедимся, что это объект с тремя ключами
+                if (typeof nodes !== 'object' || !nodes.node1 || !nodes.node2 || !nodes.node3) {
+                    throw new Error('JSON должен содержать node1, node2, node3');
+                }
+            } catch(e) {
+                document.getElementById('createError').textContent = 'Неверный JSON узлов: ' + e.message;
+                return;
+            }
 
-            await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
-            const { error } = await supabase.from('incidents').insert([{ title, message, status, affected_nodes: nodes, is_active: true }]);
+            // Сначала выключаем все активные инциденты
+            const { error: updateError } = await supabase
+                .from('incidents')
+                .update({ is_active: false })
+                .eq('is_active', true);
 
-            if (error) { document.getElementById('createError').textContent = error.message; }
-            else {
+            if (updateError) {
+                document.getElementById('createError').textContent = 'Ошибка сброса старых: ' + updateError.message;
+                return;
+            }
+
+            // Создаём новый инцидент
+            const { error: insertError } = await supabase
+                .from('incidents')
+                .insert([{
+                    title,
+                    message,
+                    status,
+                    affected_nodes: nodes,
+                    is_active: true
+                }]);
+
+            if (insertError) {
+                document.getElementById('createError').textContent = insertError.message;
+            } else {
                 document.getElementById('createError').textContent = '';
                 document.getElementById('incTitle').value = '';
                 document.getElementById('incMessage').value = '';
@@ -150,12 +178,24 @@
         };
 
         async function loadIncidents() {
-            const { data: active } = await supabase.from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false });
-            document.getElementById('activeList').innerHTML = (active || []).length
+            // Активные
+            const { data: active } = await supabase
+                .from('incidents')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false });
+
+            document.getElementById('activeList').innerHTML = (active && active.length > 0)
                 ? active.map(inc => incidentHTML(inc)).join('')
                 : '<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
 
-            const { data: all } = await supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
+            // Все последние
+            const { data: all } = await supabase
+                .from('incidents')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
+
             document.getElementById('allList').innerHTML = (all || []).map(inc => incidentHTML(inc)).join('');
         }
 
@@ -180,20 +220,20 @@
         }
 
         window.toggleActive = async (id, setActive) => {
-            if (setActive) { await supabase.from('incidents').update({ is_active: false }).eq('is_active', true); }
-            await supabase.from('incidents').update({ is_active: setActive }).eq('id', id);
+            if (setActive) {
+                // Сначала деактивируем все активные
+                await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
+            }
+            const { error } = await supabase.from('incidents').update({ is_active: setActive }).eq('id', id);
+            if (error) alert('Ошибка: ' + error.message);
             loadIncidents();
         };
 
         window.deleteIncident = async (id) => {
             if (!confirm('Вы уверены, что хотите удалить этот инцидент?')) return;
-            
             const { error } = await supabase.from('incidents').delete().eq('id', id);
-            if (error) {
-                alert('Ошибка при удалении: ' + error.message);
-            } else {
-                loadIncidents();
-            }
+            if (error) alert('Ошибка при удалении: ' + error.message);
+            loadIncidents();
         };
 
         window.addEventListener('load', checkSession);
