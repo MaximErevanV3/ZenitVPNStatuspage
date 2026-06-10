@@ -71,9 +71,8 @@
 
 <script>
     (function() {
-        // ✅ ПРАВИЛЬНЫЕ ПЕРЕМЕННЫЕ (твои ключи)
-        const SUPABASE_URL = 'https://ovkimozzqfejlhmzxvuw.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_eq7YpcP3JONUtlFe00Zq0g_AsPLv6On';
+        const SUPABASE_URL = 'https://syndicuffeucieugxffp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QN1jgXY5XplG4Cy7s9nF5A_ygesez21';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function checkSession() {
@@ -119,7 +118,6 @@
                 return;
             }
 
-            // сбрасываем is_active у всех
             await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
 
             const { error } = await supabase.from('incidents').insert([{
@@ -138,9 +136,7 @@
 
         async function loadIncidents() {
             const { data: active } = await supabase.from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false });
-            document.getElementById('activeList').innerHTML = (active && active.length)
-                ? active.map(inc => incidentHTML(inc)).join('')
-                : '<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
+            document.getElementById('activeList').innerHTML = (active && active.length) ? active.map(inc => incidentHTML(inc)).join('') : '<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
 
             const { data: all } = await supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
             document.getElementById('allList').innerHTML = (all || []).map(inc => incidentHTML(inc)).join('');
@@ -148,16 +144,7 @@
 
         function incidentHTML(inc) {
             const date = new Date(inc.created_at).toLocaleString('ru-RU');
-            return `<div class="incident-item">
-                <div class="incident-info">
-                    <div class="incident-title">${inc.title} <span style="font-size:11px;color:var(--text-secondary)">(${inc.status})</span></div>
-                    <div class="incident-meta">${date} ${inc.is_active ? '🟢 Активен' : ''}</div>
-                </div>
-                <div class="button-group">
-                    <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">${inc.is_active ? 'Деактивировать' : 'Сделать активным'}</button>
-                    <button class="btn btn-sm btn-delete" onclick="deleteIncident(${inc.id})">🗑️</button>
-                </div>
-            </div>`;
+            return `<div class="incident-item"><div class="incident-info"><div class="incident-title">${inc.title} <span style="font-size:11px;color:var(--text-secondary)">(${inc.status})</span></div><div class="incident-meta">${date} ${inc.is_active ? '🟢 Активен' : ''}</div></div><div class="button-group"><button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">${inc.is_active ? 'Деактивировать' : 'Сделать активным'}</button><button class="btn btn-sm btn-delete" onclick="deleteIncident(${inc.id})">🗑️</button></div></div>`;
         }
 
         window.toggleActive = async (id, setActive) => {
