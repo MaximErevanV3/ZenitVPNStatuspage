@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* весь CSS без изменений (тот же, что раньше) */
+        /* весь CSS без изменений (тот же, что был) */
         :root {
             --bg: #04060f;
             --surface: rgba(8, 12, 26, 0.8);
@@ -285,7 +285,8 @@
             }).join('');
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Основная функция обновления данных
+        async function refreshData() {
             const { data: activeIncidents, error } = await supabase
                 .from('incidents')
                 .select('*')
@@ -298,6 +299,12 @@
 
             renderStatus(activeIncident);
             await loadHistory();
+        }
+
+        // Первоначальная загрузка и запуск автообновления
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshData();                          // первый рендер
+            setInterval(refreshData, 30_000);      // обновление каждые 30 секунд
         });
     })();
 </script>
