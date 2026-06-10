@@ -9,18 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #04060f;
-            --surface: rgba(8, 12, 26, 0.8);
-            --surface-raised: rgba(255,255,255,0.03);
-            --border: rgba(255,255,255,0.06);
-            --border-strong: rgba(255,255,255,0.1);
-            --green: #00dda0;
-            --yellow: #ffb020;
-            --red: #ff3358;
-            --blue: #4da6ff;
-            --text-1: #eef2ff;
-            --text-2: #8892aa;
-            --text-3: #404866;
+            --bg: #04060f; --surface: rgba(8,12,26,0.8); --surface-raised: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.06); --border-strong: rgba(255,255,255,0.1);
+            --green: #00dda0; --yellow: #ffb020; --red: #ff3358; --blue: #4da6ff;
+            --text-1: #eef2ff; --text-2: #8892aa; --text-3: #404866;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -142,41 +134,11 @@
             .meta-strip { flex-direction: column; } .meta-cell { border-right: none; border-bottom: 1px solid var(--border); }
             .meta-cell:last-child { border-bottom: none; } .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
-
-        /* Экран загрузки */
-        .loader-overlay {
-            position: fixed; inset: 0; z-index: 9999;
-            background: var(--bg);
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column; gap: 20px;
-            transition: opacity 0.3s ease;
-        }
-        .loader-overlay.hidden {
-            opacity: 0; pointer-events: none;
-        }
-        .loader-text {
-            font-size: 14px; font-weight: 500; letter-spacing: 1px;
-            color: var(--text-2); text-transform: uppercase;
-        }
-        .loader-spinner {
-            width: 32px; height: 32px;
-            border: 2px solid rgba(77,166,255,0.2);
-            border-top-color: var(--blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 <div class="bg-layer"><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div><div class="bg-orb bg-orb-3"></div></div>
 <div class="bg-grid"></div>
-
-<!-- Экран загрузки -->
-<div id="loader" class="loader-overlay">
-    <div class="loader-spinner"></div>
-    <div class="loader-text">Загрузка данных...</div>
-</div>
 
 <script>
     (function() {
@@ -226,13 +188,11 @@
 
         function safeStatus(rawStatus) {
             if (typeof rawStatus === 'string' && PRESETS[rawStatus]) return rawStatus;
-            console.warn('⚠️ Некорректный статус, используется success:', rawStatus);
             return 'success';
         }
         function safeNodes(rawNodes) {
             if (rawNodes && typeof rawNodes === 'object' && !Array.isArray(rawNodes) &&
                 Object.keys(rawNodes).some(k => NODE_NAMES[k])) return rawNodes;
-            console.warn('⚠️ Некорректные affected_nodes, используются по умолчанию:', rawNodes);
             return { node1:'online', node2:'online', node3:'online' };
         }
 
@@ -287,8 +247,7 @@
                     grid.appendChild(card);
                 });
             } catch(e) {
-                console.error('renderStatus error', e);
-                // fallback минимальный, чтобы не оставлять пустую страницу
+                console.error(e);
                 document.getElementById('statusPill').className = 'status-pill pill-success';
                 document.getElementById('pillText').textContent = 'Все системы работают';
                 document.getElementById('incTitle').textContent = 'Инфраструктура в норме';
@@ -300,7 +259,7 @@
             try {
                 const { data: incidents, error } = await supabase
                     .from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
-                if (error) { console.error('History error:', error); return; }
+                if (error) return;
                 const container = document.getElementById('historyList');
                 container.innerHTML = (incidents || []).map(inc => {
                     const date = new Date(inc.created_at);
@@ -322,17 +281,18 @@
         }
 
         async function refreshData() {
-            console.log('🔄 Загрузка данных...');
             try {
                 const { data: activeIncidents, error } = await supabase
                     .from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1);
-                if (error) { console.error('Ошибка запроса активного инцидента:', error); renderStatus(null); }
-                else { renderStatus(activeIncidents?.[0] || null); }
+                if (error) {
+                    renderStatus(null);
+                } else {
+                    renderStatus(activeIncidents?.[0] || null);
+                }
                 await loadHistory();
-                console.log('✅ Данные загружены');
-            } catch(e) { console.error(e); renderStatus(null); }
-            // Скрываем экран загрузки
-            document.getElementById('loader').classList.add('hidden');
+            } catch(e) {
+                renderStatus(null);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', refreshData);
