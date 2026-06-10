@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* весь CSS без изменений (тот же, что был) */
+        /* весь CSS без изменений (тот же, что и раньше) */
         :root {
             --bg: #04060f;
             --surface: rgba(8, 12, 26, 0.8);
@@ -195,116 +195,199 @@
         const STATUS_LABELS = { online:'Online', offline:'Offline', warning:'Degraded', maintenance:'Maintenance' };
         const UPTIME_VALUES = { online:'99.8%', offline:'0.0%', warning:'81.3%', maintenance:'100%' };
 
+        // Безопасное получение статуса с проверкой на допустимые значения
+        function safeStatus(rawStatus) {
+            if (typeof rawStatus === 'string' && PRESETS[rawStatus]) {
+                return rawStatus;
+            }
+            console.warn('⚠️ Некорректный статус инцидента, используется success:', rawStatus);
+            return 'success';
+        }
+
+        // Проверка, что affected_nodes – объект с ожидаемыми ключами
+        function safeNodes(rawNodes) {
+            if (rawNodes && typeof rawNodes === 'object' && !Array.isArray(rawNodes)) {
+                // Проверяем, что есть хотя бы один ключ node1, node2, node3
+                const keys = Object.keys(rawNodes);
+                if (keys.some(k => NODE_NAMES[k])) {
+                    return rawNodes;
+                }
+            }
+            console.warn('⚠️ Некорректные affected_nodes, используются значения по умолчанию:', rawNodes);
+            return { node1:'online', node2:'online', node3:'online' };
+        }
+
         function renderStatus(incidentData) {
-            let mode = 'success';
-            let nodes = { node1:'online', node2:'online', node3:'online' };
-            let incidentId = '—';
-            let title = PRESETS.success.defaultTitle;
-            let message = PRESETS.success.defaultMessage;
+            // Если что-то пойдёт не так внутри renderStatus, перехватываем ошибку
+            try {
+                let mode = 'success';
+                let nodes = { node1:'online', node2:'online', node3:'online' };
+                let incidentId = '—';
+                let title = PRESETS.success.defaultTitle;
+                let message = PRESETS.success.defaultMessage;
 
-            if (incidentData) {
-                mode = incidentData.status;
-                nodes = incidentData.affected_nodes || nodes;
-                incidentId = '#' + incidentData.id;
-                title = incidentData.title || PRESETS[mode].defaultTitle;
-                message = incidentData.message || PRESETS[mode].defaultMessage;
+                if (incidentData) {
+                    mode = safeStatus(incidentData.status);
+                    nodes = safeNodes(incidentData.affected_nodes);
+                    incidentId = incidentData.id ? '#' + incidentData.id : '—';
+                    title = incidentData.title || PRESETS[mode].defaultTitle;
+                    message = incidentData.message || PRESETS[mode].defaultMessage;
+                }
+
+                const data = PRESETS[mode];
+                const now = new Date();
+                const timeStr = now.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+                document.getElementById('topTime').textContent = timeStr;
+                document.getElementById('mainCard').className = `card theme-${data.theme}`;
+
+                const strip = document.getElementById('alertStrip');
+                strip.classList.remove('visible', 'strip-critical', 'strip-warning');
+                if (data.banner) {
+                    strip.classList.add('visible', data.banner.cls);
+                    document.getElementById('stripText').textContent = data.banner.text;
+                }
+
+                const pill = document.getElementById('statusPill');
+                pill.className = `status-pill ${data.pill.cls}`;
+                document.getElementById('pillText').textContent = data.pill.text;
+
+                document.getElementById('incTitle').textContent = title;
+                document.getElementById('incBody').textContent = message;
+                document.getElementById('incID').textContent = incidentId;
+                document.getElementById('incTime').textContent = timeStr;
+
+                const onlineCount = Object.values(nodes).filter(s => s === 'online').length;
+                document.getElementById('nodesOnlineCount').textContent = `${onlineCount} из 3 онлайн`;
+
+                const grid = document.getElementById('serversGrid');
+                grid.innerHTML = '';
+                Object.entries(nodes).forEach(([id, status]) => {
+                    const node = NODE_NAMES[id];
+                    // Если id узла нет в NODE_NAMES – пропускаем
+                    if (!node) {
+                        console.warn('⚠️ Неизвестный узел:', id);
+                        return;
+                    }
+                    const card = document.createElement('div');
+                    card.className = `server-card status-${status}`;
+                    card.innerHTML = `
+                        <div class="server-top"><div class="server-flag">${node.flag}</div><div class="server-dot"></div></div>
+                        <div class="server-name">${node.name}</div><div class="server-code">${node.code}</div>
+                        <div class="uptime-bar-wrap">
+                            <div class="uptime-bar-label"><span>uptime</span><span>${UPTIME_VALUES[status] || '??'}</span></div>
+                            <div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div>
+                        </div>
+                        <div class="status-label-text">${STATUS_LABELS[status] || status}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (e) {
+                console.error('💥 Ошибка в renderStatus:', e);
+                // В случае фатальной ошибки показываем состояние «Всё работает»
+                // через упрощённый вызов, чтобы страница не осталась пустой
+                try {
+                    document.getElementById('mainCard').className = 'card theme-success';
+                    document.getElementById('alertStrip').classList.remove('visible', 'strip-critical', 'strip-warning');
+                    document.getElementById('statusPill').className = 'status-pill pill-success';
+                    document.getElementById('pillText').textContent = 'Все системы работают';
+                    document.getElementById('incTitle').textContent = 'Инфраструктура в норме';
+                    document.getElementById('incBody').textContent = 'Критических сбоев и плановых технических работ не зафиксировано.';
+                    document.getElementById('incID').textContent = '—';
+                    document.getElementById('incTime').textContent = new Date().toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                    document.getElementById('nodesOnlineCount').textContent = '3 из 3 онлайн';
+                    const grid = document.getElementById('serversGrid');
+                    grid.innerHTML = '';
+                    ['node1','node2','node3'].forEach((id, i) => {
+                        const node = NODE_NAMES[id];
+                        const card = document.createElement('div');
+                        card.className = 'server-card status-online';
+                        card.innerHTML = `
+                            <div class="server-top"><div class="server-flag">${node.flag}</div><div class="server-dot"></div></div>
+                            <div class="server-name">${node.name}</div><div class="server-code">${node.code}</div>
+                            <div class="uptime-bar-wrap">
+                                <div class="uptime-bar-label"><span>uptime</span><span>99.8%</span></div>
+                                <div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div>
+                            </div>
+                            <div class="status-label-text">Online</div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                } catch (fallbackError) {
+                    console.error('Даже резервный рендер сломался:', fallbackError);
+                }
             }
-
-            const data = PRESETS[mode];
-            const now = new Date();
-            const timeStr = now.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-
-            document.getElementById('topTime').textContent = timeStr;
-            document.getElementById('mainCard').className = `card theme-${data.theme}`;
-
-            const strip = document.getElementById('alertStrip');
-            strip.classList.remove('visible', 'strip-critical', 'strip-warning');
-            if (data.banner) {
-                strip.classList.add('visible', data.banner.cls);
-                document.getElementById('stripText').textContent = data.banner.text;
-            }
-
-            const pill = document.getElementById('statusPill');
-            pill.className = `status-pill ${data.pill.cls}`;
-            document.getElementById('pillText').textContent = data.pill.text;
-
-            document.getElementById('incTitle').textContent = title;
-            document.getElementById('incBody').textContent = message;
-            document.getElementById('incID').textContent = incidentId;
-            document.getElementById('incTime').textContent = timeStr;
-
-            const onlineCount = Object.values(nodes).filter(s => s === 'online').length;
-            document.getElementById('nodesOnlineCount').textContent = `${onlineCount} из 3 онлайн`;
-
-            const grid = document.getElementById('serversGrid');
-            grid.innerHTML = '';
-            Object.entries(nodes).forEach(([id, status]) => {
-                const node = NODE_NAMES[id];
-                const card = document.createElement('div');
-                card.className = `server-card status-${status}`;
-                card.innerHTML = `
-                    <div class="server-top"><div class="server-flag">${node.flag}</div><div class="server-dot"></div></div>
-                    <div class="server-name">${node.name}</div><div class="server-code">${node.code}</div>
-                    <div class="uptime-bar-wrap">
-                        <div class="uptime-bar-label"><span>uptime</span><span>${UPTIME_VALUES[status]}</span></div>
-                        <div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div>
-                    </div>
-                    <div class="status-label-text">${STATUS_LABELS[status]}</div>
-                `;
-                grid.appendChild(card);
-            });
         }
 
         async function loadHistory() {
-            const { data: incidents, error } = await supabase
-                .from('incidents')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(20);
+            try {
+                const { data: incidents, error } = await supabase
+                    .from('incidents')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
 
-            if (error) { console.error('History error:', error); return; }
+                if (error) {
+                    console.error('History error:', error);
+                    return;
+                }
 
-            const container = document.getElementById('historyList');
-            container.innerHTML = incidents.map(inc => {
-                const date = new Date(inc.created_at);
-                const dateStr = date.toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' }) +
-                                ' ' + date.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
-                const statusText = PRESETS[inc.status]?.pill?.text || inc.status;
-                const dotColor = inc.status === 'critical' ? 'var(--red)' :
-                                 inc.status === 'warning' ? 'var(--yellow)' :
-                                 inc.status === 'maintenance' ? 'var(--blue)' : 'var(--green)';
-                return `
-                    <div class="history-item">
-                        <div class="history-dot" style="background:${dotColor}"></div>
-                        <div class="history-content">
-                            <div class="history-title">${inc.title}</div>
-                            <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
+                const container = document.getElementById('historyList');
+                container.innerHTML = (incidents || []).map(inc => {
+                    const date = new Date(inc.created_at);
+                    const dateStr = date.toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' }) +
+                                    ' ' + date.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+                    const statusText = PRESETS[inc.status]?.pill?.text || inc.status || 'Неизвестно';
+                    const dotColor = inc.status === 'critical' ? 'var(--red)' :
+                                     inc.status === 'warning' ? 'var(--yellow)' :
+                                     inc.status === 'maintenance' ? 'var(--blue)' : 'var(--green)';
+                    return `
+                        <div class="history-item">
+                            <div class="history-dot" style="background:${dotColor}"></div>
+                            <div class="history-content">
+                                <div class="history-title">${inc.title || 'Без названия'}</div>
+                                <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
+                            </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Ошибка загрузки истории:', e);
+            }
         }
 
-        // Основная функция обновления данных
         async function refreshData() {
-            const { data: activeIncidents, error } = await supabase
-                .from('incidents')
-                .select('*')
-                .eq('is_active', true)
-                .order('created_at', { ascending: false })
-                .limit(1);
+            console.log('🔄 Обновление данных...');
+            try {
+                const { data: activeIncidents, error } = await supabase
+                    .from('incidents')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
 
-            if (error) console.error('Active incident error:', error);
-            const activeIncident = activeIncidents?.[0] || null;
+                if (error) {
+                    console.error('Ошибка запроса активного инцидента:', error);
+                    // В случае ошибки рендерим состояние по умолчанию
+                    renderStatus(null);
+                } else {
+                    const activeIncident = activeIncidents?.[0] || null;
+                    renderStatus(activeIncident);
+                }
 
-            renderStatus(activeIncident);
-            await loadHistory();
+                await loadHistory();
+                console.log('✅ Данные обновлены');
+            } catch (e) {
+                console.error('💥 Критическая ошибка в refreshData:', e);
+                // Пытаемся отрендерить хотя бы дефолтное состояние
+                renderStatus(null);
+            }
         }
 
-        // Первоначальная загрузка и запуск автообновления
+        // Запуск
         document.addEventListener('DOMContentLoaded', () => {
-            refreshData();                          // первый рендер
-            setInterval(refreshData, 30_000);      // обновление каждые 30 секунд
+            refreshData();
+            setInterval(refreshData, 30_000); // обновление каждые 30 секунд
         });
     })();
 </script>
