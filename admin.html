@@ -9,84 +9,138 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #04060f; --surface: #0c1226; --border: #1a223a;
-            --text: #dce3f0; --text-secondary: #8892aa; --accent: #4da6ff;
-            --red: #ff3358; --green: #00dda0; --yellow: #ffb020; --orange: #ff8c42;
+            --bg: #03050d;
+            --surface: #080c1a;
+            --border: #1a1f33;
+            --text: #e2e8f0;
+            --text-secondary: #8892b0;
+            --accent: #5b9cf5;
+            --red: #ff3b5c;
+            --green: #00e6a7;
+            --yellow: #ffb020;
+            --orange: #ff8c42;
+            --blue: #4da6ff;
+            --radius: 14px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
         }
         body::before {
             content: ''; position: fixed; inset: 0;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
             pointer-events: none; z-index: 0;
         }
-        .container { width: 100%; max-width: 800px; position: relative; z-index: 1; }
+        .container { width: 100%; max-width: 850px; position: relative; z-index: 1; }
         .card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
-            padding: 32px; backdrop-filter: blur(40px); box-shadow: 0 40px 100px rgba(0,0,0,0.6); margin-bottom: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            backdrop-filter: blur(40px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02) inset;
+            margin-bottom: 20px;
+            transition: border-color var(--transition), box-shadow var(--transition);
         }
-        h2 { font-size: 18px; font-weight: 700; margin-bottom: 24px; color: white; display: flex; align-items: center; gap: 8px; }
-        h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); }
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: var(--accent); color: white; } .btn-primary:hover { background: #3d8edb; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); } .btn-outline:hover { background: rgba(255,255,255,0.04); }
-        .btn-danger { background: var(--red); color: white; } .btn-danger:hover { background: #e02a4a; }
-        .btn-warning { background: var(--orange); color: white; } .btn-warning:hover { background: #e07a35; }
-        .btn-success { background: var(--green); color: #000; } .btn-success:hover { background: #00c48c; }
-        .btn-sm { padding: 4px 12px; font-size: 11px; border-radius: 6px; }
-        .btn-xs { padding: 3px 8px; font-size: 10px; border-radius: 4px; }
-        .btn-delete { background: rgba(255,51,88,0.15); border: 1px solid rgba(255,51,88,0.3); color: var(--red); }
-        .btn-delete:hover { background: rgba(255,51,88,0.25); }
+        .card:hover { border-color: rgba(255,255,255,0.12); }
+        h2 {
+            font-size: 18px; font-weight: 700; margin-bottom: 20px;
+            color: #fff; display: flex; align-items: center; gap: 10px;
+            letter-spacing: -0.3px;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 20px; border-radius: 10px;
+            font-size: 13px; font-weight: 600; border: none;
+            cursor: pointer; transition: all var(--transition);
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #3f7fd4; box-shadow: 0 4px 20px rgba(91,156,245,0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.18); }
+        .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+        .btn-danger:hover { background: #e02a4a; box-shadow: 0 4px 20px rgba(255,59,92,0.3); }
+        .btn-warning { background: var(--orange); border-color: var(--orange); color: #fff; }
+        .btn-warning:hover { background: #e07a35; box-shadow: 0 4px 20px rgba(255,140,66,0.3); }
+        .btn-success { background: var(--green); border-color: var(--green); color: #000; }
+        .btn-success:hover { background: #00c48c; box-shadow: 0 4px 20px rgba(0,230,167,0.3); }
+        .btn-sm { padding: 6px 14px; font-size: 11px; border-radius: 8px; }
+        .btn-xs { padding: 4px 10px; font-size: 10px; border-radius: 6px; }
+        .btn-delete { background: rgba(255,59,92,0.12); border: 1px solid rgba(255,59,92,0.3); color: var(--red); }
+        .btn-delete:hover { background: rgba(255,59,92,0.22); }
         .btn-node {
-            padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+            padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 600;
             border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
-            cursor: pointer; transition: all 0.2s; margin: 2px;
+            cursor: pointer; transition: all var(--transition); margin: 3px;
         }
-        .btn-node.active { border-color: var(--green); color: var(--green); background: rgba(0,221,160,0.1); }
-        .btn-node.node-warning { border-color: var(--yellow); color: var(--yellow); background: rgba(255,176,32,0.1); }
-        .btn-node.node-offline { border-color: var(--red); color: var(--red); background: rgba(255,51,88,0.1); }
-        .btn-node.node-maintenance { border-color: var(--blue); color: var(--blue); background: rgba(77,166,255,0.1); }
+        .btn-node.active { border-color: var(--green); color: var(--green); background: rgba(0,230,167,0.08); }
+        .btn-node.node-warning { border-color: var(--yellow); color: var(--yellow); background: rgba(255,176,32,0.08); }
+        .btn-node.node-offline { border-color: var(--red); color: var(--red); background: rgba(255,59,92,0.08); }
+        .btn-node.node-maintenance { border-color: var(--blue); color: var(--blue); background: rgba(77,166,255,0.08); }
         input, select, textarea {
-            width: 100%; padding: 10px 14px; background: #0b101f; border: 1px solid var(--border);
-            border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px;
-            margin-bottom: 16px; outline: none;
+            width: 100%; padding: 12px 16px; background: #0a0f1c; border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; margin-bottom: 16px; outline: none; transition: border-color var(--transition);
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-        label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,156,245,0.15); }
+        label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; }
         .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .node-control { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
-        .node-group { flex: 1; min-width: 150px; }
-        .node-label { font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+        .node-control { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .node-group { flex: 1; min-width: 140px; background: rgba(255,255,255,0.02); border-radius: 10px; padding: 12px; }
+        .node-label { font-size: 11px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
         .error { color: var(--red); font-size: 12px; margin-top: 8px; }
         .success { color: var(--green); font-size: 12px; margin-top: 8px; }
         .hidden { display: none; }
         .incident-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 14px 0; border-bottom: 1px solid var(--border); gap: 12px;
+            transition: background var(--transition);
         }
         .incident-item:last-child { border-bottom: none; }
+        .incident-item:hover { background: rgba(255,255,255,0.015); margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-radius: 8px; }
         .incident-info { flex: 1; min-width: 0; }
         .incident-title { font-weight: 600; font-size: 14px; word-break: break-word; }
         .incident-meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
         .button-group { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-        .back-link { position: absolute; top: 20px; left: 24px; font-size: 12px; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 4px; z-index: 10; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .back-link {
+            position: absolute; top: 20px; left: 24px; font-size: 12px; color: var(--accent);
+            text-decoration: none; display: flex; align-items: center; gap: 4px; z-index: 10;
+            font-weight: 600; transition: opacity var(--transition);
+        }
+        .back-link:hover { opacity: 0.8; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
         .stat-card {
             background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-            border-radius: 10px; padding: 16px; text-align: center;
+            border-radius: 12px; padding: 18px 16px; text-align: center;
+            transition: border-color var(--transition);
         }
-        .stat-value { font-size: 28px; font-weight: 800; color: var(--text); }
-        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-top: 4px; }
+        .stat-card:hover { border-color: rgba(255,255,255,0.1); }
+        .stat-value { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-top: 6px; font-weight: 700; }
         .preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
         .edit-modal {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
-            z-index: 100;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; animation: fadeIn 0.2s ease;
         }
-        .edit-modal .card { max-width: 500px; width: 90%; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .edit-modal .card { max-width: 520px; width: 90%; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 580px) {
+            .card { padding: 20px; }
+            .node-control { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -101,7 +155,7 @@
         <div id="loginError" class="error"></div>
     </div>
 
-    <!-- Админ-панель (скрыта до входа) -->
+    <!-- Админ-панель -->
     <div id="adminBlock" class="hidden">
         <!-- Статистика -->
         <div class="card">
@@ -138,31 +192,28 @@
                 <option value="resolved">✅ Исправлено</option>
                 <option value="success">ℹ️ Информация (всё работает)</option>
             </select>
-            
             <label>Заголовок</label>
             <input type="text" id="incTitle" placeholder="Краткий заголовок инцидента" />
-            
             <label>Описание</label>
             <textarea id="incMessage" rows="4" placeholder="Подробное описание..."></textarea>
-            
-            <label>Состояние узлов (выберите кнопками)</label>
+            <label>Состояние узлов</label>
             <div class="node-control">
                 <div class="node-group">
-                    <div class="node-label">🇫🇮 Финляндия (HEL-1)</div>
+                    <div class="node-label">🇫🇮 Финляндия</div>
                     <button class="btn-node active" onclick="setNode('node1','online',this)">Online</button>
                     <button class="btn-node" onclick="setNode('node1','warning',this)">Degraded</button>
                     <button class="btn-node" onclick="setNode('node1','offline',this)">Offline</button>
                     <button class="btn-node" onclick="setNode('node1','maintenance',this)">Maint.</button>
                 </div>
                 <div class="node-group">
-                    <div class="node-label">🇳🇱 Нидерланды (AMS-1)</div>
+                    <div class="node-label">🇳🇱 Нидерланды</div>
                     <button class="btn-node active" onclick="setNode('node2','online',this)">Online</button>
                     <button class="btn-node" onclick="setNode('node2','warning',this)">Degraded</button>
                     <button class="btn-node" onclick="setNode('node2','offline',this)">Offline</button>
                     <button class="btn-node" onclick="setNode('node2','maintenance',this)">Maint.</button>
                 </div>
                 <div class="node-group">
-                    <div class="node-label">🇫🇷 Франция (PR-1)</div>
+                    <div class="node-label">🇫🇷 Франция</div>
                     <button class="btn-node active" onclick="setNode('node3','online',this)">Online</button>
                     <button class="btn-node" onclick="setNode('node3','warning',this)">Degraded</button>
                     <button class="btn-node" onclick="setNode('node3','offline',this)">Offline</button>
@@ -170,7 +221,6 @@
                 </div>
             </div>
             <input type="hidden" id="incNodes" value='{"node1":"online","node2":"online","node3":"online"}' />
-            
             <div class="row">
                 <button class="btn btn-primary" onclick="createIncident()">Создать</button>
                 <button class="btn btn-outline btn-sm" onclick="resetNodeButtons()">🔄 Сбросить ноды</button>
@@ -222,6 +272,31 @@
             <option value="resolved">✅ Исправлено</option>
             <option value="success">ℹ️ Информация</option>
         </select>
+        <label>Состояние узлов</label>
+        <div class="node-control" id="editNodeControl">
+            <div class="node-group">
+                <div class="node-label">🇫🇮 Финляндия</div>
+                <button class="btn-node" onclick="setEditNode('node1','online',this)">Online</button>
+                <button class="btn-node" onclick="setEditNode('node1','warning',this)">Degraded</button>
+                <button class="btn-node" onclick="setEditNode('node1','offline',this)">Offline</button>
+                <button class="btn-node" onclick="setEditNode('node1','maintenance',this)">Maint.</button>
+            </div>
+            <div class="node-group">
+                <div class="node-label">🇳🇱 Нидерланды</div>
+                <button class="btn-node" onclick="setEditNode('node2','online',this)">Online</button>
+                <button class="btn-node" onclick="setEditNode('node2','warning',this)">Degraded</button>
+                <button class="btn-node" onclick="setEditNode('node2','offline',this)">Offline</button>
+                <button class="btn-node" onclick="setEditNode('node2','maintenance',this)">Maint.</button>
+            </div>
+            <div class="node-group">
+                <div class="node-label">🇫🇷 Франция</div>
+                <button class="btn-node" onclick="setEditNode('node3','online',this)">Online</button>
+                <button class="btn-node" onclick="setEditNode('node3','warning',this)">Degraded</button>
+                <button class="btn-node" onclick="setEditNode('node3','offline',this)">Offline</button>
+                <button class="btn-node" onclick="setEditNode('node3','maintenance',this)">Maint.</button>
+            </div>
+        </div>
+        <input type="hidden" id="editNodes" value='{"node1":"online","node2":"online","node3":"online"}' />
         <div class="row">
             <button class="btn btn-primary" onclick="saveEdit()">💾 Сохранить</button>
             <button class="btn btn-outline" onclick="closeEdit()">Отмена</button>
@@ -237,11 +312,13 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentNodeStates = { node1: 'online', node2: 'online', node3: 'online' };
+        let editNodeStates = { node1: 'online', node2: 'online', node3: 'online' };
 
         // ========== АВТОРИЗАЦИЯ ==========
         async function checkSession() {
             const { data: { session } } = await supabase.auth.getSession();
-            if (session) { showAdmin(); } else { showLogin(); }
+            if (session) showAdmin();
+            else showLogin();
         }
 
         function showLogin() {
@@ -259,8 +336,8 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) { document.getElementById('loginError').textContent = error.message; }
-            else { showAdmin(); }
+            if (error) document.getElementById('loginError').textContent = error.message;
+            else showAdmin();
         };
 
         window.signOut = async () => {
@@ -268,36 +345,62 @@
             showLogin();
         };
 
-        // ========== НОДЫ ==========
+        // ========== НОДЫ (создание) ==========
         window.setNode = (nodeId, status, btn) => {
             currentNodeStates[nodeId] = status;
             document.getElementById('incNodes').value = JSON.stringify(currentNodeStates);
             const parent = btn.parentElement;
             parent.querySelectorAll('.btn-node').forEach(b => b.className = 'btn-node');
-            const statusClass = status === 'warning' ? 'node-warning' :
-                               status === 'offline' ? 'node-offline' :
-                               status === 'maintenance' ? 'node-maintenance' : 'active';
-            btn.classList.add(statusClass);
+            btn.classList.add(status === 'warning' ? 'node-warning' :
+                              status === 'offline' ? 'node-offline' :
+                              status === 'maintenance' ? 'node-maintenance' : 'active');
         };
 
         window.resetNodeButtons = () => {
             currentNodeStates = { node1: 'online', node2: 'online', node3: 'online' };
             document.getElementById('incNodes').value = JSON.stringify(currentNodeStates);
-            document.querySelectorAll('.btn-node').forEach((b, i) => {
+            document.querySelectorAll('#adminBlock .btn-node').forEach((b, i) => {
                 b.className = 'btn-node';
                 if (i % 4 === 0) b.classList.add('active');
             });
         };
 
+        // ========== НОДЫ (редактирование) ==========
+        window.setEditNode = (nodeId, status, btn) => {
+            editNodeStates[nodeId] = status;
+            document.getElementById('editNodes').value = JSON.stringify(editNodeStates);
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.btn-node').forEach(b => b.className = 'btn-node');
+            btn.classList.add(status === 'warning' ? 'node-warning' :
+                              status === 'offline' ? 'node-offline' :
+                              status === 'maintenance' ? 'node-maintenance' : 'active');
+        };
+
+        function fillEditNodes(states) {
+            editNodeStates = {...states};
+            document.getElementById('editNodes').value = JSON.stringify(editNodeStates);
+            const groups = document.querySelectorAll('#editNodeControl .node-group');
+            ['node1','node2','node3'].forEach((nodeId, idx) => {
+                const status = states[nodeId] || 'online';
+                const group = groups[idx];
+                group.querySelectorAll('.btn-node').forEach(b => b.className = 'btn-node');
+                const statusMap = { online: 0, warning: 1, offline: 2, maintenance: 3 };
+                const btn = group.querySelectorAll('.btn-node')[statusMap[status] || 0];
+                btn.classList.add(status === 'warning' ? 'node-warning' :
+                                 status === 'offline' ? 'node-offline' :
+                                 status === 'maintenance' ? 'node-maintenance' : 'active');
+            });
+        }
+
         // ========== ПРЕСЕТЫ ==========
-        window.quickPreset = async (status) => {
+        window.quickPreset = (status) => {
             const presets = {
-                success: { title: 'Все системы работают', message: 'Инфраструктура функционирует нормально.', nodes: {node1:'online',node2:'online',node3:'online'} },
-                warning: { title: 'Повышенная нагрузка', message: 'Зафиксирована высокая нагрузка на сетевые узлы.', nodes: {node1:'warning',node2:'warning',node3:'online'} },
-                critical: { title: 'Критический сбой', message: 'Обнаружен критический сбой. Инженеры уведомлены.', nodes: {node1:'offline',node2:'online',node3:'online'} },
-                maintenance: { title: 'Плановое обслуживание', message: 'Проводятся регламентные работы.', nodes: {node1:'maintenance',node2:'maintenance',node3:'online'} },
-                investigating: { title: 'Расследование инцидента', message: 'Анализируем причины. Скоро отчёт.', nodes: {node1:'offline',node2:'warning',node3:'online'} },
-                resolved: { title: 'Инцидент исправлен', message: 'Все системы восстановлены.', nodes: {node1:'online',node2:'online',node3:'online'} }
+                success: { title:'Все системы работают', message:'Инфраструктура функционирует нормально.', nodes:{node1:'online',node2:'online',node3:'online'} },
+                warning: { title:'Повышенная нагрузка', message:'Зафиксирована высокая нагрузка на сетевые узлы.', nodes:{node1:'warning',node2:'warning',node3:'online'} },
+                critical: { title:'Критический сбой', message:'Обнаружен критический сбой. Инженеры уведомлены.', nodes:{node1:'offline',node2:'online',node3:'online'} },
+                maintenance: { title:'Плановое обслуживание', message:'Проводятся регламентные работы.', nodes:{node1:'maintenance',node2:'maintenance',node3:'online'} },
+                investigating: { title:'Расследование инцидента', message:'Анализируем причины. Скоро отчёт.', nodes:{node1:'offline',node2:'warning',node3:'online'} },
+                resolved: { title:'Инцидент исправлен', message:'Все системы восстановлены.', nodes:{node1:'online',node2:'online',node3:'online'} }
             };
             const p = presets[status];
             document.getElementById('incStatus').value = status;
@@ -306,16 +409,12 @@
             currentNodeStates = p.nodes;
             document.getElementById('incNodes').value = JSON.stringify(p.nodes);
             ['node1','node2','node3'].forEach(nodeId => {
-                const status = p.nodes[nodeId];
-                const group = document.querySelector(`.node-group:nth-child(${nodeId === 'node1' ? 1 : nodeId === 'node2' ? 2 : 3})`);
+                const st = p.nodes[nodeId];
+                const group = document.querySelector(`#adminBlock .node-group:nth-child(${nodeId==='node1'?1:nodeId==='node2'?2:3})`);
                 group.querySelectorAll('.btn-node').forEach(b => b.className = 'btn-node');
-                const statusMap = { online: 0, warning: 1, offline: 2, maintenance: 3 };
-                const idx = statusMap[status] || 0;
+                const idx = {online:0, warning:1, offline:2, maintenance:3}[st];
                 const btn = group.querySelectorAll('.btn-node')[idx];
-                const statusClass = status === 'warning' ? 'node-warning' :
-                                   status === 'offline' ? 'node-offline' :
-                                   status === 'maintenance' ? 'node-maintenance' : 'active';
-                btn.classList.add(statusClass);
+                btn.classList.add(st==='warning'?'node-warning':st==='offline'?'node-offline':st==='maintenance'?'node-maintenance':'active');
             });
         };
 
@@ -330,7 +429,7 @@
             const { error } = await supabase.from('incidents').insert([{
                 title, message, status, affected_nodes: nodes, is_active: true
             }]);
-            if (error) { document.getElementById('createError').textContent = error.message; }
+            if (error) document.getElementById('createError').textContent = error.message;
             else {
                 document.getElementById('createError').textContent = '';
                 document.getElementById('incTitle').value = '';
@@ -340,7 +439,7 @@
         };
 
         window.toggleActive = async (id, setActive) => {
-            if (setActive) { await supabase.from('incidents').update({ is_active: false }).eq('is_active', true); }
+            if (setActive) await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
             await supabase.from('incidents').update({ is_active: setActive }).eq('id', id);
             loadAll();
         };
@@ -360,6 +459,7 @@
             document.getElementById('editTitle').value = data.title;
             document.getElementById('editMessage').value = data.message || '';
             document.getElementById('editStatus').value = data.status;
+            fillEditNodes(data.affected_nodes || { node1:'online', node2:'online', node3:'online' });
             document.getElementById('editModal').classList.remove('hidden');
         };
 
@@ -373,10 +473,11 @@
             const title = document.getElementById('editTitle').value;
             const message = document.getElementById('editMessage').value;
             const status = document.getElementById('editStatus').value;
+            const nodes = JSON.parse(document.getElementById('editNodes').value);
             const { error } = await supabase.from('incidents')
-                .update({ title, message, status })
+                .update({ title, message, status, affected_nodes: nodes })
                 .eq('id', id);
-            if (error) { document.getElementById('editError').textContent = error.message; }
+            if (error) document.getElementById('editError').textContent = error.message;
             else { closeEdit(); loadAll(); }
         };
 
@@ -384,8 +485,7 @@
         window.resetIncidentIDs = async () => {
             if (!confirm('⚠️ Удалить ВСЕ инциденты и сбросить счётчик ID?')) return;
             const msgDiv = document.getElementById('systemMessage');
-            msgDiv.className = '';
-            msgDiv.textContent = 'Выполняется...';
+            msgDiv.className = ''; msgDiv.textContent = 'Выполняется...';
             const { error } = await supabase.rpc('reset_incidents_table');
             if (error) { msgDiv.className = 'error'; msgDiv.textContent = 'Ошибка: ' + error.message; }
             else { msgDiv.className = 'success'; msgDiv.textContent = '✅ Таблица очищена, счётчик ID сброшен'; loadAll(); }
@@ -400,10 +500,8 @@
                 csv += `${inc.id},"${new Date(inc.created_at).toLocaleString('ru-RU')}","${inc.status}","${inc.title}","${(inc.message||'').replace(/"/g,'""')}","${inc.is_active}","${JSON.stringify(inc.affected_nodes).replace(/"/g,'""')}"\n`;
             });
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'zenitvpn-incidents.csv';
-            a.click(); URL.revokeObjectURL(url);
+            a.href = URL.createObjectURL(blob); a.download = 'zenitvpn-incidents.csv'; a.click();
         };
 
         // ========== ЗАГРУЗКА ==========
@@ -440,11 +538,9 @@
                         <div class="incident-meta">${date} • ${nodesSummary} ${inc.is_active ? '🟢' : ''}</div>
                     </div>
                     <div class="button-group">
-                        <button class="btn btn-sm btn-outline" onclick="openEdit(${inc.id})" title="Редактировать">✏️</button>
-                        <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">
-                            ${inc.is_active ? 'Деактив.' : 'Актив.'}
-                        </button>
-                        <button class="btn btn-sm btn-delete" onclick="deleteIncident(${inc.id})" title="Удалить">🗑️</button>
+                        <button class="btn btn-sm btn-outline" onclick="openEdit(${inc.id})">✏️</button>
+                        <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">${inc.is_active ? 'Деактив.' : 'Актив.'}</button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteIncident(${inc.id})">🗑️</button>
                     </div>
                 </div>
             `;
