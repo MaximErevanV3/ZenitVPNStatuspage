@@ -8,11 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg: #04060f; --surface: #0c1226; --border: #1a223a;
-            --text: #dce3f0; --text-secondary: #8892aa; --accent: #4da6ff;
-            --red: #ff3358; --green: #00dda0; --yellow: #ffb020;
-        }
+        :root { --bg: #04060f; --surface: #0c1226; --border: #1a223a; --text: #dce3f0; --text-secondary: #8892aa; --accent: #4da6ff; --red: #ff3358; --green: #00dda0; --yellow: #ffb020; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
         body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px); pointer-events: none; z-index: 0; }
@@ -42,8 +38,8 @@
 <div class="container">
     <div id="loginBlock" class="card">
         <h2>🔐 Вход в админ‑панель</h2>
-        <input type="email" id="email" placeholder="Email" />
-        <input type="password" id="password" placeholder="Пароль" />
+        <input type="email" id="email" placeholder="Email" value="maximshdw@gmail.com" />
+        <input type="password" id="password" placeholder="Пароль" value="11w1988wE" />
         <button class="btn btn-primary" onclick="signIn()">Войти</button>
         <div id="loginError" class="error"></div>
     </div>
@@ -75,13 +71,13 @@
 
 <script>
     (function() {
+        // ✅ ПРАВИЛЬНЫЕ ПЕРЕМЕННЫЕ (твои ключи)
         const SUPABASE_URL = 'https://ovkimozzqfejlhmzxvuw.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_eq7YpcP3JONUtlFe00Zq0g_AsPLv6On';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function checkSession() {
             const { data: { session } } = await supabase.auth.getSession();
-            console.log('Сессия:', session);
             if (session) { showAdmin(); } else { showLogin(); }
         }
         function showLogin() {
@@ -97,12 +93,10 @@
         window.signIn = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) {
-                console.error('Ошибка входа:', error);
-                document.getElementById('loginError').textContent = error.message;
+                document.getElementById('loginError').textContent = 'Ошибка: ' + error.message;
             } else {
-                console.log('Успешный вход, сессия:', data.session);
                 showAdmin();
             }
         };
@@ -119,38 +113,22 @@
             let nodes;
             try {
                 nodes = JSON.parse(document.getElementById('incNodes').value);
-                if (typeof nodes !== 'object' || !nodes.node1 || !nodes.node2 || !nodes.node3) {
-                    throw new Error('JSON должен содержать node1, node2, node3');
-                }
+                if (!nodes.node1 || !nodes.node2 || !nodes.node3) throw new Error('Нужны node1,node2,node3');
             } catch(e) {
-                document.getElementById('createError').textContent = 'Неверный JSON узлов: ' + e.message;
+                document.getElementById('createError').textContent = 'JSON ошибка: ' + e.message;
                 return;
             }
 
-            console.log('Попытка создать инцидент:', { status, title, message, nodes });
+            // сбрасываем is_active у всех
+            await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
 
-            // Сбрасываем is_active у всех
-            const { error: updateError } = await supabase
-                .from('incidents')
-                .update({ is_active: false })
-                .eq('is_active', true);
+            const { error } = await supabase.from('incidents').insert([{
+                title, message, status, affected_nodes: nodes, is_active: true
+            }]);
 
-            if (updateError) {
-                console.error('Ошибка сброса is_active:', updateError);
-                document.getElementById('createError').textContent = 'Ошибка сброса старых: ' + updateError.message;
-                return;
-            }
-
-            const { data, error: insertError } = await supabase
-                .from('incidents')
-                .insert([{ title, message, status, affected_nodes: nodes, is_active: true }])
-                .select();
-
-            if (insertError) {
-                console.error('Ошибка вставки инцидента:', insertError);
-                document.getElementById('createError').textContent = 'Ошибка создания: ' + insertError.message;
+            if (error) {
+                document.getElementById('createError').textContent = 'Ошибка: ' + error.message;
             } else {
-                console.log('Инцидент создан:', data);
                 document.getElementById('createError').textContent = '';
                 document.getElementById('incTitle').value = '';
                 document.getElementById('incMessage').value = '';
@@ -159,24 +137,12 @@
         };
 
         async function loadIncidents() {
-            const { data: active, error: activeError } = await supabase
-                .from('incidents')
-                .select('*')
-                .eq('is_active', true)
-                .order('created_at', { ascending: false });
-            if (activeError) console.error('Ошибка загрузки активных:', activeError);
-
+            const { data: active } = await supabase.from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false });
             document.getElementById('activeList').innerHTML = (active && active.length)
                 ? active.map(inc => incidentHTML(inc)).join('')
                 : '<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
 
-            const { data: all, error: allError } = await supabase
-                .from('incidents')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(20);
-            if (allError) console.error('Ошибка загрузки истории:', allError);
-
+            const { data: all } = await supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
             document.getElementById('allList').innerHTML = (all || []).map(inc => incidentHTML(inc)).join('');
         }
 
@@ -195,18 +161,16 @@
         }
 
         window.toggleActive = async (id, setActive) => {
-            if (setActive) {
-                await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
-            }
+            if (setActive) await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
             const { error } = await supabase.from('incidents').update({ is_active: setActive }).eq('id', id);
             if (error) alert('Ошибка: ' + error.message);
             loadIncidents();
         };
 
         window.deleteIncident = async (id) => {
-            if (!confirm('Вы уверены?')) return;
+            if (!confirm('Удалить инцидент?')) return;
             const { error } = await supabase.from('incidents').delete().eq('id', id);
-            if (error) alert('Ошибка удаления: ' + error.message);
+            if (error) alert('Ошибка: ' + error.message);
             loadIncidents();
         };
 
