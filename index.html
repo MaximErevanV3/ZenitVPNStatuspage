@@ -230,6 +230,23 @@
 
         let refreshTimer;
 
+        function updateTimeDisplay() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('ru-RU', {
+                day:'2-digit', month:'2-digit', year:'numeric',
+                hour:'2-digit', minute:'2-digit'
+            });
+            const topTime = document.getElementById('topTime');
+            if (topTime) topTime.textContent = timeStr;
+
+            const lastRefreshEl = document.getElementById('lastRefresh');
+            if (lastRefreshEl) {
+                lastRefreshEl.textContent = now.toLocaleTimeString('ru-RU', {
+                    hour:'2-digit', minute:'2-digit', second:'2-digit'
+                });
+            }
+        }
+
         function renderStatus(incidentData) {
             let mode = 'success';
             let nodes = { node1:'online', node2:'online', node3:'online' };
@@ -237,7 +254,7 @@
             let title = PRESETS.success.defaultTitle;
             let message = PRESETS.success.defaultMessage;
 
-            if (incidentData) {
+            if (incidentData && PRESETS[incidentData.status]) {
                 mode = incidentData.status;
                 nodes = incidentData.affected_nodes || nodes;
                 incidentId = '#' + incidentData.id;
@@ -246,112 +263,129 @@
             }
 
             const data = PRESETS[mode];
-            const now = new Date();
-            const timeStr = now.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-
-            document.getElementById('topTime').textContent = timeStr;
-            document.getElementById('mainCard').className = `card theme-${data.theme}`;
+            const mainCard = document.getElementById('mainCard');
+            if (mainCard) mainCard.className = `card theme-${data.theme}`;
 
             const strip = document.getElementById('alertStrip');
-            strip.classList.remove('visible', 'strip-critical', 'strip-warning', 'strip-investigating');
-            if (data.banner) {
-                strip.classList.add('visible', data.banner.cls);
-                document.getElementById('stripText').textContent = data.banner.text;
+            const stripText = document.getElementById('stripText');
+            if (strip && stripText) {
+                strip.classList.remove('visible', 'strip-critical', 'strip-warning', 'strip-investigating');
+                if (data.banner) {
+                    strip.classList.add('visible', data.banner.cls);
+                    stripText.textContent = data.banner.text;
+                }
             }
 
             const pill = document.getElementById('statusPill');
-            pill.className = `status-pill ${data.pill.cls}`;
-            document.getElementById('pillText').textContent = data.pill.text;
+            const pillText = document.getElementById('pillText');
+            if (pill) pill.className = `status-pill ${data.pill.cls}`;
+            if (pillText) pillText.textContent = data.pill.text;
 
             document.getElementById('incTitle').textContent = title;
             document.getElementById('incBody').textContent = message;
             document.getElementById('incID').textContent = incidentId;
-            document.getElementById('incTime').textContent = timeStr;
+
+            updateTimeDisplay();
 
             const onlineCount = Object.values(nodes).filter(s => s === 'online').length;
-            document.getElementById('nodesOnlineCount').textContent = `${onlineCount} из 3 онлайн`;
+            const nodesOnlineCount = document.getElementById('nodesOnlineCount');
+            if (nodesOnlineCount) nodesOnlineCount.textContent = `${onlineCount} из 3 онлайн`;
 
             const grid = document.getElementById('serversGrid');
-            grid.innerHTML = '';
-            Object.entries(nodes).forEach(([id, status]) => {
-                const node = NODE_NAMES[id];
-                const card = document.createElement('div');
-                card.className = `server-card status-${status}`;
-                card.innerHTML = `
-                    <div class="server-top"><div class="server-flag">${node.flag}</div><div class="server-dot"></div></div>
-                    <div class="server-name">${node.name}</div><div class="server-code">${node.code}</div>
-                    <div class="uptime-bar-wrap">
-                        <div class="uptime-bar-label"><span>uptime</span><span>${UPTIME_VALUES[status]}</span></div>
-                        <div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div>
-                    </div>
-                    <div class="status-label-text">${STATUS_LABELS[status]}</div>
-                `;
-                grid.appendChild(card);
-            });
+            if (grid) {
+                grid.innerHTML = '';
+                Object.entries(nodes).forEach(([id, status]) => {
+                    const node = NODE_NAMES[id];
+                    const card = document.createElement('div');
+                    card.className = `server-card status-${status}`;
+                    card.innerHTML = `
+                        <div class="server-top"><div class="server-flag">${node.flag}</div><div class="server-dot"></div></div>
+                        <div class="server-name">${node.name}</div><div class="server-code">${node.code}</div>
+                        <div class="uptime-bar-wrap">
+                            <div class="uptime-bar-label"><span>uptime</span><span>${UPTIME_VALUES[status]}</span></div>
+                            <div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div>
+                        </div>
+                        <div class="status-label-text">${STATUS_LABELS[status]}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
         }
 
         async function loadHistory() {
-            const { data: incidents, error } = await supabase
-                .from('incidents')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(20);
+            try {
+                const { data: incidents, error } = await supabase
+                    .from('incidents')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
 
-            if (error) { console.error('History error:', error); return; }
+                const container = document.getElementById('historyList');
+                if (!container) return;
+                if (error || !incidents) {
+                    container.innerHTML = '<p style="color:var(--text-3);">История временно недоступна</p>';
+                    return;
+                }
 
-            const container = document.getElementById('historyList');
-            container.innerHTML = incidents.map(inc => {
-                const date = new Date(inc.created_at);
-                const dateStr = date.toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' }) +
-                                ' ' + date.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
-                const statusText = PRESETS[inc.status]?.pill?.text || inc.status;
-                const dotColor = inc.status === 'critical' ? 'var(--red)' :
-                                 inc.status === 'warning' ? 'var(--yellow)' :
-                                 inc.status === 'maintenance' ? 'var(--blue)' :
-                                 inc.status === 'investigating' ? 'var(--orange)' :
-                                 inc.status === 'resolved' ? 'var(--green)' : 'var(--green)';
-                return `
-                    <div class="history-item">
-                        <div class="history-dot" style="background:${dotColor}"></div>
-                        <div class="history-content">
-                            <div class="history-title">${inc.title}</div>
-                            <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
+                container.innerHTML = incidents.map(inc => {
+                    const date = new Date(inc.created_at);
+                    const dateStr = date.toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' }) +
+                                    ' ' + date.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+                    const statusText = PRESETS[inc.status]?.pill?.text || inc.status;
+                    const dotColor = inc.status === 'critical' ? 'var(--red)' :
+                                     inc.status === 'warning' ? 'var(--yellow)' :
+                                     inc.status === 'maintenance' ? 'var(--blue)' :
+                                     inc.status === 'investigating' ? 'var(--orange)' :
+                                     inc.status === 'resolved' ? 'var(--green)' : 'var(--green)';
+                    return `
+                        <div class="history-item">
+                            <div class="history-dot" style="background:${dotColor}"></div>
+                            <div class="history-content">
+                                <div class="history-title">${inc.title}</div>
+                                <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
+                            </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('History load error:', e);
+            }
         }
 
         async function refreshData() {
             const dot = document.querySelector('.refresh-dot');
-            dot.classList.add('updating');
-            setTimeout(() => dot.classList.remove('updating'), 600);
+            if (dot) {
+                dot.classList.add('updating');
+                setTimeout(() => dot.classList.remove('updating'), 600);
+            }
 
-            const { data: activeIncidents, error } = await supabase
-                .from('incidents')
-                .select('*')
-                .eq('is_active', true)
-                .order('created_at', { ascending: false })
-                .limit(1);
+            try {
+                const { data: activeIncidents, error } = await supabase
+                    .from('incidents')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
 
-            if (error) console.error('Refresh error:', error);
-            const activeIncident = activeIncidents?.[0] || null;
-
-            renderStatus(activeIncident);
-            await loadHistory();
-
-            const now = new Date();
-            document.getElementById('lastRefresh').textContent = 
-                now.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+                if (error) {
+                    console.error('Refresh error:', error);
+                    renderStatus(null);
+                } else {
+                    renderStatus(activeIncidents?.[0] || null);
+                }
+                await loadHistory();
+            } catch (e) {
+                console.error('Refresh failed:', e);
+                renderStatus(null);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             await refreshData();
-            // Автообновление каждые 60 секунд
             refreshTimer = setInterval(refreshData, 60000);
+            setInterval(updateTimeDisplay, 1000);
         });
 
-        // Очистка таймера при уходе со страницы
         window.addEventListener('beforeunload', () => {
             if (refreshTimer) clearInterval(refreshTimer);
         });
