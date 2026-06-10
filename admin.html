@@ -109,8 +109,6 @@
                 <button class="btn btn-warning btn-sm" onclick="quickPreset('warning')">⚠️ Нагрузка</button>
                 <button class="btn btn-danger btn-sm" onclick="quickPreset('critical')">🚨 Критический</button>
                 <button class="btn btn-primary btn-sm" onclick="quickPreset('maintenance')">🔧 Обслуживание</button>
-                <button class="btn btn-outline btn-sm" onclick="quickPreset('investigating')">🔍 Расследование</button>
-                <button class="btn btn-success btn-sm" onclick="quickPreset('resolved')">🎉 Исправлено</button>
             </div>
         </div>
 
@@ -121,8 +119,6 @@
                 <option value="maintenance">🔧 Тех. обслуживание</option>
                 <option value="critical">🚨 Критический сбой</option>
                 <option value="warning">⚠️ Предупреждение</option>
-                <option value="investigating">🔍 Расследование</option>
-                <option value="resolved">✅ Исправлено</option>
                 <option value="success">ℹ️ Информация (всё работает)</option>
             </select>
             <label>Заголовок</label>
@@ -204,8 +200,6 @@
             <option value="maintenance">🔧 Тех. обслуживание</option>
             <option value="critical">🚨 Критический сбой</option>
             <option value="warning">⚠️ Предупреждение</option>
-            <option value="investigating">🔍 Расследование</option>
-            <option value="resolved">✅ Исправлено</option>
             <option value="success">ℹ️ Информация</option>
         </select>
         <label>Состояние узлов</label>
@@ -315,9 +309,7 @@
                 success: { title:'Все системы работают', message:'Инфраструктура функционирует нормально.', nodes:{node1:'online',node2:'online',node3:'online'} },
                 warning: { title:'Повышенная нагрузка', message:'Высокая нагрузка на сеть.', nodes:{node1:'warning',node2:'warning',node3:'online'} },
                 critical: { title:'Критический сбой', message:'Обнаружен критический сбой.', nodes:{node1:'offline',node2:'online',node3:'online'} },
-                maintenance: { title:'Плановое обслуживание', message:'Проводятся регламентные работы.', nodes:{node1:'maintenance',node2:'maintenance',node3:'online'} },
-                investigating: { title:'Расследование', message:'Анализируем причины.', nodes:{node1:'offline',node2:'warning',node3:'online'} },
-                resolved: { title:'Инцидент исправлен', message:'Все системы восстановлены.', nodes:{node1:'online',node2:'online',node3:'online'} }
+                maintenance: { title:'Плановое обслуживание', message:'Проводятся регламентные работы.', nodes:{node1:'maintenance',node2:'maintenance',node3:'online'} }
             };
             const p = presets[status];
             document.getElementById('incStatus').value = status;
@@ -364,11 +356,9 @@
             loadAll();
         };
 
-        // Редактирование активного инцидента напрямую
         window.editActiveIncident = async () => {
             const msgDiv = document.getElementById('editActiveMessage');
-            msgDiv.className = '';
-            msgDiv.textContent = '';
+            msgDiv.className = ''; msgDiv.textContent = '';
             const { data: active, error } = await supabase.from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1);
             if (error || !active || active.length === 0) {
                 msgDiv.className = 'error';
