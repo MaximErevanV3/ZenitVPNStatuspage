@@ -6,6 +6,7 @@
     <title>ZenitVPN — Статус Систем</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg: #04060f;
@@ -13,20 +14,17 @@
             --surface-raised: rgba(255,255,255,0.03);
             --border: rgba(255,255,255,0.06);
             --border-strong: rgba(255,255,255,0.1);
-
             --green: #00dda0;
             --yellow: #ffb020;
             --red: #ff3358;
             --blue: #4da6ff;
             --purple: #a78bfa;
-
             --text-1: #eef2ff;
             --text-2: #8892aa;
             --text-3: #404866;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             background: var(--bg);
             color: var(--text-1);
@@ -39,7 +37,6 @@
             overflow-x: hidden;
         }
 
-        /* ── Scanline texture ── */
         body::before {
             content: '';
             position: fixed; inset: 0;
@@ -54,16 +51,12 @@
             z-index: 0;
         }
 
-        /* ── Background ── */
         .bg-layer {
             position: fixed; inset: 0;
-            z-index: 0; pointer-events: none;
-            overflow: hidden;
+            z-index: 0; pointer-events: none; overflow: hidden;
         }
         .bg-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
+            position: absolute; border-radius: 50%; filter: blur(120px);
         }
         .bg-orb-1 { width:700px;height:700px; background:rgba(77,166,255,0.055); top:-250px;left:-200px; }
         .bg-orb-2 { width:500px;height:500px; background:rgba(0,221,160,0.04); bottom:-200px;right:-100px; }
@@ -78,7 +71,6 @@
             mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%);
         }
 
-        /* ── Container ── */
         .container {
             width: 100%; max-width: 700px;
             position: relative; z-index: 1;
@@ -89,7 +81,6 @@
             to   { opacity:1; transform: translateY(0); }
         }
 
-        /* ── Top bar (outside card) ── */
         .topbar {
             display: flex;
             align-items: center;
@@ -97,9 +88,7 @@
             margin-bottom: 16px;
             padding: 0 4px;
         }
-        .logo {
-            display: flex; align-items: center; gap: 9px;
-        }
+        .logo { display: flex; align-items: center; gap: 9px; }
         .logo-shield {
             width: 28px; height: 28px;
             background: linear-gradient(135deg, rgba(77,166,255,0.18), rgba(77,166,255,0.06));
@@ -116,9 +105,7 @@
         .logo-name b { color: var(--blue); }
 
         .topbar-right {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 10.5px; font-family: 'JetBrains Mono', monospace;
-            color: var(--text-3);
+            display: flex; align-items: center; gap: 12px;
         }
         .live-dot {
             width: 5px; height: 5px; border-radius: 50%;
@@ -129,8 +116,29 @@
             0%,100% { opacity:.5; box-shadow: 0 0 0 0 rgba(0,221,160,0.5); }
             50%      { opacity:1; box-shadow: 0 0 0 4px rgba(0,221,160,0); }
         }
+        .topbar-time {
+            font-size: 10.5px; font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
+        }
 
-        /* ── Main Card ── */
+        .admin-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11px; font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(77,166,255,0.1);
+            border: 1px solid rgba(77,166,255,0.25);
+            color: var(--blue);
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .admin-btn:hover {
+            background: rgba(77,166,255,0.18);
+            border-color: rgba(77,166,255,0.4);
+        }
+
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -138,10 +146,7 @@
             backdrop-filter: blur(60px);
             -webkit-backdrop-filter: blur(60px);
             overflow: hidden;
-            box-shadow:
-                0 0 0 1px rgba(255,255,255,0.025) inset,
-                0 40px 100px rgba(0,0,0,0.7),
-                0 8px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.025) inset, 0 40px 100px rgba(0,0,0,0.7), 0 8px 30px rgba(0,0,0,0.4);
             transition: border-color 0.5s ease, box-shadow 0.5s ease;
         }
         .card.theme-success  { border-color: rgba(0,221,160,0.14);  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(0,221,160,0.04); }
@@ -149,13 +154,9 @@
         .card.theme-critical { border-color: rgba(255,51,88,0.22);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(255,51,88,0.06); }
         .card.theme-info     { border-color: rgba(77,166,255,0.2);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(77,166,255,0.05); }
 
-        /* ── Alert Banner (top strip of card) ── */
         .alert-strip {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            padding: 11px 28px;
-            font-size: 11px; font-weight: 700;
+            display: none; align-items: center; gap: 10px;
+            padding: 11px 28px; font-size: 11px; font-weight: 700;
             letter-spacing: 1.2px; text-transform: uppercase;
             border-bottom: 1px solid transparent;
         }
@@ -170,106 +171,54 @@
             border-bottom-color: rgba(255,176,32,0.15);
             color: var(--yellow);
         }
-        .strip-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: currentColor; flex-shrink: 0;
-            animation: pulse-strip 1.4s ease-in-out infinite;
-        }
-        @keyframes pulse-strip {
-            0%,100% { opacity:.5; }
-            50% { opacity:1; box-shadow: 0 0 8px 3px currentColor; }
-        }
+        .strip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: pulse-strip 1.4s ease-in-out infinite; }
+        @keyframes pulse-strip { 0%,100%{opacity:.5;} 50%{opacity:1; box-shadow: 0 0 8px 3px currentColor;} }
 
-        /* ── Card Body ── */
         .card-body { padding: 32px 36px 28px; }
 
-        /* ── Overall status pill ── */
         .status-pill {
             display: inline-flex; align-items: center; gap: 8px;
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 11px; font-weight: 700;
-            letter-spacing: 0.8px; text-transform: uppercase;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
+            padding: 6px 14px; border-radius: 100px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+            margin-bottom: 20px; border: 1px solid transparent;
         }
         .pill-success  { background: rgba(0,221,160,0.08);  border-color: rgba(0,221,160,0.18);  color: var(--green); }
         .pill-warning  { background: rgba(255,176,32,0.08); border-color: rgba(255,176,32,0.2);  color: var(--yellow); }
         .pill-critical { background: rgba(255,51,88,0.08);  border-color: rgba(255,51,88,0.2);   color: var(--red); }
         .pill-info     { background: rgba(77,166,255,0.08); border-color: rgba(77,166,255,0.2);  color: var(--blue); }
-        .pill-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: currentColor;
-            animation: livepulse 2s ease-in-out infinite;
-        }
+        .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: livepulse 2s ease-in-out infinite; }
 
         .incident-title {
-            font-size: 24px; font-weight: 800;
-            line-height: 1.2; letter-spacing: -0.5px;
-            color: var(--text-1);
-            margin-bottom: 10px;
+            font-size: 24px; font-weight: 800; line-height: 1.2; letter-spacing: -0.5px;
+            color: var(--text-1); margin-bottom: 10px;
         }
         .incident-body {
-            font-size: 13.5px; color: var(--text-2);
-            line-height: 1.75; margin-bottom: 28px;
-            white-space: pre-line;
-            max-width: 560px;
+            font-size: 13.5px; color: var(--text-2); line-height: 1.75; margin-bottom: 28px;
+            white-space: pre-line; max-width: 560px;
         }
 
-        /* ── Meta strip ── */
         .meta-strip {
             display: flex; gap: 0;
             background: var(--surface-raised);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 28px;
+            border-radius: 10px; overflow: hidden; margin-bottom: 28px;
         }
-        .meta-cell {
-            flex: 1; padding: 12px 18px;
-            border-right: 1px solid var(--border);
-        }
+        .meta-cell { flex: 1; padding: 12px 18px; border-right: 1px solid var(--border); }
         .meta-cell:last-child { border-right: none; }
-        .meta-label {
-            font-size: 9.5px; font-weight: 700;
-            letter-spacing: 1.5px; text-transform: uppercase;
-            color: var(--text-3); margin-bottom: 4px;
-        }
-        .meta-value {
-            font-size: 12px; font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text-2);
-        }
+        .meta-label { font-size: 9.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+        .meta-value { font-size: 12px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--text-2); }
 
-        /* ── Servers ── */
-        .servers-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        .servers-label {
-            font-size: 10px; font-weight: 700;
-            letter-spacing: 2px; text-transform: uppercase;
-            color: var(--text-3);
-        }
-        .servers-count {
-            font-size: 10px; font-family: 'JetBrains Mono', monospace;
-            color: var(--text-3);
-        }
+        .servers-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .servers-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-3); }
+        .servers-count { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-3); }
 
         .servers-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 24px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px;
         }
 
         .server-card {
-            background: var(--surface-raised);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            position: relative;
-            overflow: hidden;
+            background: var(--surface-raised); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
             transition: border-color 0.3s, background 0.3s;
             animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
         }
@@ -277,11 +226,8 @@
         .server-card:nth-child(2) { animation-delay: 0.10s; }
         .server-card:nth-child(3) { animation-delay: 0.15s; }
 
-        /* Thin top accent line per status */
         .server-card::after {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0;
-            height: 1px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
         }
         .server-card.status-online::after    { background: linear-gradient(90deg, transparent, rgba(0,221,160,0.5), transparent); }
         .server-card.status-warning::after   { background: linear-gradient(90deg, transparent, rgba(255,176,32,0.5), transparent); }
@@ -293,15 +239,9 @@
         .server-card.status-offline     { border-color: rgba(255,51,88,0.18);  background: rgba(255,51,88,0.025); }
         .server-card.status-maintenance { border-color: rgba(77,166,255,0.18); background: rgba(77,166,255,0.025); }
 
-        .server-top {
-            display: flex; align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
+        .server-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
         .server-flag { font-size: 20px; line-height: 1; }
-        .server-dot {
-            width: 7px; height: 7px; border-radius: 50%; margin-top: 2px;
-        }
+        .server-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 2px; }
         .status-online    .server-dot { background: var(--green);  animation: glow-g 1.8s ease-in-out infinite; }
         .status-warning   .server-dot { background: var(--yellow); animation: glow-y 1.4s ease-in-out infinite; }
         .status-offline   .server-dot { background: var(--red);    animation: glow-r 1.2s ease-in-out infinite; }
@@ -312,72 +252,44 @@
         @keyframes glow-r { 0%,100%{box-shadow:0 0 4px 1px rgba(255,51,88,0.4);opacity:.6}50%{box-shadow:0 0 10px 4px rgba(255,51,88,0.7);opacity:1} }
         @keyframes glow-b { 0%,100%{box-shadow:0 0 4px 1px rgba(77,166,255,0.4);opacity:.6}50%{box-shadow:0 0 10px 4px rgba(77,166,255,0.7);opacity:1} }
 
-        .server-name {
-            font-size: 12.5px; font-weight: 700;
-            color: var(--text-1); margin-bottom: 2px;
-        }
-        .server-code {
-            font-size: 10px; font-family: 'JetBrains Mono', monospace;
-            color: var(--text-3);
-        }
+        .server-name { font-size: 12.5px; font-weight: 700; color: var(--text-1); margin-bottom: 2px; }
+        .server-code { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-3); }
 
-        /* Uptime bar */
-        .uptime-bar-wrap {
-            margin-top: 12px;
-        }
-        .uptime-bar-label {
-            display: flex; justify-content: space-between;
-            font-size: 9.5px; color: var(--text-3);
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 5px;
-        }
-        .uptime-bar-track {
-            height: 3px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .uptime-bar-fill {
-            height: 100%; border-radius: 2px;
-            transition: width 1s cubic-bezier(0.22,1,0.36,1);
-        }
+        .uptime-bar-wrap { margin-top: 12px; }
+        .uptime-bar-label { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--text-3); font-family: 'JetBrains Mono', monospace; margin-bottom: 5px; }
+        .uptime-bar-track { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+        .uptime-bar-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(0.22,1,0.36,1); }
         .status-online    .uptime-bar-fill { background: var(--green); width: 99.8%; }
         .status-warning   .uptime-bar-fill { background: var(--yellow); width: 81%; }
         .status-offline   .uptime-bar-fill { background: var(--red); width: 0%; }
         .status-maintenance .uptime-bar-fill { background: var(--blue); width: 100%; }
 
-        .status-label-text {
-            font-size: 10px; font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 0.3px; margin-top: 6px;
-        }
+        .status-label-text { font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.3px; margin-top: 6px; }
         .status-online    .status-label-text { color: var(--green); }
         .status-warning   .status-label-text { color: var(--yellow); }
         .status-offline   .status-label-text { color: var(--red); }
         .status-maintenance .status-label-text { color: var(--blue); }
 
-        /* ── Footer ── */
+        .history-section { margin-top: 28px; }
+        .history-list { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+        .history-item {
+            display: flex; align-items: flex-start; gap: 14px;
+            padding: 12px 0; border-bottom: 1px solid var(--border);
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+        .history-title { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 2px; }
+        .history-meta { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-3); }
+
         .card-footer {
-            padding: 14px 36px;
-            border-top: 1px solid var(--border);
+            padding: 14px 36px; border-top: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(0,0,0,0.15);
         }
-        .footer-left {
-            font-size: 10px; font-family: 'JetBrains Mono', monospace;
-            color: var(--text-3);
-        }
-        .footer-right {
-            display: flex; align-items: center; gap: 16px;
-        }
-        .footer-badge {
-            display: flex; align-items: center; gap: 5px;
-            font-size: 10px; font-family: 'JetBrains Mono', monospace;
-            color: var(--text-3);
-        }
-        .footer-badge-dot {
-            width: 5px; height: 5px; border-radius: 50%;
-        }
+        .footer-left { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-3); }
+        .footer-right { display: flex; align-items: center; gap: 16px; }
+        .footer-badge { display: flex; align-items: center; gap: 5px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-3); }
+        .footer-badge-dot { width: 5px; height: 5px; border-radius: 50%; }
 
         @media (max-width: 580px) {
             .card-body { padding: 24px 20px 20px; }
@@ -400,49 +312,39 @@
 </div>
 <div class="bg-grid"></div>
 
-<!-- =====================================================
-     ТУМБЛЕР РЕЖИМА — ИЗМЕНИТЬ ЗДЕСЬ
-     'success' | 'maintenance' | 'critical' | 'warning'
-     ===================================================== -->
 <script>
-    const CURRENT_SYSTEM_MODE = 'success';
+    const SUPABASE_URL = 'https://ovkimozzqfejlhmzxvuw.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_eq7YpcP3JONUtlFe00Zq0g_AsPLv6On';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const PRESETS = {
         success: {
             theme: 'success',
             pill: { cls: 'pill-success', text: 'Все системы работают' },
             banner: null,
-            title: 'Инфраструктура в норме',
-            id: '—',
-            message: 'Критических сбоев и плановых технических работ не зафиксировано. Все магистральные каналы функционируют на максимальной пропускной способности.',
-            nodes: { node1: 'online', node2: 'online', node3: 'online' }
+            defaultTitle: 'Инфраструктура в норме',
+            defaultMessage: 'Критических сбоев и плановых технических работ не зафиксировано.'
         },
         maintenance: {
             theme: 'info',
             pill: { cls: 'pill-info', text: 'Техническое обслуживание' },
             banner: null,
-            title: 'Плановые технические работы',
-            id: '#MNT-404',
-            message: 'Инженеры проводят модернизацию серверного ПО и обновление SSL-сертефикатов. Узел в Нидерландах и Финляндии временно переведён в режим обслуживания.',
-            nodes: { node1: 'maintenance', node2: 'maintenance', node3: 'online' }
+            defaultTitle: 'Плановые технические работы',
+            defaultMessage: 'Инженеры проводят модернизацию серверного ПО.'
         },
         critical: {
             theme: 'critical',
             pill: { cls: 'pill-critical', text: 'Критический сбой' },
             banner: { cls: 'strip-critical', text: 'Зафиксирован критический сбой' },
-            title: 'Аварийное отключение узла',
-            id: '#ZNT-0001',
-            message: 'Узел в Финляндии недоступен. Трафик перенаправлен на резервные серверы. Инженеры устанавливают причину инцидента.',
-            nodes: { node1: 'offline', node2: 'online', node3: 'online' }
+            defaultTitle: 'Аварийное отключение узла',
+            defaultMessage: 'Узел в Финляндии недоступен. Трафик перенаправлен.'
         },
         warning: {
             theme: 'warning',
             pill: { cls: 'pill-warning', text: 'Повышенная нагрузка' },
             banner: { cls: 'strip-warning', text: 'Повышенная нагрузка на сеть' },
-            title: 'Замедление сетевых узлов',
-            id: '#ZNT-0002',
-            message: 'Зафиксирована повышенная нагрузка на все три узла. Возможны замедления и кратковременная недоступность серверов.',
-            nodes: { node1: 'warning', node2: 'warning', node3: 'warning' }
+            defaultTitle: 'Замедление сетевых узлов',
+            defaultMessage: 'Зафиксирована повышенная нагрузка на все три узла.'
         }
     };
 
@@ -465,122 +367,54 @@
         warning:     '81.3%',
         maintenance: '100%'
     };
-</script>
 
-<div class="container">
+    function renderStatus(incidentData) {
+        let mode = 'success';
+        let nodes = { node1: 'online', node2: 'online', node3: 'online' };
+        let incidentId = '—';
+        let title = PRESETS.success.defaultTitle;
+        let message = PRESETS.success.defaultMessage;
 
-    <!-- Top bar outside card -->
-    <div class="topbar">
-        <div class="logo">
-            <div class="logo-shield">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-            </div>
-            <div class="logo-name">Zenit<b>VPN</b></div>
-        </div>
-        <div class="topbar-right">
-            <div class="live-dot"></div>
-            <span id="topTime"></span>
-        </div>
-    </div>
+        if (incidentData) {
+            mode = incidentData.status;
+            nodes = incidentData.affected_nodes || nodes;
+            incidentId = '#' + incidentData.id;
+            title = incidentData.title || PRESETS[mode].defaultTitle;
+            message = incidentData.message || PRESETS[mode].defaultMessage;
+        }
 
-    <div class="card" id="mainCard">
-
-        <!-- Alert strip (top of card) -->
-        <div class="alert-strip" id="alertStrip">
-            <div class="strip-dot"></div>
-            <span id="stripText"></span>
-        </div>
-
-        <!-- Body -->
-        <div class="card-body">
-
-            <div class="status-pill" id="statusPill">
-                <div class="pill-dot"></div>
-                <span id="pillText"></span>
-            </div>
-
-            <h1 class="incident-title" id="incTitle"></h1>
-            <p class="incident-body" id="incBody"></p>
-
-            <!-- Meta cells -->
-            <div class="meta-strip">
-                <div class="meta-cell">
-                    <div class="meta-label">ID инцидента</div>
-                    <div class="meta-value" id="incID"></div>
-                </div>
-                <div class="meta-cell">
-                    <div class="meta-label">Обновлено</div>
-                    <div class="meta-value" id="incTime"></div>
-                </div>
-                <div class="meta-cell">
-                    <div class="meta-label">Всего узлов</div>
-                    <div class="meta-value">3 / 3</div>
-                </div>
-            </div>
-
-            <!-- Servers -->
-            <div class="servers-header">
-                <span class="servers-label">Состояние узлов</span>
-                <span class="servers-count" id="nodesOnlineCount"></span>
-            </div>
-            <div class="servers-grid" id="serversGrid"></div>
-        </div>
-
-        <!-- Footer -->
-        <div class="card-footer">
-            <span class="footer-left">ZenitVPN Монитор </span>
-            <div class="footer-right">
-                <div class="footer-badge">
-                    <div class="footer-badge-dot" style="background:var(--green); animation: glow-g 2s ease-in-out infinite;"></div>
-                    <span>Автообновление</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const mode = CURRENT_SYSTEM_MODE;
-        const data = PRESETS[mode] || PRESETS.success;
-
+        const data = PRESETS[mode];
         const now = new Date();
         const timeStr = now.toLocaleString('ru-RU', {
             day:'2-digit', month:'2-digit', year:'numeric',
             hour:'2-digit', minute:'2-digit'
         });
-        document.getElementById('topTime').textContent = timeStr;
 
-        // Card theme
+        document.getElementById('topTime').textContent = timeStr;
         document.getElementById('mainCard').className = `card theme-${data.theme}`;
 
-        // Alert strip
         const strip = document.getElementById('alertStrip');
+        strip.classList.remove('visible', 'strip-critical', 'strip-warning');
         if (data.banner) {
             strip.classList.add('visible', data.banner.cls);
             document.getElementById('stripText').textContent = data.banner.text;
         }
 
-        // Status pill
         const pill = document.getElementById('statusPill');
         pill.className = `status-pill ${data.pill.cls}`;
         document.getElementById('pillText').textContent = data.pill.text;
 
-        // Text
-        document.getElementById('incTitle').textContent = data.title;
-        document.getElementById('incBody').textContent  = data.message;
-        document.getElementById('incID').textContent    = data.id;
-        document.getElementById('incTime').textContent  = timeStr;
+        document.getElementById('incTitle').textContent = title;
+        document.getElementById('incBody').textContent = message;
+        document.getElementById('incID').textContent = incidentId;
+        document.getElementById('incTime').textContent = timeStr;
 
-        // Online count
-        const onlineCount = Object.values(data.nodes).filter(s => s === 'online').length;
+        const onlineCount = Object.values(nodes).filter(s => s === 'online').length;
         document.getElementById('nodesOnlineCount').textContent = `${onlineCount} из 3 онлайн`;
 
-        // Build server cards
         const grid = document.getElementById('serversGrid');
-        Object.entries(data.nodes).forEach(([id, status]) => {
+        grid.innerHTML = '';
+        Object.entries(nodes).forEach(([id, status]) => {
             const node = NODE_NAMES[id];
             const card = document.createElement('div');
             card.className = `server-card status-${status}`;
@@ -604,8 +438,137 @@
             `;
             grid.appendChild(card);
         });
+    }
+
+    async function loadHistory() {
+        const { data: incidents, error } = await supabase
+            .from('incidents')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) {
+            console.error('History load error:', error);
+            return;
+        }
+
+        const container = document.getElementById('historyList');
+        container.innerHTML = incidents.map(inc => {
+            const date = new Date(inc.created_at);
+            const dateStr = date.toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' }) +
+                            ' ' + date.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+            const statusText = PRESETS[inc.status]?.pill?.text || inc.status;
+            const dotColor = inc.status === 'critical' ? 'var(--red)' :
+                             inc.status === 'warning' ? 'var(--yellow)' :
+                             inc.status === 'maintenance' ? 'var(--blue)' : 'var(--green)';
+            return `
+                <div class="history-item">
+                    <div class="history-dot" style="background:${dotColor}"></div>
+                    <div class="history-content">
+                        <div class="history-title">${inc.title}</div>
+                        <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const { data: activeIncidents, error } = await supabase
+            .from('incidents')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (error) console.error('Active incident fetch error:', error);
+        const activeIncident = activeIncidents?.[0] || null;
+
+        renderStatus(activeIncident);
+        await loadHistory();
     });
 </script>
 
+<div class="container">
+    <div class="topbar">
+        <div class="logo">
+            <div class="logo-shield">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <div class="logo-name">Zenit<b>VPN</b></div>
+        </div>
+        <div class="topbar-right">
+            <div class="live-dot"></div>
+            <span class="topbar-time" id="topTime"></span>
+            <a href="admin.html" class="admin-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Админ
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="mainCard">
+        <div class="alert-strip" id="alertStrip">
+            <div class="strip-dot"></div>
+            <span id="stripText"></span>
+        </div>
+
+        <div class="card-body">
+            <div class="status-pill" id="statusPill">
+                <div class="pill-dot"></div>
+                <span id="pillText"></span>
+            </div>
+
+            <h1 class="incident-title" id="incTitle"></h1>
+            <p class="incident-body" id="incBody"></p>
+
+            <div class="meta-strip">
+                <div class="meta-cell">
+                    <div class="meta-label">ID инцидента</div>
+                    <div class="meta-value" id="incID"></div>
+                </div>
+                <div class="meta-cell">
+                    <div class="meta-label">Обновлено</div>
+                    <div class="meta-value" id="incTime"></div>
+                </div>
+                <div class="meta-cell">
+                    <div class="meta-label">Всего узлов</div>
+                    <div class="meta-value">3 / 3</div>
+                </div>
+            </div>
+
+            <div class="servers-header">
+                <span class="servers-label">Состояние узлов</span>
+                <span class="servers-count" id="nodesOnlineCount"></span>
+            </div>
+            <div class="servers-grid" id="serversGrid"></div>
+
+            <div class="history-section">
+                <div class="servers-header">
+                    <span class="servers-label">История инцидентов</span>
+                </div>
+                <div class="history-list" id="historyList"></div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <span class="footer-left">ZenitVPN Монитор</span>
+            <div class="footer-right">
+                <div class="footer-badge">
+                    <div class="footer-badge-dot" style="background:var(--green); animation: glow-g 2s ease-in-out infinite;"></div>
+                    <span>Автообновление</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
-    </html>
+</html>
