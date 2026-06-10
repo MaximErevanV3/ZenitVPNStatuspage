@@ -18,7 +18,6 @@
             --yellow: #ffb020;
             --red: #ff3358;
             --blue: #4da6ff;
-            --orange: #ff8c42;
             --text-1: #eef2ff;
             --text-2: #8892aa;
             --text-3: #404866;
@@ -63,12 +62,10 @@
         .card.theme-warning  { border-color: rgba(255,176,32,0.2);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(255,176,32,0.05); }
         .card.theme-critical { border-color: rgba(255,51,88,0.22);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(255,51,88,0.06); }
         .card.theme-info     { border-color: rgba(77,166,255,0.2);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(77,166,255,0.05); }
-        .card.theme-resolved { border-color: rgba(0,221,160,0.18);  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(0,221,160,0.06); }
         .alert-strip { display: none; align-items: center; gap: 10px; padding: 11px 28px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; border-bottom: 1px solid transparent; }
         .alert-strip.visible { display: flex; }
         .alert-strip.strip-critical { background: rgba(255,51,88,0.07); border-bottom-color: rgba(255,51,88,0.15); color: var(--red); }
         .alert-strip.strip-warning { background: rgba(255,176,32,0.07); border-bottom-color: rgba(255,176,32,0.15); color: var(--yellow); }
-        .alert-strip.strip-investigating { background: rgba(255,140,66,0.07); border-bottom-color: rgba(255,140,66,0.15); color: var(--orange); }
         .strip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: pulse-strip 1.4s ease-in-out infinite; }
         @keyframes pulse-strip { 0%,100%{opacity:.5;} 50%{opacity:1; box-shadow: 0 0 8px 3px currentColor;} }
         .card-body { padding: 32px 36px 28px; }
@@ -77,8 +74,6 @@
         .pill-warning  { background: rgba(255,176,32,0.08); border-color: rgba(255,176,32,0.2);  color: var(--yellow); }
         .pill-critical { background: rgba(255,51,88,0.08);  border-color: rgba(255,51,88,0.2);   color: var(--red); }
         .pill-info     { background: rgba(77,166,255,0.08); border-color: rgba(77,166,255,0.2);  color: var(--blue); }
-        .pill-investigating { background: rgba(255,140,66,0.08); border-color: rgba(255,140,66,0.2); color: var(--orange); }
-        .pill-resolved { background: rgba(0,221,160,0.08); border-color: rgba(0,221,160,0.2); color: var(--green); }
         .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: livepulse 2s ease-in-out infinite; }
         .incident-title { font-size: 24px; font-weight: 800; line-height: 1.2; letter-spacing: -0.5px; color: var(--text-1); margin-bottom: 10px; }
         .incident-body { font-size: 13.5px; color: var(--text-2); line-height: 1.75; margin-bottom: 28px; white-space: pre-line; max-width: 560px; }
@@ -161,9 +156,7 @@
             success: { theme:'success', pill:{cls:'pill-success',text:'Все системы работают'}, banner:null, defaultTitle:'Инфраструктура в норме', defaultMessage:'Критических сбоев и плановых работ не зафиксировано.' },
             maintenance: { theme:'info', pill:{cls:'pill-info',text:'Техническое обслуживание'}, banner:null, defaultTitle:'Плановые работы', defaultMessage:'Инженеры проводят модернизацию.' },
             critical: { theme:'critical', pill:{cls:'pill-critical',text:'Критический сбой'}, banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'}, defaultTitle:'Аварийное отключение', defaultMessage:'Узел в Финляндии недоступен.' },
-            warning: { theme:'warning', pill:{cls:'pill-warning',text:'Повышенная нагрузка'}, banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'}, defaultTitle:'Замедление узлов', defaultMessage:'Высокая нагрузка на все узлы.' },
-            investigating: { theme:'critical', pill:{cls:'pill-investigating',text:'Расследование'}, banner:{cls:'strip-investigating',text:'Ведётся расследование'}, defaultTitle:'Расследование', defaultMessage:'Анализируем причины.' },
-            resolved: { theme:'resolved', pill:{cls:'pill-resolved',text:'Исправлено'}, banner:null, defaultTitle:'Инцидент исправлен', defaultMessage:'Все системы восстановлены.' }
+            warning: { theme:'warning', pill:{cls:'pill-warning',text:'Повышенная нагрузка'}, banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'}, defaultTitle:'Замедление узлов', defaultMessage:'Высокая нагрузка на все узлы.' }
         };
 
         const NODE_NAMES = {
@@ -188,7 +181,7 @@
             const data = PRESETS[mode];
             document.getElementById('mainCard').className = `card theme-${data.theme}`;
             const strip = document.getElementById('alertStrip');
-            strip.classList.remove('visible','strip-critical','strip-warning','strip-investigating');
+            strip.classList.remove('visible','strip-critical','strip-warning');
             if (data.banner) { strip.classList.add('visible', data.banner.cls); document.getElementById('stripText').textContent = data.banner.text; }
             const pill = document.getElementById('statusPill');
             pill.className = `status-pill ${data.pill.cls}`;
@@ -224,7 +217,7 @@
                 const d = new Date(inc.created_at);
                 const dateStr = d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
                 const statusText = PRESETS[inc.status]?.pill?.text || inc.status;
-                const dotColor = inc.status==='critical'?'var(--red)': inc.status==='warning'?'var(--yellow)': inc.status==='maintenance'?'var(--blue)': inc.status==='investigating'?'var(--orange)': inc.status==='resolved'?'var(--green)':'var(--green)';
+                const dotColor = inc.status==='critical'?'var(--red)': inc.status==='warning'?'var(--yellow)': inc.status==='maintenance'?'var(--blue)': 'var(--green)';
                 return `<div class="history-item"><div class="history-dot" style="background:${dotColor}"></div><div class="history-content"><div class="history-title">${inc.title}</div><div class="history-meta">${dateStr} • ${statusText} ${inc.is_active?'(активно)':''}</div></div></div>`;
             }).join('');
         }
