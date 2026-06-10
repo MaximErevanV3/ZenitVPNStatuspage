@@ -137,7 +137,7 @@
         .footer-badge { display: flex; align-items: center; gap: 5px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-3); }
         .footer-badge-dot { width: 5px; height: 5px; border-radius: 50%; }
 
-        /* Экран загрузки */
+        /* экран загрузки */
         .loader-overlay {
             position: fixed; inset: 0; z-index: 9999;
             background: var(--bg);
@@ -145,13 +145,8 @@
             flex-direction: column; gap: 20px;
             transition: opacity 0.3s ease;
         }
-        .loader-overlay.hidden {
-            opacity: 0; pointer-events: none;
-        }
-        .loader-text {
-            font-size: 14px; font-weight: 500; letter-spacing: 1px;
-            color: var(--text-2); text-transform: uppercase;
-        }
+        .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+        .loader-text { font-size: 14px; font-weight: 500; letter-spacing: 1px; color: var(--text-2); text-transform: uppercase; }
         .loader-spinner {
             width: 32px; height: 32px;
             border: 2px solid rgba(77,166,255,0.2);
@@ -173,7 +168,6 @@
 <div class="bg-layer"><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div><div class="bg-orb bg-orb-3"></div></div>
 <div class="bg-grid"></div>
 
-<!-- Экран загрузки -->
 <div id="loader" class="loader-overlay">
     <div class="loader-spinner"></div>
     <div class="loader-text">Загрузка данных...</div>
@@ -181,39 +175,15 @@
 
 <script>
     (function() {
-        const SUPABASE_URL = 'https://ovkimozzqfejlhmzxvuw.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_eq7YpcP3JONUtlFe00Zq0g_AsPLv6On';
+        const SUPABASE_URL = 'https://syndicuffeucieugxffp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QN1jgXY5XplG4Cy7s9nF5A_ygesez21';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const PRESETS = {
-            success: {
-                theme: 'success',
-                pill: { cls: 'pill-success', text: 'Все системы работают' },
-                banner: null,
-                defaultTitle: 'Инфраструктура в норме',
-                defaultMessage: 'Критических сбоев и плановых технических работ не зафиксировано.'
-            },
-            maintenance: {
-                theme: 'info',
-                pill: { cls: 'pill-info', text: 'Техническое обслуживание' },
-                banner: null,
-                defaultTitle: 'Плановые технические работы',
-                defaultMessage: 'Инженеры проводят модернизацию серверного ПО.'
-            },
-            critical: {
-                theme: 'critical',
-                pill: { cls: 'pill-critical', text: 'Критический сбой' },
-                banner: { cls: 'strip-critical', text: 'Зафиксирован критический сбой' },
-                defaultTitle: 'Аварийное отключение узла',
-                defaultMessage: 'Узел в Финляндии недоступен. Трафик перенаправлен.'
-            },
-            warning: {
-                theme: 'warning',
-                pill: { cls: 'pill-warning', text: 'Повышенная нагрузка' },
-                banner: { cls: 'strip-warning', text: 'Повышенная нагрузка на сеть' },
-                defaultTitle: 'Замедление сетевых узлов',
-                defaultMessage: 'Зафиксирована повышенная нагрузка на все три узла.'
-            }
+            success: { theme: 'success', pill: { cls: 'pill-success', text: 'Все системы работают' }, banner: null, defaultTitle: 'Инфраструктура в норме', defaultMessage: 'Критических сбоев и плановых технических работ не зафиксировано.' },
+            maintenance: { theme: 'info', pill: { cls: 'pill-info', text: 'Техническое обслуживание' }, banner: null, defaultTitle: 'Плановые технические работы', defaultMessage: 'Инженеры проводят модернизацию серверного ПО.' },
+            critical: { theme: 'critical', pill: { cls: 'pill-critical', text: 'Критический сбой' }, banner: { cls: 'strip-critical', text: 'Зафиксирован критический сбой' }, defaultTitle: 'Аварийное отключение узла', defaultMessage: 'Узел в Финляндии недоступен. Трафик перенаправлен.' },
+            warning: { theme: 'warning', pill: { cls: 'pill-warning', text: 'Повышенная нагрузка' }, banner: { cls: 'strip-warning', text: 'Повышенная нагрузка на сеть' }, defaultTitle: 'Замедление сетевых узлов', defaultMessage: 'Зафиксирована повышенная нагрузка на все три узла.' }
         };
 
         const NODE_NAMES = {
@@ -230,8 +200,7 @@
             return 'success';
         }
         function safeNodes(rawNodes) {
-            if (rawNodes && typeof rawNodes === 'object' && !Array.isArray(rawNodes) &&
-                Object.keys(rawNodes).some(k => NODE_NAMES[k])) return rawNodes;
+            if (rawNodes && typeof rawNodes === 'object' && !Array.isArray(rawNodes) && Object.keys(rawNodes).some(k => NODE_NAMES[k])) return rawNodes;
             return { node1:'online', node2:'online', node3:'online' };
         }
 
@@ -296,53 +265,32 @@
 
         async function loadHistory() {
             try {
-                const { data: incidents, error } = await supabase
-                    .from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
+                const { data: incidents, error } = await supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(20);
                 if (error) return;
                 const container = document.getElementById('historyList');
                 container.innerHTML = (incidents || []).map(inc => {
                     const date = new Date(inc.created_at);
-                    const dateStr = date.toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' }) +
-                                    ' ' + date.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+                    const dateStr = date.toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' }) + ' ' + date.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
                     const statusText = PRESETS[inc.status]?.pill?.text || inc.status || 'Неизвестно';
-                    const dotColor = inc.status === 'critical' ? 'var(--red)' :
-                                     inc.status === 'warning' ? 'var(--yellow)' :
-                                     inc.status === 'maintenance' ? 'var(--blue)' : 'var(--green)';
-                    return `<div class="history-item">
-                        <div class="history-dot" style="background:${dotColor}"></div>
-                        <div class="history-content">
-                            <div class="history-title">${inc.title || 'Без названия'}</div>
-                            <div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div>
-                        </div>
-                    </div>`;
+                    const dotColor = inc.status === 'critical' ? 'var(--red)' : inc.status === 'warning' ? 'var(--yellow)' : inc.status === 'maintenance' ? 'var(--blue)' : 'var(--green)';
+                    return `<div class="history-item"><div class="history-dot" style="background:${dotColor}"></div><div class="history-content"><div class="history-title">${inc.title || 'Без названия'}</div><div class="history-meta">${dateStr} • ${statusText} ${inc.is_active ? '(активно)' : ''}</div></div></div>`;
                 }).join('');
             } catch(e) { console.error(e); }
         }
 
         async function refreshData() {
             try {
-                const { data: activeIncidents, error } = await supabase
-                    .from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1);
-                if (error) {
-                    renderStatus(null);
-                } else {
-                    renderStatus(activeIncidents?.[0] || null);
-                }
+                const { data: activeIncidents, error } = await supabase.from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1);
+                if (error) { renderStatus(null); } else { renderStatus(activeIncidents?.[0] || null); }
                 await loadHistory();
-            } catch(e) {
-                renderStatus(null);
-            } finally {
-                // Скрываем экран загрузки в любом случае
+            } catch(e) { renderStatus(null); } finally {
                 document.getElementById('loader').classList.add('hidden');
             }
         }
 
-        // Дополнительная страховка: если через 8 секунд загрузчик не скрыт — скрываем принудительно
         setTimeout(() => {
             const loader = document.getElementById('loader');
-            if (loader && !loader.classList.contains('hidden')) {
-                loader.classList.add('hidden');
-            }
+            if (loader && !loader.classList.contains('hidden')) loader.classList.add('hidden');
         }, 8000);
 
         document.addEventListener('DOMContentLoaded', refreshData);
@@ -352,25 +300,13 @@
 <div class="container">
     <div class="topbar">
         <div class="logo">
-            <div class="logo-shield">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-            </div>
+            <div class="logo-shield"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
             <div class="logo-name">Zenit<b>VPN</b></div>
         </div>
         <div class="topbar-right">
             <div class="live-dot"></div>
             <span class="topbar-time" id="topTime"></span>
-            <a href="admin.html" class="admin-btn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                Админ
-            </a>
+            <a href="admin.html" class="admin-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Админ</a>
         </div>
     </div>
 
@@ -387,19 +323,11 @@
             </div>
             <div class="servers-header"><span class="servers-label">Состояние узлов</span><span class="servers-count" id="nodesOnlineCount"></span></div>
             <div class="servers-grid" id="serversGrid"></div>
-            <div class="history-section">
-                <div class="servers-header"><span class="servers-label">История инцидентов</span></div>
-                <div class="history-list" id="historyList"></div>
-            </div>
+            <div class="history-section"><div class="servers-header"><span class="servers-label">История инцидентов</span></div><div class="history-list" id="historyList"></div></div>
         </div>
         <div class="card-footer">
             <span class="footer-left">ZenitVPN Монитор</span>
-            <div class="footer-right">
-                <div class="footer-badge">
-                    <div class="footer-badge-dot" style="background:var(--green); animation: glow-g 2s ease-in-out infinite;"></div>
-                    <span>Без автообновления</span>
-                </div>
-            </div>
+            <div class="footer-right"><div class="footer-badge"><div class="footer-badge-dot" style="background:var(--green); animation: glow-g 2s ease-in-out infinite;"></div><span>Без автообновления</span></div></div>
         </div>
     </div>
 </div>
