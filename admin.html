@@ -100,7 +100,7 @@
         .node-label { font-size: 11px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
         .error { color: var(--red); font-size: 12px; margin-top: 8px; }
         .success { color: var(--green); font-size: 12px; margin-top: 8px; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         .incident-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 14px 0; border-bottom: 1px solid var(--border); gap: 12px;
@@ -132,7 +132,10 @@
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
             display: flex; align-items: center; justify-content: center;
-            z-index: 100; animation: fadeIn 0.2s ease;
+            z-index: 100;
+        }
+        .modal:not(.hidden) {
+            animation: fadeIn 0.2s ease;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal .card { max-width: 520px; width: 90%; animation: slideUp 0.3s ease; }
@@ -338,8 +341,14 @@
         let currentNodeStates = { node1: 'online', node2: 'online', node3: 'online' };
         let editNodeStates = { node1: 'online', node2: 'online', node3: 'online' };
 
+        // Гарантированно скрываем все модальные окна при загрузке
+        function forceHideAllModals() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+        }
+
         // ========== АВТОРИЗАЦИЯ ==========
         async function checkSession() {
+            forceHideAllModals(); // дополнительная страховка
             const { data: { session } } = await supabase.auth.getSession();
             if (session) showAdmin();
             else showLogin();
@@ -348,11 +357,13 @@
         function showLogin() {
             document.getElementById('loginBlock').classList.remove('hidden');
             document.getElementById('adminBlock').classList.add('hidden');
+            forceHideAllModals();
         }
 
         function showAdmin() {
             document.getElementById('loginBlock').classList.add('hidden');
             document.getElementById('adminBlock').classList.remove('hidden');
+            forceHideAllModals();
             loadAll();
         }
 
@@ -599,7 +610,11 @@
             `;
         }
 
-        window.addEventListener('load', checkSession);
+        // Старт: принудительно скрываем все модальные окна и проверяем сессию
+        window.addEventListener('load', () => {
+            forceHideAllModals();
+            checkSession();
+        });
     })();
 </script>
 </body>
