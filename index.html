@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* весь CSS без изменений (тот же, что раньше) */
         :root {
             --bg: #04060f;
             --surface: rgba(8, 12, 26, 0.8);
@@ -19,6 +18,8 @@
             --yellow: #ffb020;
             --red: #ff3358;
             --blue: #4da6ff;
+            --purple: #a78bfa;
+            --orange: #ff8c42;
             --text-1: #eef2ff;
             --text-2: #8892aa;
             --text-3: #404866;
@@ -54,6 +55,20 @@
         .logo-name { font-size: 12.5px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-1); }
         .logo-name b { color: var(--blue); }
         .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .refresh-indicator { 
+            font-size: 10px; font-family: 'JetBrains Mono', monospace; 
+            color: var(--text-3); display: flex; align-items: center; gap: 6px;
+        }
+        .refresh-dot { 
+            width: 5px; height: 5px; border-radius: 50%; 
+            background: var(--green); transition: all 0.3s;
+        }
+        .refresh-dot.updating { animation: refreshPulse 0.6s ease-in-out; }
+        @keyframes refreshPulse { 
+            0%{opacity:1;transform:scale(1);} 
+            50%{opacity:0.3;transform:scale(2.5);} 
+            100%{opacity:1;transform:scale(1);} 
+        }
         .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: livepulse 2.2s ease-in-out infinite; }
         @keyframes livepulse { 0%,100% { opacity:.5; box-shadow: 0 0 0 0 rgba(0,221,160,0.5); } 50% { opacity:1; box-shadow: 0 0 0 4px rgba(0,221,160,0); } }
         .topbar-time { font-size: 10.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-3); }
@@ -64,10 +79,12 @@
         .card.theme-warning  { border-color: rgba(255,176,32,0.2);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(255,176,32,0.05); }
         .card.theme-critical { border-color: rgba(255,51,88,0.22);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(255,51,88,0.06); }
         .card.theme-info     { border-color: rgba(77,166,255,0.2);   box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(77,166,255,0.05); }
+        .card.theme-resolved { border-color: rgba(0,221,160,0.18);  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(0,221,160,0.06); }
         .alert-strip { display: none; align-items: center; gap: 10px; padding: 11px 28px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; border-bottom: 1px solid transparent; }
         .alert-strip.visible { display: flex; }
         .alert-strip.strip-critical { background: rgba(255,51,88,0.07); border-bottom-color: rgba(255,51,88,0.15); color: var(--red); }
         .alert-strip.strip-warning { background: rgba(255,176,32,0.07); border-bottom-color: rgba(255,176,32,0.15); color: var(--yellow); }
+        .alert-strip.strip-investigating { background: rgba(255,140,66,0.07); border-bottom-color: rgba(255,140,66,0.15); color: var(--orange); }
         .strip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: pulse-strip 1.4s ease-in-out infinite; }
         @keyframes pulse-strip { 0%,100%{opacity:.5;} 50%{opacity:1; box-shadow: 0 0 8px 3px currentColor;} }
         .card-body { padding: 32px 36px 28px; }
@@ -76,6 +93,8 @@
         .pill-warning  { background: rgba(255,176,32,0.08); border-color: rgba(255,176,32,0.2);  color: var(--yellow); }
         .pill-critical { background: rgba(255,51,88,0.08);  border-color: rgba(255,51,88,0.2);   color: var(--red); }
         .pill-info     { background: rgba(77,166,255,0.08); border-color: rgba(77,166,255,0.2);  color: var(--blue); }
+        .pill-investigating { background: rgba(255,140,66,0.08); border-color: rgba(255,140,66,0.2); color: var(--orange); }
+        .pill-resolved { background: rgba(0,221,160,0.08); border-color: rgba(0,221,160,0.2); color: var(--green); }
         .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: livepulse 2s ease-in-out infinite; }
         .incident-title { font-size: 24px; font-weight: 800; line-height: 1.2; letter-spacing: -0.5px; color: var(--text-1); margin-bottom: 10px; }
         .incident-body { font-size: 13.5px; color: var(--text-2); line-height: 1.75; margin-bottom: 28px; white-space: pre-line; max-width: 560px; }
@@ -183,6 +202,20 @@
                 banner: { cls: 'strip-warning', text: 'Повышенная нагрузка на сеть' },
                 defaultTitle: 'Замедление сетевых узлов',
                 defaultMessage: 'Зафиксирована повышенная нагрузка на все три узла.'
+            },
+            investigating: {
+                theme: 'critical',
+                pill: { cls: 'pill-investigating', text: 'Расследование' },
+                banner: { cls: 'strip-investigating', text: 'Ведётся расследование инцидента' },
+                defaultTitle: 'Расследование инцидента',
+                defaultMessage: 'Инженеры анализируют причины сбоя. Подробности будут опубликованы.'
+            },
+            resolved: {
+                theme: 'resolved',
+                pill: { cls: 'pill-resolved', text: 'Исправлено' },
+                banner: null,
+                defaultTitle: 'Инцидент исправлен',
+                defaultMessage: 'Неполадки устранены. Все системы работают в штатном режиме.'
             }
         };
 
@@ -194,6 +227,8 @@
 
         const STATUS_LABELS = { online:'Online', offline:'Offline', warning:'Degraded', maintenance:'Maintenance' };
         const UPTIME_VALUES = { online:'99.8%', offline:'0.0%', warning:'81.3%', maintenance:'100%' };
+
+        let refreshTimer;
 
         function renderStatus(incidentData) {
             let mode = 'success';
@@ -218,7 +253,7 @@
             document.getElementById('mainCard').className = `card theme-${data.theme}`;
 
             const strip = document.getElementById('alertStrip');
-            strip.classList.remove('visible', 'strip-critical', 'strip-warning');
+            strip.classList.remove('visible', 'strip-critical', 'strip-warning', 'strip-investigating');
             if (data.banner) {
                 strip.classList.add('visible', data.banner.cls);
                 document.getElementById('stripText').textContent = data.banner.text;
@@ -272,7 +307,9 @@
                 const statusText = PRESETS[inc.status]?.pill?.text || inc.status;
                 const dotColor = inc.status === 'critical' ? 'var(--red)' :
                                  inc.status === 'warning' ? 'var(--yellow)' :
-                                 inc.status === 'maintenance' ? 'var(--blue)' : 'var(--green)';
+                                 inc.status === 'maintenance' ? 'var(--blue)' :
+                                 inc.status === 'investigating' ? 'var(--orange)' :
+                                 inc.status === 'resolved' ? 'var(--green)' : 'var(--green)';
                 return `
                     <div class="history-item">
                         <div class="history-dot" style="background:${dotColor}"></div>
@@ -285,7 +322,11 @@
             }).join('');
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function refreshData() {
+            const dot = document.querySelector('.refresh-dot');
+            dot.classList.add('updating');
+            setTimeout(() => dot.classList.remove('updating'), 600);
+
             const { data: activeIncidents, error } = await supabase
                 .from('incidents')
                 .select('*')
@@ -293,11 +334,26 @@
                 .order('created_at', { ascending: false })
                 .limit(1);
 
-            if (error) console.error('Active incident error:', error);
+            if (error) console.error('Refresh error:', error);
             const activeIncident = activeIncidents?.[0] || null;
 
             renderStatus(activeIncident);
             await loadHistory();
+
+            const now = new Date();
+            document.getElementById('lastRefresh').textContent = 
+                now.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await refreshData();
+            // Автообновление каждые 60 секунд
+            refreshTimer = setInterval(refreshData, 60000);
+        });
+
+        // Очистка таймера при уходе со страницы
+        window.addEventListener('beforeunload', () => {
+            if (refreshTimer) clearInterval(refreshTimer);
         });
     })();
 </script>
@@ -313,6 +369,10 @@
             <div class="logo-name">Zenit<b>VPN</b></div>
         </div>
         <div class="topbar-right">
+            <div class="refresh-indicator">
+                <div class="refresh-dot"></div>
+                <span id="lastRefresh">--:--:--</span>
+            </div>
             <div class="live-dot"></div>
             <span class="topbar-time" id="topTime"></span>
             <a href="admin.html" class="admin-btn">
@@ -350,7 +410,7 @@
             <div class="footer-right">
                 <div class="footer-badge">
                     <div class="footer-badge-dot" style="background:var(--green); animation: glow-g 2s ease-in-out infinite;"></div>
-                    <span>Автообновление</span>
+                    <span>Автообновление 60с</span>
                 </div>
             </div>
         </div>
