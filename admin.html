@@ -236,7 +236,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_eq7YpcP3JONUtlFe00Zq0g_AsPLv6On';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Состояние нод по умолчанию
         let currentNodeStates = { node1: 'online', node2: 'online', node3: 'online' };
 
         // ========== АВТОРИЗАЦИЯ ==========
@@ -269,17 +268,12 @@
             showLogin();
         };
 
-        // ========== НОДЫ (ВИЗУАЛЬНЫЕ КНОПКИ) ==========
+        // ========== НОДЫ ==========
         window.setNode = (nodeId, status, btn) => {
-            // Обновляем скрытое поле
             currentNodeStates[nodeId] = status;
             document.getElementById('incNodes').value = JSON.stringify(currentNodeStates);
-
-            // Визуально выделяем активную кнопку
             const parent = btn.parentElement;
-            parent.querySelectorAll('.btn-node').forEach(b => {
-                b.className = 'btn-node';
-            });
+            parent.querySelectorAll('.btn-node').forEach(b => b.className = 'btn-node');
             const statusClass = status === 'warning' ? 'node-warning' :
                                status === 'offline' ? 'node-offline' :
                                status === 'maintenance' ? 'node-maintenance' : 'active';
@@ -291,11 +285,11 @@
             document.getElementById('incNodes').value = JSON.stringify(currentNodeStates);
             document.querySelectorAll('.btn-node').forEach((b, i) => {
                 b.className = 'btn-node';
-                if (i % 4 === 0) b.classList.add('active'); // Первая кнопка в каждой группе = Online
+                if (i % 4 === 0) b.classList.add('active');
             });
         };
 
-        // ========== БЫСТРЫЕ ПРЕСЕТЫ ==========
+        // ========== ПРЕСЕТЫ ==========
         window.quickPreset = async (status) => {
             const presets = {
                 success: { title: 'Все системы работают', message: 'Инфраструктура функционирует нормально.', nodes: {node1:'online',node2:'online',node3:'online'} },
@@ -306,14 +300,11 @@
                 resolved: { title: 'Инцидент исправлен', message: 'Все системы восстановлены.', nodes: {node1:'online',node2:'online',node3:'online'} }
             };
             const p = presets[status];
-            
             document.getElementById('incStatus').value = status;
             document.getElementById('incTitle').value = p.title;
             document.getElementById('incMessage').value = p.message;
             currentNodeStates = p.nodes;
             document.getElementById('incNodes').value = JSON.stringify(p.nodes);
-            
-            // Обновить визуальные кнопки
             ['node1','node2','node3'].forEach(nodeId => {
                 const status = p.nodes[nodeId];
                 const group = document.querySelector(`.node-group:nth-child(${nodeId === 'node1' ? 1 : nodeId === 'node2' ? 2 : 3})`);
@@ -334,14 +325,11 @@
             const title = document.getElementById('incTitle').value;
             const message = document.getElementById('incMessage').value;
             const nodes = JSON.parse(document.getElementById('incNodes').value);
-
             if (!title) { document.getElementById('createError').textContent = 'Введите заголовок'; return; }
-
             await supabase.from('incidents').update({ is_active: false }).eq('is_active', true);
             const { error } = await supabase.from('incidents').insert([{
                 title, message, status, affected_nodes: nodes, is_active: true
             }]);
-
             if (error) { document.getElementById('createError').textContent = error.message; }
             else {
                 document.getElementById('createError').textContent = '';
@@ -364,12 +352,14 @@
         };
 
         // ========== РЕДАКТИРОВАНИЕ ==========
-        window.openEdit = (inc) => {
-            document.getElementById('editIncId').value = inc.id;
-            document.getElementById('editId').textContent = inc.id;
-            document.getElementById('editTitle').value = inc.title;
-            document.getElementById('editMessage').value = inc.message || '';
-            document.getElementById('editStatus').value = inc.status;
+        window.openEdit = async (id) => {
+            const { data, error } = await supabase.from('incidents').select('*').eq('id', id).single();
+            if (error || !data) return alert('Инцидент не найден');
+            document.getElementById('editIncId').value = data.id;
+            document.getElementById('editId').textContent = data.id;
+            document.getElementById('editTitle').value = data.title;
+            document.getElementById('editMessage').value = data.message || '';
+            document.getElementById('editStatus').value = data.status;
             document.getElementById('editModal').classList.remove('hidden');
         };
 
@@ -383,11 +373,9 @@
             const title = document.getElementById('editTitle').value;
             const message = document.getElementById('editMessage').value;
             const status = document.getElementById('editStatus').value;
-
             const { error } = await supabase.from('incidents')
                 .update({ title, message, status })
                 .eq('id', id);
-
             if (error) { document.getElementById('editError').textContent = error.message; }
             else { closeEdit(); loadAll(); }
         };
@@ -403,16 +391,14 @@
             else { msgDiv.className = 'success'; msgDiv.textContent = '✅ Таблица очищена, счётчик ID сброшен'; loadAll(); }
         };
 
-        // ========== ЭКСПОРТ CSV ==========
+        // ========== ЭКСПОРТ ==========
         window.exportHistory = async () => {
             const { data } = await supabase.from('incidents').select('*').order('created_at', { ascending: false });
             if (!data || !data.length) return alert('Нет данных для экспорта');
-            
             let csv = 'ID,Дата,Статус,Заголовок,Описание,Активен,Ноды\n';
             data.forEach(inc => {
                 csv += `${inc.id},"${new Date(inc.created_at).toLocaleString('ru-RU')}","${inc.status}","${inc.title}","${(inc.message||'').replace(/"/g,'""')}","${inc.is_active}","${JSON.stringify(inc.affected_nodes).replace(/"/g,'""')}"\n`;
             });
-            
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -420,7 +406,7 @@
             a.click(); URL.revokeObjectURL(url);
         };
 
-        // ========== ЗАГРУЗКА ДАННЫХ ==========
+        // ========== ЗАГРУЗКА ==========
         async function loadAll() {
             await Promise.all([loadStats(), loadIncidents()]);
         }
@@ -454,7 +440,7 @@
                         <div class="incident-meta">${date} • ${nodesSummary} ${inc.is_active ? '🟢' : ''}</div>
                     </div>
                     <div class="button-group">
-                        <button class="btn btn-sm btn-outline" onclick="openEdit(${JSON.stringify(inc).replace(/"/g,'&quot;')})" title="Редактировать">✏️</button>
+                        <button class="btn btn-sm btn-outline" onclick="openEdit(${inc.id})" title="Редактировать">✏️</button>
                         <button class="btn btn-sm ${inc.is_active ? 'btn-danger' : 'btn-outline'}" onclick="toggleActive(${inc.id}, ${!inc.is_active})">
                             ${inc.is_active ? 'Деактив.' : 'Актив.'}
                         </button>
