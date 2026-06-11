@@ -39,6 +39,9 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         .footer-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:12px}
         .retry-btn{background:var(--red);color:white;border:none;padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;margin-left:10px}
+        .node-select-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+        .node-select-row label{min-width:100px;margin-bottom:0;display:flex;align-items:center;gap:6px}
+        .node-select-row select{width:auto;flex:1;margin-bottom:0}
     </style>
 </head>
 <body>
@@ -61,8 +64,19 @@
 <input type="text" id="incTitle" placeholder="Краткий заголовок" />
 <label>Описание</label>
 <textarea id="incMessage" rows="4" placeholder="Подробное описание..."></textarea>
-<label>Состояние узлов (JSON)</label>
-<input type="text" id="incNodes" value='{"node1":"online","node2":"online","node3":"online"}' />
+<label>Состояние узлов</label>
+<div class="node-select-row">
+    <label>🇫🇮 Финляндия</label>
+    <select id="node1"><option value="online">Online</option><option value="offline">Offline</option><option value="warning">Degraded</option><option value="maintenance">Maintenance</option></select>
+</div>
+<div class="node-select-row">
+    <label>🇳🇱 Нидерланды</label>
+    <select id="node2"><option value="online">Online</option><option value="offline">Offline</option><option value="warning">Degraded</option><option value="maintenance">Maintenance</option></select>
+</div>
+<div class="node-select-row">
+    <label>🇫🇷 Франция</label>
+    <select id="node3"><option value="online">Online</option><option value="offline">Offline</option><option value="warning">Degraded</option><option value="maintenance">Maintenance</option></select>
+</div>
 <button class="btn btn-primary" onclick="createIncident()">Создать</button>
 <div id="createError" class="error"></div>
 <div id="createSuccess" class="success-message"></div>
@@ -78,7 +92,6 @@
 (function(){
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
-// Тот же список, что на главной, corsproxy.io первый
 const PROXY_URLS = [
     'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co'),
     'https://vuzcudxulhqkrkniulsl.supabase.co',
@@ -91,8 +104,17 @@ const PROXY_NAMES = {
     'zenitvpn-proxy': 'Cloudflare Workers'
 };
 
+const API_TIMEOUT = 15000;
+
 let supabase = null;
 let currentProxyName = 'Проверка...';
+
+function withTimeout(promise, ms, errorMessage = 'Время ожидания истекло') {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(errorMessage)), ms))
+    ]);
+}
 
 function getProxyName(url) {
     for (let key in PROXY_NAMES) {
@@ -143,45 +165,55 @@ window.signIn=async()=>{
     let e=document.getElementById('email').value,p=document.getElementById('password').value;
     document.getElementById('loginError').textContent='';
     showLoader('Выполняется вход...');
-    let{error}=await supabase.auth.signInWithPassword({email:e,password:p});
-    if(error){
-        hideLoader();
-        document.getElementById('loginError').textContent='Ошибка: '+error.message;
-    }else{
+    try {
+        await withTimeout(supabase.auth.signInWithPassword({email:e,password:p}), API_TIMEOUT, 'Вход не выполнен: сервер не отвечает');
         hideLoader();
         showAdmin();
+    } catch(error) {
+        hideLoader();
+        document.getElementById('loginError').textContent='Ошибка: ' + (error.message || 'Неизвестная ошибка');
     }
 };
 window.signOut=async()=>{await supabase.auth.signOut();showLogin()};
 
 window.createIncident=async()=>{
 document.getElementById('createError').textContent='';document.getElementById('createSuccess').textContent='';
-let status=document.getElementById('incStatus').value,title=document.getElementById('incTitle').value,message=document.getElementById('incMessage').value,nodes;
-try{nodes=JSON.parse(document.getElementById('incNodes').value);if(!nodes.node1||!nodes.node2||!nodes.node3)throw new Error('JSON должен содержать node1, node2, node3')}catch(e){document.getElementById('createError').textContent='Ошибка JSON: '+e.message;return}
+let status=document.getElementById('incStatus').value,title=document.getElementById('incTitle').value,message=document.getElementById('incMessage').value;
+// Собираем узлы из селектов
+let nodes = {
+    node1: document.getElementById('node1').value,
+    node2: document.getElementById('node2').value,
+    node3: document.getElementById('node3').value
+};
 showLoader('Создание инцидента...');
-let{error:ue}=await supabase.from('incidents').update({is_active:false}).eq('is_active',true);
-if(ue){hideLoader();document.getElementById('createError').textContent='Ошибка сброса активности: '+ue.message;return}
-let{error:ie}=await supabase.from('incidents').insert([{title,message,status,affected_nodes:nodes,is_active:true}]);
-if(ie){hideLoader();document.getElementById('createError').textContent='Ошибка создания: '+ie.message;return}
-document.getElementById('incTitle').value='';document.getElementById('incMessage').value='';
-await loadIncidents();hideLoader();
-document.getElementById('createSuccess').textContent='✅ Инцидент создан';
-setTimeout(()=>{document.getElementById('createSuccess').textContent=''},3000);
+try {
+    await withTimeout(supabase.from('incidents').update({is_active:false}).eq('is_active',true), API_TIMEOUT, 'Сервер не отвечает');
+    await withTimeout(supabase.from('incidents').insert([{title,message,status,affected_nodes:nodes,is_active:true}]), API_TIMEOUT, 'Сервер не отвечает');
+    document.getElementById('incTitle').value='';document.getElementById('incMessage').value='';
+    // сбрасываем селекты на online
+    document.getElementById('node1').value='online';
+    document.getElementById('node2').value='online';
+    document.getElementById('node3').value='online';
+    await loadIncidents();
+    hideLoader();
+    document.getElementById('createSuccess').textContent='✅ Инцидент создан';
+    setTimeout(()=>{document.getElementById('createSuccess').textContent=''},3000);
+} catch(e) {
+    hideLoader();
+    document.getElementById('createError').textContent='Ошибка создания: ' + (e.message || 'Сервер не отвечает');
+}
 };
 
 window.loadIncidents = async function(){
     document.getElementById('activeList').innerHTML='<p style="color:var(--text-secondary)">Загрузка...</p>';
     document.getElementById('allList').innerHTML='<p style="color:var(--text-secondary)">Загрузка...</p>';
-    
-    // если supabase не инициализирован или последний запрос упал — пересоздаём с новым прокси
     if(!supabase || window._lastLoadFailed){
         let url = await findWorkingUrl();
         supabase = window.supabase.createClient(url, SUPABASE_ANON_KEY);
         window._lastLoadFailed = false;
     }
-    
     try{
-        let{data:active,error:activeError}=await supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false});
+        let{data:active,error:activeError}=await withTimeout(supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false}), API_TIMEOUT, 'Ошибка загрузки активных');
         if(activeError){
             console.error('Ошибка загрузки активных:',activeError);
             document.getElementById('activeList').innerHTML='<p style="color:var(--red)">Ошибка загрузки. <button class="retry-btn" onclick="loadIncidents()">Повторить</button></p>';
@@ -189,8 +221,7 @@ window.loadIncidents = async function(){
         }else{
             document.getElementById('activeList').innerHTML=(active&&active.length)?active.map(inc=>incidentHTML(inc)).join(''):'<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
         }
-        
-        let{data:all,error:allError}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20);
+        let{data:all,error:allError}=await withTimeout(supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20), API_TIMEOUT, 'Ошибка загрузки истории');
         if(allError){
             console.error('Ошибка загрузки истории:',allError);
             document.getElementById('allList').innerHTML='<p style="color:var(--red)">Ошибка загрузки. <button class="retry-btn" onclick="loadIncidents()">Повторить</button></p>';
@@ -208,10 +239,33 @@ window.loadIncidents = async function(){
 
 function incidentHTML(inc){let d=new Date(inc.created_at).toLocaleString('ru-RU');return'<div class="incident-item"><div class="incident-info"><div class="incident-title">'+inc.title+' <span style="font-size:11px;color:var(--text-secondary)">('+inc.status+')</span></div><div class="incident-meta">'+d+' '+(inc.is_active?'🟢 Активен':'')+'</div></div><div class="button-group"><button class="btn btn-sm '+(inc.is_active?'btn-danger':'btn-outline')+'" onclick="toggleActive('+inc.id+','+!inc.is_active+')">'+(inc.is_active?'Деактивировать':'Сделать активным')+'</button><button class="btn btn-sm btn-delete" onclick="deleteIncident('+inc.id+')">🗑️</button></div></div>'}
 
-window.toggleActive=async(id,setActive)=>{showLoader('Обновление статуса...');if(setActive){let{error:de}=await supabase.from('incidents').update({is_active:false}).eq('is_active',true);if(de){hideLoader();alert('Ошибка: '+de.message);return}}let{error}=await supabase.from('incidents').update({is_active:setActive}).eq('id',id);if(error){hideLoader();alert('Ошибка: '+error.message);return}await loadIncidents();hideLoader()};
-window.deleteIncident=async(id)=>{if(!confirm('Удалить инцидент?'))return;showLoader('Удаление инцидента...');let{error}=await supabase.from('incidents').delete().eq('id',id);if(error){hideLoader();alert('Ошибка: '+error.message);return}await loadIncidents();hideLoader()};
+window.toggleActive=async(id,setActive)=>{
+    showLoader('Обновление статуса...');
+    try {
+        if(setActive){
+            await withTimeout(supabase.from('incidents').update({is_active:false}).eq('is_active',true), API_TIMEOUT, 'Сервер не отвечает');
+        }
+        await withTimeout(supabase.from('incidents').update({is_active:setActive}).eq('id',id), API_TIMEOUT, 'Сервер не отвечает');
+        await loadIncidents();
+        hideLoader();
+    } catch(e) {
+        hideLoader();
+        alert('Ошибка: ' + (e.message || 'Сервер не отвечает'));
+    }
+};
+window.deleteIncident=async(id)=>{
+    if(!confirm('Удалить инцидент?')) return;
+    showLoader('Удаление инцидента...');
+    try {
+        await withTimeout(supabase.from('incidents').delete().eq('id',id), API_TIMEOUT, 'Сервер не отвечает');
+        await loadIncidents();
+        hideLoader();
+    } catch(e) {
+        hideLoader();
+        alert('Ошибка удаления: ' + (e.message || 'Сервер не отвечает'));
+    }
+};
 
-// Инициализация
 window.addEventListener('load', async () => {
     showLoader('Подключение к серверу...');
     await checkSession();
