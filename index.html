@@ -10,16 +10,59 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root{--bg:#04060f;--surface:rgba(8,12,26,0.8);--surface-raised:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.1);--green:#00dda0;--yellow:#ffb020;--red:#ff3358;--blue:#4da6ff;--text-1:#eef2ff;--text-2:#8892aa;--text-3:#404866}
+        :root {
+            --bg: #04060f;
+            --surface: rgba(8, 12, 26, 0.8);
+            --surface-raised: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.06);
+            --border-strong: rgba(255,255,255,0.1);
+            --green: #00dda0;
+            --yellow: #ffb020;
+            --red: #ff3358;
+            --blue: #4da6ff;
+            --text-1: #eef2ff;
+            --text-2: #8892aa;
+            --text-3: #404866;
+        }
+
+        /* светлая тема */
+        body.light-theme {
+            --bg: #f5f7fa;
+            --surface: rgba(255,255,255,0.85);
+            --surface-raised: rgba(0,0,0,0.03);
+            --border: rgba(0,0,0,0.08);
+            --border-strong: rgba(0,0,0,0.15);
+            --green: #00b37e;
+            --yellow: #e6a700;
+            --red: #d63031;
+            --blue: #3b82f6;
+            --text-1: #1a1a2e;
+            --text-2: #4a4a6a;
+            --text-3: #7a7a9a;
+        }
+
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:var(--bg);color:var(--text-1);font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden}
-        body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:0}
+        body{
+            background:var(--bg);color:var(--text-1);font-family:'Inter',system-ui,sans-serif;
+            min-height:100vh;display:flex;align-items:center;justify-content:center;
+            padding:24px;overflow-x:hidden;transition:background 0.3s,color 0.3s;
+        }
+        body::before{
+            content:'';position:fixed;inset:0;
+            background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);
+            pointer-events:none;z-index:0;
+        }
         .bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
         .bg-orb{position:absolute;border-radius:50%;filter:blur(120px)}
         .bg-orb-1{width:700px;height:700px;background:rgba(77,166,255,0.055);top:-250px;left:-200px}
         .bg-orb-2{width:500px;height:500px;background:rgba(0,221,160,0.04);bottom:-200px;right:-100px}
         .bg-orb-3{width:300px;height:300px;background:rgba(167,139,250,0.035);top:40%;left:50%;transform:translateX(-50%)}
-        .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%)}
+        .bg-grid{
+            position:fixed;inset:0;z-index:0;pointer-events:none;
+            background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
+            background-size:48px 48px;
+            mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%);
+        }
         .container{width:100%;max-width:700px;position:relative;z-index:1;animation:fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both}
         @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
         .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px}
@@ -33,7 +76,7 @@
         .topbar-time{font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .admin-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:0.5px;background:rgba(77,166,255,0.1);border:1px solid rgba(77,166,255,0.25);color:var(--blue);text-decoration:none;transition:background 0.2s,border-color 0.2s;font-family:'Inter',sans-serif}
         .admin-btn:hover{background:rgba(77,166,255,0.18);border-color:rgba(77,166,255,0.4)}
-        .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(60px);-webkit-backdrop-filter:blur(60px);overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.025) inset,0 40px 100px rgba(0,0,0,0.7),0 8px 30px rgba(0,0,0,0.4);transition:border-color 0.5s ease,box-shadow 0.5s ease}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(60px);-webkit-backdrop-filter:blur(60px);overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.025) inset,0 40px 100px rgba(0,0,0,0.7),0 8px 30px rgba(0,0,0,0.4);transition:border-color 0.5s ease,box-shadow 0.5s ease,background 0.3s}
         .card.theme-success{border-color:rgba(0,221,160,0.14);box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 80px rgba(0,221,160,0.04)}
         .card.theme-warning{border-color:rgba(255,176,32,0.2);box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 80px rgba(255,176,32,0.05)}
         .card.theme-critical{border-color:rgba(255,51,88,0.22);box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 80px rgba(255,51,88,0.06)}
@@ -127,6 +170,15 @@
         .blur-content{filter:blur(6px);pointer-events:none;user-select:none}
         .map-container{height:200px;border-radius:12px;overflow:hidden;margin-bottom:20px;border:1px solid var(--border)}
         .map-container .leaflet-container{background:var(--surface);height:100%;width:100%}
+
+        /* кнопка переключения темы */
+        .theme-toggle{
+            background:transparent;border:1px solid var(--border);
+            border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+            cursor:pointer;color:var(--text-2);font-size:16px;transition:all 0.3s;margin-right:8px;
+        }
+        .theme-toggle:hover{background:var(--surface-raised);border-color:var(--border-strong);}
+
         @media(max-width:580px){
             .card-body{padding:24px 20px 20px}.card-footer{padding:12px 20px}
             .servers-grid{grid-template-columns:1fr}.incident-title{font-size:20px}
@@ -159,7 +211,7 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
+const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
 const PROXY_URLS = [
@@ -179,16 +231,43 @@ let currentProxyName = 'Проверка...';
 let lastUpdateTime = null;
 let updateTimerInterval = null;
 
-// Координаты узлов
 const NODE_COORDS = {
-    node1: { lat: 60.1695, lng: 24.9354 },  // Хельсинки
-    node2: { lat: 52.3676, lng: 4.9041 },   // Амстердам
-    node3: { lat: 48.8566, lng: 2.3522 }    // Париж
+    node1: { lat: 60.1695, lng: 24.9354 },
+    node2: { lat: 52.3676, lng: 4.9041 },
+    node3: { lat: 48.8566, lng: 2.3522 }
 };
 
 let map = null;
 let markers = {};
 
+// --- тема ---
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-theme');
+    } else {
+        document.body.classList.remove('light-theme');
+    }
+    localStorage.setItem('zenitvpn_theme', theme);
+    updateThemeIcon(theme);
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.contains('light-theme');
+    applyTheme(isLight ? 'dark' : 'light');
+}
+
+function updateThemeIcon(theme) {
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    btn.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+
+function initTheme() {
+    const saved = localStorage.getItem('zenitvpn_theme') || 'dark';
+    applyTheme(saved);
+}
+
+// --- инициализация карты ---
 function initMap() {
     if (map) return;
     map = L.map('map').setView([54.5, 15], 4);
@@ -201,7 +280,6 @@ function initMap() {
 
 function updateMapMarkers(nodes) {
     if (!map) initMap();
-    // Удаляем старые маркеры
     for (let key in markers) {
         map.removeLayer(markers[key]);
         delete markers[key];
@@ -266,31 +344,6 @@ function stopUpdateTimer() {
     }
 }
 
-function saveLastStatus(data) {
-    try {
-        localStorage.setItem('zenitvpn_last_status', JSON.stringify({
-            data: data,
-            timestamp: Date.now()
-        }));
-    } catch(e) {}
-}
-
-function loadLastStatus() {
-    try {
-        const saved = localStorage.getItem('zenitvpn_last_status');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed.data) {
-                renderStatus(parsed.data);
-                lastUpdateTime = new Date(parsed.timestamp);
-                updateLastUpdateTime();
-                return true;
-            }
-        }
-    } catch(e) {}
-    return false;
-}
-
 const PRESETS={success:{theme:'success',pill:{cls:'pill-success',text:'Все системы работают'},banner:null,defaultTitle:'Инфраструктура в норме',defaultMessage:'Критических сбоев и плановых технических работ не зафиксировано.'},maintenance:{theme:'info',pill:{cls:'pill-info',text:'Техническое обслуживание'},banner:null,defaultTitle:'Плановые технические работы',defaultMessage:'Инженеры проводят модернизацию серверного ПО.'},critical:{theme:'critical',pill:{cls:'pill-critical',text:'Критический сбой'},banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'},defaultTitle:'Аварийное отключение узла',defaultMessage:'Узел в Финляндии недоступен. Трафик перенаправлен.'},warning:{theme:'warning',pill:{cls:'pill-warning',text:'Повышенная нагрузка'},banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'},defaultTitle:'Замедление сетевых узлов',defaultMessage:'Зафиксирована повышенная нагрузка на все три узла.'}};
 const NODE_NAMES={node1:{name:'Финляндия',code:'HEL-1',flag:'🇫🇮'},node2:{name:'Нидерланды',code:'AMS-1',flag:'🇳🇱'},node3:{name:'Франция',code:'PR-1',flag:'🇫🇷'}};
 const STATUS_LABELS={online:'Online',offline:'Offline',warning:'Degraded',maintenance:'Maintenance'};
@@ -353,7 +406,6 @@ function renderStatus(d){
         card.innerHTML='<div class="server-top"><div class="server-flag">'+node.flag+'</div><div class="server-dot"></div></div><div class="server-name">'+node.name+'</div><div class="server-code">'+node.code+'</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>'+(UPTIME_VALUES[s]||'??')+'</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">'+(STATUS_LABELS[s]||s)+'</div>';
         grid.appendChild(card);
     });
-    // Обновляем карту
     updateMapMarkers(n);
 }
 
@@ -388,10 +440,7 @@ async function refreshData(){
     }
     
     timeoutId=setTimeout(()=>{
-        // Таймаут — пробуем загрузить из кэша
-        const cached = loadLastStatus();
-        if (!cached) showErrorState();
-        else hideLoader();
+        showErrorState();
     },LOADER_TIMEOUT);
     
     try{
@@ -399,15 +448,10 @@ async function refreshData(){
         clearTimeout(timeoutId);
         if(e){
             console.error('Ошибка:',e);
-            const cached = loadLastStatus();
-            if (!cached) showErrorState();
-            else hideLoader();
+            showErrorState();
             return;
         }
-        const activeData = a?.[0] || null;
-        renderStatus(activeData);
-        // Сохраняем в localStorage
-        saveLastStatus(activeData);
+        renderStatus(a?.[0]||null);
         lastUpdateTime = new Date();
         updateLastUpdateTime();
         startUpdateTimer();
@@ -416,25 +460,38 @@ async function refreshData(){
     }catch(e){
         clearTimeout(timeoutId);
         console.error('Критическая ошибка:',e);
-        const cached = loadLastStatus();
-        if (!cached) showErrorState();
-        else hideLoader();
+        showErrorState();
     }
 }
 
 window.retryLoad=function(){refreshData()};
 
+// привязка кнопки темы
 document.addEventListener('DOMContentLoaded', ()=>{
+    initTheme();
     initMap();
     refreshData();
+    document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
 });
 })();
 </script>
 
 <div class="container">
 <div class="topbar">
-<div class="logo"><div class="logo-shield"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="logo-name">Zenit<b>VPN</b></div></div>
-<div class="topbar-right"><div class="live-dot"></div><span class="topbar-time" id="topTime">—</span><a href="admin.html" class="admin-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Админ</a></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+        <button id="themeToggleBtn" class="theme-toggle" title="Переключить тему">🌙</button>
+        <div class="logo">
+            <div class="logo-shield"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="logo-name">Zenit<b>VPN</b></div>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <div class="live-dot"></div>
+        <span class="topbar-time" id="topTime">—</span>
+        <a href="admin.html" class="admin-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Админ
+        </a>
+    </div>
 </div>
 <div class="card theme-success" id="mainCard">
 <div class="alert-strip" id="alertStrip"><div class="strip-dot"></div><span id="stripText"></span></div>
