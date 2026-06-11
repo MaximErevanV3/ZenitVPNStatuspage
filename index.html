@@ -25,7 +25,6 @@
             --text-3: #404866;
         }
 
-        /* светлая тема */
         body.light-theme {
             --bg: #f5f7fa;
             --surface: rgba(255,255,255,0.85);
@@ -42,27 +41,14 @@
         }
 
         *{box-sizing:border-box;margin:0;padding:0}
-        body{
-            background:var(--bg);color:var(--text-1);font-family:'Inter',system-ui,sans-serif;
-            min-height:100vh;display:flex;align-items:center;justify-content:center;
-            padding:24px;overflow-x:hidden;transition:background 0.3s,color 0.3s;
-        }
-        body::before{
-            content:'';position:fixed;inset:0;
-            background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);
-            pointer-events:none;z-index:0;
-        }
+        body{background:var(--bg);color:var(--text-1);font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden;transition:background 0.3s,color 0.3s}
+        body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:0}
         .bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
         .bg-orb{position:absolute;border-radius:50%;filter:blur(120px)}
         .bg-orb-1{width:700px;height:700px;background:rgba(77,166,255,0.055);top:-250px;left:-200px}
         .bg-orb-2{width:500px;height:500px;background:rgba(0,221,160,0.04);bottom:-200px;right:-100px}
         .bg-orb-3{width:300px;height:300px;background:rgba(167,139,250,0.035);top:40%;left:50%;transform:translateX(-50%)}
-        .bg-grid{
-            position:fixed;inset:0;z-index:0;pointer-events:none;
-            background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
-            background-size:48px 48px;
-            mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%);
-        }
+        .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%)}
         .container{width:100%;max-width:700px;position:relative;z-index:1;animation:fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both}
         @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
         .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px}
@@ -95,6 +81,8 @@
         .pill-info{background:rgba(77,166,255,0.08);border-color:rgba(77,166,255,0.2);color:var(--blue)}
         .pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:livepulse 2s ease-in-out infinite}
         .incident-title{font-size:24px;font-weight:800;line-height:1.2;letter-spacing:-0.5px;color:var(--text-1);margin-bottom:10px}
+        .incident-title a{color:inherit;text-decoration:none;transition:opacity 0.2s}
+        .incident-title a:hover{opacity:0.8}
         .incident-body{font-size:13.5px;color:var(--text-2);line-height:1.75;margin-bottom:28px;white-space:pre-line;max-width:560px}
         .meta-strip{display:flex;gap:0;background:var(--surface-raised);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:28px}
         .meta-cell{flex:1;padding:12px 18px;border-right:1px solid var(--border)}
@@ -144,6 +132,8 @@
         .history-item{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
         .history-item:last-child{border-bottom:none}.history-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
         .history-title{font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:2px}
+        .history-title a{color:inherit;text-decoration:none;transition:opacity 0.2s}
+        .history-title a:hover{opacity:0.8}
         .history-meta{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .card-footer{padding:14px 36px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.15);flex-wrap:wrap;gap:8px}
         .footer-left{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
@@ -215,15 +205,15 @@ const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
 const PROXY_URLS = [
-    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev',
+    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co'),
     'https://vuzcudxulhqkrkniulsl.supabase.co',
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
+    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev'
 ];
 
 const PROXY_NAMES = {
-    'zenitvpn-proxy': 'Cloudflare Workers',
+    'corsproxy.io': 'CORS-прокси',
     'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
-    'allorigins': 'Резервный прокси'
+    'zenitvpn-proxy': 'Cloudflare Workers'
 };
 
 let supabase = null;
@@ -355,7 +345,7 @@ async function findWorkingUrl(){
     updateFooterProxy('Поиск сервера...');
     for(let url of PROXY_URLS){
         try{
-            let testUrl = url.includes('allorigins') ? url + '/rest/v1/' : url + '/rest/v1/';
+            let testUrl = url.includes('corsproxy.io') || url.includes('allorigins') ? url + '/rest/v1/' : url + '/rest/v1/';
             let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
             if(resp.ok || resp.status===401 || resp.status===400){
                 let name = getProxyName(url);
@@ -391,7 +381,8 @@ function renderStatus(d){
     if(data.banner){strip.classList.add('visible',data.banner.cls);document.getElementById('stripText').textContent=data.banner.text}
     document.getElementById('statusPill').className='status-pill '+data.pill.cls;
     document.getElementById('pillText').textContent=data.pill.text;
-    document.getElementById('incTitle').textContent=t;
+    // заголовок активного инцидента — ссылка на детальную страницу
+    document.getElementById('incTitle').innerHTML = d ? '<a href="incident.html?id='+d.id+'">'+t+'</a>' : t;
     document.getElementById('incBody').textContent=msg;
     document.getElementById('incID').textContent=id;
     document.getElementById('incTime').textContent=ts;
@@ -417,7 +408,8 @@ async function loadHistory(){
         if(e){c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>';return}
         c.innerHTML=(i||[]).map(inc=>{
             let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':'var(--green)';
-            return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title">'+(inc.title||'Без названия')+'</div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>';
+            // заголовок инцидента в истории — ссылка на детальную страницу
+            return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title"><a href="incident.html?id='+inc.id+'">'+(inc.title||'Без названия')+'</a></div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>';
         }).join('');
     }catch(e){console.error(e);c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>'}
 }
