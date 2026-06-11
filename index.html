@@ -61,9 +61,7 @@
         .servers-count{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .servers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
         .server-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;transition:border-color 0.3s,background 0.3s;animation:fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both}
-        .server-card:nth-child(1){animation-delay:0.05s}
-        .server-card:nth-child(2){animation-delay:0.10s}
-        .server-card:nth-child(3){animation-delay:0.15s}
+        .server-card:nth-child(1){animation-delay:0.05s}.server-card:nth-child(2){animation-delay:0.10s}.server-card:nth-child(3){animation-delay:0.15s}
         .server-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px}
         .server-card.status-online::after{background:linear-gradient(90deg,transparent,rgba(0,221,160,0.5),transparent)}
         .server-card.status-warning::after{background:linear-gradient(90deg,transparent,rgba(255,176,32,0.5),transparent)}
@@ -95,19 +93,15 @@
         .status-offline .uptime-bar-fill{background:var(--red);width:0%}
         .status-maintenance .uptime-bar-fill{background:var(--blue);width:100%}
         .status-label-text{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;margin-top:6px}
-        .status-online .status-label-text{color:var(--green)}
-        .status-warning .status-label-text{color:var(--yellow)}
-        .status-offline .status-label-text{color:var(--red)}
-        .status-maintenance .status-label-text{color:var(--blue)}
-        .history-section{margin-top:28px}
-        .history-list{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+        .status-online .status-label-text{color:var(--green)}.status-warning .status-label-text{color:var(--yellow)}
+        .status-offline .status-label-text{color:var(--red)}.status-maintenance .status-label-text{color:var(--blue)}
+        .history-section{margin-top:28px}.history-list{display:flex;flex-direction:column;gap:14px;margin-top:12px}
         .history-item{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
-        .history-item:last-child{border-bottom:none}
-        .history-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+        .history-item:last-child{border-bottom:none}.history-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
         .history-title{font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:2px}
         .history-meta{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .card-footer{padding:14px 36px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.15)}
-        .footer-left{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
+        .footer-left{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3);transition:color 0.3s}
         .footer-right{display:flex;align-items:center;gap:16px}
         .footer-badge{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .footer-badge-dot{width:5px;height:5px;border-radius:50%}
@@ -128,12 +122,7 @@
         .maintenance-title{font-size:24px;font-weight:800;color:var(--text-1);margin-bottom:12px}
         .maintenance-message{font-size:14px;color:var(--text-2);line-height:1.6}
         .blur-content{filter:blur(6px);pointer-events:none;user-select:none}
-        @media(max-width:580px){
-            .card-body{padding:24px 20px 20px}.card-footer{padding:12px 20px}
-            .servers-grid{grid-template-columns:1fr}.incident-title{font-size:20px}
-            .meta-strip{flex-direction:column}.meta-cell{border-right:none;border-bottom:1px solid var(--border)}
-            .meta-cell:last-child{border-bottom:none}.topbar{flex-direction:column;align-items:flex-start;gap:8px}
-        }
+        @media(max-width:580px){.card-body{padding:24px 20px 20px}.card-footer{padding:12px 20px}.servers-grid{grid-template-columns:1fr}.incident-title{font-size:20px}.meta-strip{flex-direction:column}.meta-cell{border-right:none;border-bottom:1px solid var(--border)}.meta-cell:last-child{border-bottom:none}.topbar{flex-direction:column;align-items:flex-start;gap:8px}}
     </style>
 </head>
 <body>
@@ -150,8 +139,8 @@
 
 <div id="loader" class="loader-overlay">
     <div id="loaderSpinner" class="loader-spinner"></div>
-    <div id="loaderText" class="loader-text">Загрузка данных...</div>
-    <div id="loaderSubtext" class="loader-subtext">Соединение с сервером может быть медленным</div>
+    <div id="loaderText" class="loader-text">Проверка серверов...</div>
+    <div id="loaderSubtext" class="loader-subtext">Выбор оптимального маршрута</div>
     <div id="loaderError" class="loader-error">
         Не удалось загрузить данные.<br>Проверьте подключение и попробуйте снова.<br>
         <button class="loader-retry-btn" onclick="retryLoad()">Попробовать снова</button>
@@ -161,15 +150,60 @@
 <script>
 (function(){
 const MAINTENANCE_MODE=false;
-const SUPABASE_URL='https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev';
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const PROXY_URLS = [
+    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev',
+    'https://vuzcudxulhqkrkniulsl.supabase.co',
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
+];
+
+const PROXY_NAMES = {
+    'zenitvpn-proxy': 'Cloudflare Workers',
+    'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
+    'allorigins': 'Резервный прокси'
+};
+
+let supabase = null;
+let currentProxyName = 'Проверка...';
+
+function getProxyName(url) {
+    for (let key in PROXY_NAMES) {
+        if (url.includes(key)) return PROXY_NAMES[key];
+    }
+    return 'Неизвестный прокси';
+}
+
+function updateFooterProxy(name) {
+    const footer = document.querySelector('.footer-left');
+    if (footer) footer.textContent = 'ZenitVPN Монитор | Прокси: ' + name;
+    currentProxyName = name;
+}
+
 const PRESETS={success:{theme:'success',pill:{cls:'pill-success',text:'Все системы работают'},banner:null,defaultTitle:'Инфраструктура в норме',defaultMessage:'Критических сбоев и плановых технических работ не зафиксировано.'},maintenance:{theme:'info',pill:{cls:'pill-info',text:'Техническое обслуживание'},banner:null,defaultTitle:'Плановые технические работы',defaultMessage:'Инженеры проводят модернизацию серверного ПО.'},critical:{theme:'critical',pill:{cls:'pill-critical',text:'Критический сбой'},banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'},defaultTitle:'Аварийное отключение узла',defaultMessage:'Узел в Финляндии недоступен. Трафик перенаправлен.'},warning:{theme:'warning',pill:{cls:'pill-warning',text:'Повышенная нагрузка'},banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'},defaultTitle:'Замедление сетевых узлов',defaultMessage:'Зафиксирована повышенная нагрузка на все три узла.'}};
 const NODE_NAMES={node1:{name:'Финляндия',code:'HEL-1',flag:'🇫🇮'},node2:{name:'Нидерланды',code:'AMS-1',flag:'🇳🇱'},node3:{name:'Франция',code:'PR-1',flag:'🇫🇷'}};
 const STATUS_LABELS={online:'Online',offline:'Offline',warning:'Degraded',maintenance:'Maintenance'};
 const UPTIME_VALUES={online:'99.8%',offline:'0.0%',warning:'81.3%',maintenance:'100%'};
 const LOADER_TIMEOUT = 300000;
 let timeoutId=null;
+
+async function findWorkingUrl(){
+    updateFooterProxy('Проверка серверов...');
+    for(let url of PROXY_URLS){
+        try{
+            let testUrl = url.includes('allorigins') ? url + '/rest/v1/' : url + '/rest/v1/';
+            let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
+            if(resp.ok || resp.status===401 || resp.status===400){
+                let name = getProxyName(url);
+                console.log('✅ Рабочий URL:', url, '—', name);
+                updateFooterProxy(name);
+                return url;
+            }
+        }catch(e){console.log('❌ Не работает:', url)}
+    }
+    updateFooterProxy('Все серверы недоступны');
+    return PROXY_URLS[0];
+}
 
 function enableMaintenance(){document.getElementById('maintenanceOverlay').classList.remove('hidden');document.querySelector('.container').classList.add('blur-content');document.getElementById('loader').classList.add('hidden')}
 function disableMaintenance(){document.getElementById('maintenanceOverlay').classList.add('hidden');document.querySelector('.container').classList.remove('blur-content')}
@@ -178,11 +212,35 @@ function safeNodes(r){return r&&typeof r==='object'&&!Array.isArray(r)&&Object.k
 function renderStatus(d){let m='success',n={node1:'online',node2:'online',node3:'online'},id='—',t=PRESETS.success.defaultTitle,msg=PRESETS.success.defaultMessage;if(d){m=safeStatus(d.status);n=safeNodes(d.affected_nodes);id=d.id?'#'+d.id:'—';t=d.title||PRESETS[m].defaultTitle;msg=d.message||PRESETS[m].defaultMessage}let data=PRESETS[m],now=new Date(),ts=now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});document.getElementById('topTime').textContent=ts;document.getElementById('mainCard').className='card theme-'+data.theme;let strip=document.getElementById('alertStrip');strip.classList.remove('visible','strip-critical','strip-warning');if(data.banner){strip.classList.add('visible',data.banner.cls);document.getElementById('stripText').textContent=data.banner.text}document.getElementById('statusPill').className='status-pill '+data.pill.cls;document.getElementById('pillText').textContent=data.pill.text;document.getElementById('incTitle').textContent=t;document.getElementById('incBody').textContent=msg;document.getElementById('incID').textContent=id;document.getElementById('incTime').textContent=ts;document.getElementById('nodesOnlineCount').textContent=Object.values(n).filter(s=>s==='online').length+' из 3 онлайн';let grid=document.getElementById('serversGrid');grid.innerHTML='';Object.entries(n).forEach(([i,s])=>{let node=NODE_NAMES[i];if(!node)return;let card=document.createElement('div');card.className='server-card status-'+s;card.innerHTML='<div class="server-top"><div class="server-flag">'+node.flag+'</div><div class="server-dot"></div></div><div class="server-name">'+node.name+'</div><div class="server-code">'+node.code+'</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>'+(UPTIME_VALUES[s]||'??')+'</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">'+(STATUS_LABELS[s]||s)+'</div>';grid.appendChild(card)})}
 async function loadHistory(){let c=document.getElementById('historyList');c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Загрузка истории...</p>';try{let{data:i,error:e}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20);if(e){c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>';return}c.innerHTML=(i||[]).map(inc=>{let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':'var(--green)';return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title">'+(inc.title||'Без названия')+'</div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>'}).join('')}catch(e){console.error(e);c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>'}}
 function showLoader(){document.getElementById('loader').classList.remove('hidden');document.getElementById('loaderSpinner').style.display='block';document.getElementById('loaderText').style.display='block';document.getElementById('loaderSubtext').style.display='block';document.getElementById('loaderError').classList.remove('visible')}
-function showErrorState(){document.getElementById('loaderSpinner').style.display='none';document.getElementById('loaderText').style.display='none';document.getElementById('loaderSubtext').style.display='none';document.getElementById('loaderError').classList.add('visible')}
+function showErrorState(){document.getElementById('loaderSpinner').style.display='none';document.getElementById('loaderText').style.display='none';document.getElementById('loaderSubtext').style.display='none';document.getElementById('loaderError').classList.add('visible');updateFooterProxy('Ошибка соединения')}
 function hideLoader(){document.getElementById('loader').classList.add('hidden')}
-async function refreshData(){if(MAINTENANCE_MODE){enableMaintenance();return}disableMaintenance();if(timeoutId)clearTimeout(timeoutId);showLoader();timeoutId=setTimeout(()=>{showErrorState()},LOADER_TIMEOUT);try{let{data:a,error:e}=await supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(1);clearTimeout(timeoutId);if(e){console.error('Ошибка:',e);showErrorState();return}renderStatus(a?.[0]||null);await loadHistory();hideLoader()}catch(e){clearTimeout(timeoutId);console.error('Критическая ошибка:',e);showErrorState()}}
+
+async function refreshData(){
+    if(MAINTENANCE_MODE){enableMaintenance();return}
+    disableMaintenance();
+    if(timeoutId)clearTimeout(timeoutId);
+    showLoader();
+    document.getElementById('loaderText').textContent = 'Загрузка данных...';
+    document.getElementById('loaderSubtext').textContent = 'Прокси: ' + currentProxyName;
+    
+    if(!supabase){
+        let url = await findWorkingUrl();
+        supabase = window.supabase.createClient(url, SUPABASE_ANON_KEY);
+    }
+    
+    timeoutId=setTimeout(()=>{showErrorState()},LOADER_TIMEOUT);
+    try{
+        let{data:a,error:e}=await supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(1);
+        clearTimeout(timeoutId);
+        if(e){console.error('Ошибка:',e);showErrorState();return}
+        renderStatus(a?.[0]||null);
+        await loadHistory();
+        hideLoader();
+    }catch(e){clearTimeout(timeoutId);console.error('Критическая ошибка:',e);showErrorState()}
+}
+
 window.retryLoad=function(){refreshData()};
-document.addEventListener('DOMContentLoaded',refreshData);
+document.addEventListener('DOMContentLoaded', refreshData);
 })();
 </script>
 
@@ -206,7 +264,10 @@ document.addEventListener('DOMContentLoaded',refreshData);
 </div>
 <div class="history-section"><div class="servers-header"><span class="servers-label">История инцидентов</span></div><div class="history-list" id="historyList"><p style="color:var(--text-3);font-size:12px;">Загрузка истории...</p></div></div>
 </div>
-<div class="card-footer"><span class="footer-left">ZenitVPN Монитор</span><div class="footer-right"><div class="footer-badge"><div class="footer-badge-dot" style="background:var(--green);animation:glow-g 2s ease-in-out infinite"></div><span>Без автообновления</span></div></div></div>
+<div class="card-footer">
+    <span class="footer-left">ZenitVPN Монитор | Прокси: Проверка...</span>
+    <div class="footer-right"><div class="footer-badge"><div class="footer-badge-dot" style="background:var(--green);animation:glow-g 2s ease-in-out infinite"></div><span>Автовыбор сервера</span></div></div>
+</div>
 </div>
 </div>
 </body>
