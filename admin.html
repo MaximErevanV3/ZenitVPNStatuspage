@@ -84,7 +84,19 @@ async function checkSession(){let{data:{session}}=await supabase.auth.getSession
 function showLogin(){document.getElementById('loginBlock').classList.remove('hidden');document.getElementById('adminBlock').classList.add('hidden')}
 function showAdmin(){document.getElementById('loginBlock').classList.add('hidden');document.getElementById('adminBlock').classList.remove('hidden');loadIncidents()}
 
-window.signIn=async()=>{let e=document.getElementById('email').value,p=document.getElementById('password').value;let{error}=await supabase.auth.signInWithPassword({email:e,password:p});if(error){document.getElementById('loginError').textContent='Ошибка: '+error.message}else{showAdmin()}};
+window.signIn=async()=>{
+    let e=document.getElementById('email').value,p=document.getElementById('password').value;
+    document.getElementById('loginError').textContent='';
+    showLoader('Выполняется вход...');
+    let{error}=await supabase.auth.signInWithPassword({email:e,password:p});
+    if(error){
+        hideLoader();
+        document.getElementById('loginError').textContent='Ошибка: '+error.message;
+    }else{
+        hideLoader();
+        showAdmin();
+    }
+};
 window.signOut=async()=>{await supabase.auth.signOut();showLogin()};
 
 window.createIncident=async()=>{
