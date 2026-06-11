@@ -6,6 +6,8 @@
     <title>ZenitVPN — Статус Систем</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root{--bg:#04060f;--surface:rgba(8,12,26,0.8);--surface-raised:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.1);--green:#00dda0;--yellow:#ffb020;--red:#ff3358;--blue:#4da6ff;--text-1:#eef2ff;--text-2:#8892aa;--text-3:#404866}
@@ -100,11 +102,12 @@
         .history-item:last-child{border-bottom:none}.history-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
         .history-title{font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:2px}
         .history-meta{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
-        .card-footer{padding:14px 36px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.15)}
-        .footer-left{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3);transition:color 0.3s}
+        .card-footer{padding:14px 36px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.15);flex-wrap:wrap;gap:8px}
+        .footer-left{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .footer-right{display:flex;align-items:center;gap:16px}
         .footer-badge{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .footer-badge-dot{width:5px;height:5px;border-radius:50%}
+        .footer-center{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3);margin-left:auto;margin-right:auto}
         .loader-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity 0.3s ease}
         .loader-overlay.hidden{opacity:0;pointer-events:none}
         .loader-text{font-size:14px;font-weight:500;letter-spacing:1px;color:var(--text-2);text-transform:uppercase}
@@ -122,7 +125,14 @@
         .maintenance-title{font-size:24px;font-weight:800;color:var(--text-1);margin-bottom:12px}
         .maintenance-message{font-size:14px;color:var(--text-2);line-height:1.6}
         .blur-content{filter:blur(6px);pointer-events:none;user-select:none}
-        @media(max-width:580px){.card-body{padding:24px 20px 20px}.card-footer{padding:12px 20px}.servers-grid{grid-template-columns:1fr}.incident-title{font-size:20px}.meta-strip{flex-direction:column}.meta-cell{border-right:none;border-bottom:1px solid var(--border)}.meta-cell:last-child{border-bottom:none}.topbar{flex-direction:column;align-items:flex-start;gap:8px}}
+        .map-container{height:200px;border-radius:12px;overflow:hidden;margin-bottom:20px;border:1px solid var(--border)}
+        .map-container .leaflet-container{background:var(--surface);height:100%;width:100%}
+        @media(max-width:580px){
+            .card-body{padding:24px 20px 20px}.card-footer{padding:12px 20px}
+            .servers-grid{grid-template-columns:1fr}.incident-title{font-size:20px}
+            .meta-strip{flex-direction:column}.meta-cell{border-right:none;border-bottom:1px solid var(--border)}
+            .meta-cell:last-child{border-bottom:none}.topbar{flex-direction:column;align-items:flex-start;gap:8px}
+        }
     </style>
 </head>
 <body>
@@ -149,7 +159,7 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
+const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
 const PROXY_URLS = [
@@ -166,6 +176,55 @@ const PROXY_NAMES = {
 
 let supabase = null;
 let currentProxyName = 'Проверка...';
+let lastUpdateTime = null;
+let updateTimerInterval = null;
+
+// Координаты узлов
+const NODE_COORDS = {
+    node1: { lat: 60.1695, lng: 24.9354 },  // Хельсинки
+    node2: { lat: 52.3676, lng: 4.9041 },   // Амстердам
+    node3: { lat: 48.8566, lng: 2.3522 }    // Париж
+};
+
+let map = null;
+let markers = {};
+
+function initMap() {
+    if (map) return;
+    map = L.map('map').setView([54.5, 15], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 10
+    }).addTo(map);
+}
+
+function updateMapMarkers(nodes) {
+    if (!map) initMap();
+    // Удаляем старые маркеры
+    for (let key in markers) {
+        map.removeLayer(markers[key]);
+        delete markers[key];
+    }
+    Object.entries(nodes).forEach(([id, status]) => {
+        const coords = NODE_COORDS[id];
+        if (!coords) return;
+        let color = '#00dda0';
+        if (status === 'warning') color = '#ffb020';
+        else if (status === 'offline') color = '#ff3358';
+        else if (status === 'maintenance') color = '#4da6ff';
+        const marker = L.circleMarker([coords.lat, coords.lng], {
+            radius: 8,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.9
+        }).addTo(map);
+        marker.bindTooltip(NODE_NAMES[id]?.name || id);
+        markers[id] = marker;
+    });
+}
 
 function getProxyName(url) {
     for (let key in PROXY_NAMES) {
@@ -180,6 +239,58 @@ function updateFooterProxy(name) {
     currentProxyName = name;
 }
 
+function updateLastUpdateTime() {
+    if (!lastUpdateTime) {
+        document.getElementById('updateCounter').textContent = 'ещё не обновлялось';
+        return;
+    }
+    const now = new Date();
+    const diff = Math.floor((now - lastUpdateTime) / 1000);
+    let text;
+    if (diff < 5) text = 'только что';
+    else if (diff < 60) text = `${diff} сек. назад`;
+    else if (diff < 3600) text = `${Math.floor(diff/60)} мин. назад`;
+    else text = `${Math.floor(diff/3600)} ч. назад`;
+    document.getElementById('updateCounter').textContent = `обновлено ${text}`;
+}
+
+function startUpdateTimer() {
+    if (updateTimerInterval) clearInterval(updateTimerInterval);
+    updateTimerInterval = setInterval(updateLastUpdateTime, 1000);
+}
+
+function stopUpdateTimer() {
+    if (updateTimerInterval) {
+        clearInterval(updateTimerInterval);
+        updateTimerInterval = null;
+    }
+}
+
+function saveLastStatus(data) {
+    try {
+        localStorage.setItem('zenitvpn_last_status', JSON.stringify({
+            data: data,
+            timestamp: Date.now()
+        }));
+    } catch(e) {}
+}
+
+function loadLastStatus() {
+    try {
+        const saved = localStorage.getItem('zenitvpn_last_status');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.data) {
+                renderStatus(parsed.data);
+                lastUpdateTime = new Date(parsed.timestamp);
+                updateLastUpdateTime();
+                return true;
+            }
+        }
+    } catch(e) {}
+    return false;
+}
+
 const PRESETS={success:{theme:'success',pill:{cls:'pill-success',text:'Все системы работают'},banner:null,defaultTitle:'Инфраструктура в норме',defaultMessage:'Критических сбоев и плановых технических работ не зафиксировано.'},maintenance:{theme:'info',pill:{cls:'pill-info',text:'Техническое обслуживание'},banner:null,defaultTitle:'Плановые технические работы',defaultMessage:'Инженеры проводят модернизацию серверного ПО.'},critical:{theme:'critical',pill:{cls:'pill-critical',text:'Критический сбой'},banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'},defaultTitle:'Аварийное отключение узла',defaultMessage:'Узел в Финляндии недоступен. Трафик перенаправлен.'},warning:{theme:'warning',pill:{cls:'pill-warning',text:'Повышенная нагрузка'},banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'},defaultTitle:'Замедление сетевых узлов',defaultMessage:'Зафиксирована повышенная нагрузка на все три узла.'}};
 const NODE_NAMES={node1:{name:'Финляндия',code:'HEL-1',flag:'🇫🇮'},node2:{name:'Нидерланды',code:'AMS-1',flag:'🇳🇱'},node3:{name:'Франция',code:'PR-1',flag:'🇫🇷'}};
 const STATUS_LABELS={online:'Online',offline:'Offline',warning:'Degraded',maintenance:'Maintenance'};
@@ -188,7 +299,7 @@ const LOADER_TIMEOUT = 300000;
 let timeoutId=null;
 
 async function findWorkingUrl(){
-    updateFooterProxy('Проверка серверов...');
+    updateFooterProxy('Поиск сервера...');
     for(let url of PROXY_URLS){
         try{
             let testUrl = url.includes('allorigins') ? url + '/rest/v1/' : url + '/rest/v1/';
@@ -209,10 +320,58 @@ function enableMaintenance(){document.getElementById('maintenanceOverlay').class
 function disableMaintenance(){document.getElementById('maintenanceOverlay').classList.add('hidden');document.querySelector('.container').classList.remove('blur-content')}
 function safeStatus(r){return typeof r==='string'&&PRESETS[r]?r:'success'}
 function safeNodes(r){return r&&typeof r==='object'&&!Array.isArray(r)&&Object.keys(r).some(k=>NODE_NAMES[k])?r:{node1:'online',node2:'online',node3:'online'}}
-function renderStatus(d){let m='success',n={node1:'online',node2:'online',node3:'online'},id='—',t=PRESETS.success.defaultTitle,msg=PRESETS.success.defaultMessage;if(d){m=safeStatus(d.status);n=safeNodes(d.affected_nodes);id=d.id?'#'+d.id:'—';t=d.title||PRESETS[m].defaultTitle;msg=d.message||PRESETS[m].defaultMessage}let data=PRESETS[m],now=new Date(),ts=now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});document.getElementById('topTime').textContent=ts;document.getElementById('mainCard').className='card theme-'+data.theme;let strip=document.getElementById('alertStrip');strip.classList.remove('visible','strip-critical','strip-warning');if(data.banner){strip.classList.add('visible',data.banner.cls);document.getElementById('stripText').textContent=data.banner.text}document.getElementById('statusPill').className='status-pill '+data.pill.cls;document.getElementById('pillText').textContent=data.pill.text;document.getElementById('incTitle').textContent=t;document.getElementById('incBody').textContent=msg;document.getElementById('incID').textContent=id;document.getElementById('incTime').textContent=ts;document.getElementById('nodesOnlineCount').textContent=Object.values(n).filter(s=>s==='online').length+' из 3 онлайн';let grid=document.getElementById('serversGrid');grid.innerHTML='';Object.entries(n).forEach(([i,s])=>{let node=NODE_NAMES[i];if(!node)return;let card=document.createElement('div');card.className='server-card status-'+s;card.innerHTML='<div class="server-top"><div class="server-flag">'+node.flag+'</div><div class="server-dot"></div></div><div class="server-name">'+node.name+'</div><div class="server-code">'+node.code+'</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>'+(UPTIME_VALUES[s]||'??')+'</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">'+(STATUS_LABELS[s]||s)+'</div>';grid.appendChild(card)})}
-async function loadHistory(){let c=document.getElementById('historyList');c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Загрузка истории...</p>';try{let{data:i,error:e}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20);if(e){c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>';return}c.innerHTML=(i||[]).map(inc=>{let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':'var(--green)';return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title">'+(inc.title||'Без названия')+'</div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>'}).join('')}catch(e){console.error(e);c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>'}}
+
+function renderStatus(d){
+    let m='success',n={node1:'online',node2:'online',node3:'online'},id='—',t=PRESETS.success.defaultTitle,msg=PRESETS.success.defaultMessage;
+    if(d){
+        m=safeStatus(d.status);
+        n=safeNodes(d.affected_nodes);
+        id=d.id?'#'+d.id:'—';
+        t=d.title||PRESETS[m].defaultTitle;
+        msg=d.message||PRESETS[m].defaultMessage;
+    }
+    let data=PRESETS[m],now=new Date(),ts=now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('topTime').textContent=ts;
+    document.getElementById('mainCard').className='card theme-'+data.theme;
+    let strip=document.getElementById('alertStrip');
+    strip.classList.remove('visible','strip-critical','strip-warning');
+    if(data.banner){strip.classList.add('visible',data.banner.cls);document.getElementById('stripText').textContent=data.banner.text}
+    document.getElementById('statusPill').className='status-pill '+data.pill.cls;
+    document.getElementById('pillText').textContent=data.pill.text;
+    document.getElementById('incTitle').textContent=t;
+    document.getElementById('incBody').textContent=msg;
+    document.getElementById('incID').textContent=id;
+    document.getElementById('incTime').textContent=ts;
+    document.getElementById('nodesOnlineCount').textContent=Object.values(n).filter(s=>s==='online').length+' из 3 онлайн';
+    let grid=document.getElementById('serversGrid');
+    grid.innerHTML='';
+    Object.entries(n).forEach(([i,s])=>{
+        let node=NODE_NAMES[i];
+        if(!node)return;
+        let card=document.createElement('div');
+        card.className='server-card status-'+s;
+        card.innerHTML='<div class="server-top"><div class="server-flag">'+node.flag+'</div><div class="server-dot"></div></div><div class="server-name">'+node.name+'</div><div class="server-code">'+node.code+'</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>'+(UPTIME_VALUES[s]||'??')+'</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">'+(STATUS_LABELS[s]||s)+'</div>';
+        grid.appendChild(card);
+    });
+    // Обновляем карту
+    updateMapMarkers(n);
+}
+
+async function loadHistory(){
+    let c=document.getElementById('historyList');
+    c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Загрузка истории...</p>';
+    try{
+        let{data:i,error:e}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20);
+        if(e){c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>';return}
+        c.innerHTML=(i||[]).map(inc=>{
+            let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':'var(--green)';
+            return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title">'+(inc.title||'Без названия')+'</div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>';
+        }).join('');
+    }catch(e){console.error(e);c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>'}
+}
+
 function showLoader(){document.getElementById('loader').classList.remove('hidden');document.getElementById('loaderSpinner').style.display='block';document.getElementById('loaderText').style.display='block';document.getElementById('loaderSubtext').style.display='block';document.getElementById('loaderError').classList.remove('visible')}
-function showErrorState(){document.getElementById('loaderSpinner').style.display='none';document.getElementById('loaderText').style.display='none';document.getElementById('loaderSubtext').style.display='none';document.getElementById('loaderError').classList.add('visible');updateFooterProxy('Ошибка соединения')}
+function showErrorState(){document.getElementById('loaderSpinner').style.display='none';document.getElementById('loaderText').style.display='none';document.getElementById('loaderSubtext').style.display='none';document.getElementById('loaderError').classList.add('visible');updateFooterProxy('Ошибка соединения');stopUpdateTimer()}
 function hideLoader(){document.getElementById('loader').classList.add('hidden')}
 
 async function refreshData(){
@@ -228,19 +387,47 @@ async function refreshData(){
         supabase = window.supabase.createClient(url, SUPABASE_ANON_KEY);
     }
     
-    timeoutId=setTimeout(()=>{showErrorState()},LOADER_TIMEOUT);
+    timeoutId=setTimeout(()=>{
+        // Таймаут — пробуем загрузить из кэша
+        const cached = loadLastStatus();
+        if (!cached) showErrorState();
+        else hideLoader();
+    },LOADER_TIMEOUT);
+    
     try{
         let{data:a,error:e}=await supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(1);
         clearTimeout(timeoutId);
-        if(e){console.error('Ошибка:',e);showErrorState();return}
-        renderStatus(a?.[0]||null);
+        if(e){
+            console.error('Ошибка:',e);
+            const cached = loadLastStatus();
+            if (!cached) showErrorState();
+            else hideLoader();
+            return;
+        }
+        const activeData = a?.[0] || null;
+        renderStatus(activeData);
+        // Сохраняем в localStorage
+        saveLastStatus(activeData);
+        lastUpdateTime = new Date();
+        updateLastUpdateTime();
+        startUpdateTimer();
         await loadHistory();
         hideLoader();
-    }catch(e){clearTimeout(timeoutId);console.error('Критическая ошибка:',e);showErrorState()}
+    }catch(e){
+        clearTimeout(timeoutId);
+        console.error('Критическая ошибка:',e);
+        const cached = loadLastStatus();
+        if (!cached) showErrorState();
+        else hideLoader();
+    }
 }
 
 window.retryLoad=function(){refreshData()};
-document.addEventListener('DOMContentLoaded', refreshData);
+
+document.addEventListener('DOMContentLoaded', ()=>{
+    initMap();
+    refreshData();
+});
 })();
 </script>
 
@@ -256,6 +443,7 @@ document.addEventListener('DOMContentLoaded', refreshData);
 <h1 class="incident-title" id="incTitle">Инфраструктура в норме</h1>
 <p class="incident-body" id="incBody">Критических сбоев и плановых технических работ не зафиксировано.</p>
 <div class="meta-strip"><div class="meta-cell"><div class="meta-label">ID инцидента</div><div class="meta-value" id="incID">—</div></div><div class="meta-cell"><div class="meta-label">Обновлено</div><div class="meta-value" id="incTime">—</div></div><div class="meta-cell"><div class="meta-label">Всего узлов</div><div class="meta-value">3 / 3</div></div></div>
+<div id="map" class="map-container"></div>
 <div class="servers-header"><span class="servers-label">Состояние узлов</span><span class="servers-count" id="nodesOnlineCount">3 из 3 онлайн</span></div>
 <div class="servers-grid" id="serversGrid">
 <div class="server-card status-online"><div class="server-top"><div class="server-flag">🇫🇮</div><div class="server-dot"></div></div><div class="server-name">Финляндия</div><div class="server-code">HEL-1</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>99.8%</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">Online</div></div>
@@ -266,6 +454,7 @@ document.addEventListener('DOMContentLoaded', refreshData);
 </div>
 <div class="card-footer">
     <span class="footer-left">ZenitVPN Монитор | Прокси: Проверка...</span>
+    <span class="footer-center" id="updateCounter">ещё не обновлялось</span>
     <div class="footer-right"><div class="footer-badge"><div class="footer-badge-dot" style="background:var(--green);animation:glow-g 2s ease-in-out infinite"></div><span>Автовыбор сервера</span></div></div>
 </div>
 </div>
