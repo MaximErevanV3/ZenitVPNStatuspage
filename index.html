@@ -114,6 +114,7 @@
         .loader-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity 0.3s ease}
         .loader-overlay.hidden{opacity:0;pointer-events:none}
         .loader-text{font-size:14px;font-weight:500;letter-spacing:1px;color:var(--text-2);text-transform:uppercase}
+        .loader-subtext{font-size:11px;color:var(--text-3);margin-top:-10px}
         .loader-spinner{width:32px;height:32px;border:2px solid rgba(77,166,255,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
         .loader-error{text-align:center;color:var(--red);font-size:14px;font-weight:500;max-width:300px;line-height:1.5;display:none}
@@ -150,6 +151,7 @@
 <div id="loader" class="loader-overlay">
     <div id="loaderSpinner" class="loader-spinner"></div>
     <div id="loaderText" class="loader-text">Загрузка данных...</div>
+    <div id="loaderSubtext" class="loader-subtext">Соединение с сервером может быть медленным</div>
     <div id="loaderError" class="loader-error">
         Не удалось загрузить данные.<br>Проверьте подключение и попробуйте снова.<br>
         <button class="loader-retry-btn" onclick="retryLoad()">Попробовать снова</button>
@@ -158,15 +160,15 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
-const SUPABASE_URL='https://vuzcudxulhqkrkniulsl.supabase.co';
+const MAINTENANCE_MODE=false;
+const SUPABASE_URL='https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev';
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const PRESETS={success:{theme:'success',pill:{cls:'pill-success',text:'Все системы работают'},banner:null,defaultTitle:'Инфраструктура в норме',defaultMessage:'Критических сбоев и плановых технических работ не зафиксировано.'},maintenance:{theme:'info',pill:{cls:'pill-info',text:'Техническое обслуживание'},banner:null,defaultTitle:'Плановые технические работы',defaultMessage:'Инженеры проводят модернизацию серверного ПО.'},critical:{theme:'critical',pill:{cls:'pill-critical',text:'Критический сбой'},banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'},defaultTitle:'Аварийное отключение узла',defaultMessage:'Узел в Финляндии недоступен. Трафик перенаправлен.'},warning:{theme:'warning',pill:{cls:'pill-warning',text:'Повышенная нагрузка'},banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'},defaultTitle:'Замедление сетевых узлов',defaultMessage:'Зафиксирована повышенная нагрузка на все три узла.'}};
 const NODE_NAMES={node1:{name:'Финляндия',code:'HEL-1',flag:'🇫🇮'},node2:{name:'Нидерланды',code:'AMS-1',flag:'🇳🇱'},node3:{name:'Франция',code:'PR-1',flag:'🇫🇷'}};
 const STATUS_LABELS={online:'Online',offline:'Offline',warning:'Degraded',maintenance:'Maintenance'};
 const UPTIME_VALUES={online:'99.8%',offline:'0.0%',warning:'81.3%',maintenance:'100%'};
-const LOADER_TIMEOUT=120000;
+const LOADER_TIMEOUT = 300000;
 let timeoutId=null;
 
 function enableMaintenance(){document.getElementById('maintenanceOverlay').classList.remove('hidden');document.querySelector('.container').classList.add('blur-content');document.getElementById('loader').classList.add('hidden')}
@@ -175,8 +177,8 @@ function safeStatus(r){return typeof r==='string'&&PRESETS[r]?r:'success'}
 function safeNodes(r){return r&&typeof r==='object'&&!Array.isArray(r)&&Object.keys(r).some(k=>NODE_NAMES[k])?r:{node1:'online',node2:'online',node3:'online'}}
 function renderStatus(d){let m='success',n={node1:'online',node2:'online',node3:'online'},id='—',t=PRESETS.success.defaultTitle,msg=PRESETS.success.defaultMessage;if(d){m=safeStatus(d.status);n=safeNodes(d.affected_nodes);id=d.id?'#'+d.id:'—';t=d.title||PRESETS[m].defaultTitle;msg=d.message||PRESETS[m].defaultMessage}let data=PRESETS[m],now=new Date(),ts=now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});document.getElementById('topTime').textContent=ts;document.getElementById('mainCard').className='card theme-'+data.theme;let strip=document.getElementById('alertStrip');strip.classList.remove('visible','strip-critical','strip-warning');if(data.banner){strip.classList.add('visible',data.banner.cls);document.getElementById('stripText').textContent=data.banner.text}document.getElementById('statusPill').className='status-pill '+data.pill.cls;document.getElementById('pillText').textContent=data.pill.text;document.getElementById('incTitle').textContent=t;document.getElementById('incBody').textContent=msg;document.getElementById('incID').textContent=id;document.getElementById('incTime').textContent=ts;document.getElementById('nodesOnlineCount').textContent=Object.values(n).filter(s=>s==='online').length+' из 3 онлайн';let grid=document.getElementById('serversGrid');grid.innerHTML='';Object.entries(n).forEach(([i,s])=>{let node=NODE_NAMES[i];if(!node)return;let card=document.createElement('div');card.className='server-card status-'+s;card.innerHTML='<div class="server-top"><div class="server-flag">'+node.flag+'</div><div class="server-dot"></div></div><div class="server-name">'+node.name+'</div><div class="server-code">'+node.code+'</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>'+(UPTIME_VALUES[s]||'??')+'</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">'+(STATUS_LABELS[s]||s)+'</div>';grid.appendChild(card)})}
 async function loadHistory(){let c=document.getElementById('historyList');c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Загрузка истории...</p>';try{let{data:i,error:e}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20);if(e){c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>';return}c.innerHTML=(i||[]).map(inc=>{let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':'var(--green)';return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title">'+(inc.title||'Без названия')+'</div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>'}).join('')}catch(e){console.error(e);c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>'}}
-function showLoader(){document.getElementById('loader').classList.remove('hidden');document.getElementById('loaderSpinner').style.display='block';document.getElementById('loaderText').style.display='block';document.getElementById('loaderError').classList.remove('visible')}
-function showErrorState(){document.getElementById('loaderSpinner').style.display='none';document.getElementById('loaderText').style.display='none';document.getElementById('loaderError').classList.add('visible')}
+function showLoader(){document.getElementById('loader').classList.remove('hidden');document.getElementById('loaderSpinner').style.display='block';document.getElementById('loaderText').style.display='block';document.getElementById('loaderSubtext').style.display='block';document.getElementById('loaderError').classList.remove('visible')}
+function showErrorState(){document.getElementById('loaderSpinner').style.display='none';document.getElementById('loaderText').style.display='none';document.getElementById('loaderSubtext').style.display='none';document.getElementById('loaderError').classList.add('visible')}
 function hideLoader(){document.getElementById('loader').classList.add('hidden')}
 async function refreshData(){if(MAINTENANCE_MODE){enableMaintenance();return}disableMaintenance();if(timeoutId)clearTimeout(timeoutId);showLoader();timeoutId=setTimeout(()=>{showErrorState()},LOADER_TIMEOUT);try{let{data:a,error:e}=await supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(1);clearTimeout(timeoutId);if(e){console.error('Ошибка:',e);showErrorState();return}renderStatus(a?.[0]||null);await loadHistory();hideLoader()}catch(e){clearTimeout(timeoutId);console.error('Критическая ошибка:',e);showErrorState()}}
 window.retryLoad=function(){refreshData()};
