@@ -37,6 +37,7 @@
         .loader-text{font-size:14px;font-weight:500;letter-spacing:1px;color:var(--text-secondary);text-transform:uppercase}
         .loader-spinner{width:32px;height:32px;border:2px solid rgba(77,166,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
+        .footer-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:12px}
     </style>
 </head>
 <body>
@@ -68,19 +69,71 @@
 <div class="card"><h2>⚡ Активные инциденты</h2><div id="activeList"></div></div>
 <div class="card"><h2>📋 Последние инциденты</h2><div id="allList"></div></div>
 <button class="btn btn-outline" onclick="signOut()">🚪 Выйти</button>
+<div class="footer-note" id="proxyNote">Прокси: проверка...</div>
 </div>
 </div>
 
 <script>
 (function(){
-const SUPABASE_URL='https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev';
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const PROXY_URLS = [
+    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev',
+    'https://vuzcudxulhqkrkniulsl.supabase.co',
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
+];
+
+const PROXY_NAMES = {
+    'zenitvpn-proxy': 'Cloudflare Workers',
+    'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
+    'allorigins': 'Резервный прокси'
+};
+
+let supabase = null;
+let currentProxyName = 'Проверка...';
+
+function getProxyName(url) {
+    for (let key in PROXY_NAMES) {
+        if (url.includes(key)) return PROXY_NAMES[key];
+    }
+    return 'Неизвестный прокси';
+}
+
+function updateProxyNote(name) {
+    const note = document.getElementById('proxyNote');
+    if (note) note.textContent = 'Прокси: ' + name;
+    currentProxyName = name;
+}
+
+async function findWorkingUrl(){
+    updateProxyNote('Поиск сервера...');
+    for(let url of PROXY_URLS){
+        try{
+            let testUrl = url.includes('allorigins') ? url + '/rest/v1/' : url + '/rest/v1/';
+            let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
+            if(resp.ok || resp.status===401 || resp.status===400){
+                let name = getProxyName(url);
+                console.log('✅ Админка: рабочий URL:', url, '—', name);
+                updateProxyNote(name);
+                return url;
+            }
+        }catch(e){console.log('❌ Админка: не работает:', url)}
+    }
+    updateProxyNote('Все серверы недоступны');
+    return PROXY_URLS[0];
+}
 
 function showLoader(t='Выполняется...'){document.getElementById('loaderText').textContent=t;document.getElementById('loader').classList.remove('hidden')}
 function hideLoader(){document.getElementById('loader').classList.add('hidden')}
 
-async function checkSession(){let{data:{session}}=await supabase.auth.getSession();if(session){showAdmin()}else{showLogin()}}
+async function checkSession(){
+    if(!supabase){
+        let url = await findWorkingUrl();
+        supabase = window.supabase.createClient(url, SUPABASE_ANON_KEY);
+    }
+    let{data:{session}}=await supabase.auth.getSession();
+    if(session){showAdmin()}else{showLogin()}
+}
 function showLogin(){document.getElementById('loginBlock').classList.remove('hidden');document.getElementById('adminBlock').classList.add('hidden')}
 function showAdmin(){document.getElementById('loginBlock').classList.add('hidden');document.getElementById('adminBlock').classList.remove('hidden');loadIncidents()}
 
@@ -115,10 +168,14 @@ setTimeout(()=>{document.getElementById('createSuccess').textContent=''},3000);
 };
 
 async function loadIncidents(){
-let{data:active}=await supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false});
+let{data:active,error:activeError}=await supabase.from('incidents').select('*').eq('is_active',true).order('created_at',{ascending:false});
+if(activeError){console.error('Ошибка загрузки активных:',activeError);document.getElementById('activeList').innerHTML='<p style="color:var(--red)">Ошибка загрузки</p>'}else{
 document.getElementById('activeList').innerHTML=(active&&active.length)?active.map(inc=>incidentHTML(inc)).join(''):'<p style="color:var(--text-secondary)">Нет активных инцидентов</p>';
-let{data:all}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20);
+}
+let{data:all,error:allError}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(20);
+if(allError){console.error('Ошибка загрузки истории:',allError);document.getElementById('allList').innerHTML='<p style="color:var(--red)">Ошибка загрузки</p>'}else{
 document.getElementById('allList').innerHTML=(all||[]).map(inc=>incidentHTML(inc)).join('');
+}
 }
 
 function incidentHTML(inc){let d=new Date(inc.created_at).toLocaleString('ru-RU');return'<div class="incident-item"><div class="incident-info"><div class="incident-title">'+inc.title+' <span style="font-size:11px;color:var(--text-secondary)">('+inc.status+')</span></div><div class="incident-meta">'+d+' '+(inc.is_active?'🟢 Активен':'')+'</div></div><div class="button-group"><button class="btn btn-sm '+(inc.is_active?'btn-danger':'btn-outline')+'" onclick="toggleActive('+inc.id+','+!inc.is_active+')">'+(inc.is_active?'Деактивировать':'Сделать активным')+'</button><button class="btn btn-sm btn-delete" onclick="deleteIncident('+inc.id+')">🗑️</button></div></div>'}
@@ -126,7 +183,12 @@ function incidentHTML(inc){let d=new Date(inc.created_at).toLocaleString('ru-RU'
 window.toggleActive=async(id,setActive)=>{showLoader('Обновление статуса...');if(setActive){let{error:de}=await supabase.from('incidents').update({is_active:false}).eq('is_active',true);if(de){hideLoader();alert('Ошибка: '+de.message);return}}let{error}=await supabase.from('incidents').update({is_active:setActive}).eq('id',id);if(error){hideLoader();alert('Ошибка: '+error.message);return}await loadIncidents();hideLoader()};
 window.deleteIncident=async(id)=>{if(!confirm('Удалить инцидент?'))return;showLoader('Удаление инцидента...');let{error}=await supabase.from('incidents').delete().eq('id',id);if(error){hideLoader();alert('Ошибка: '+error.message);return}await loadIncidents();hideLoader()};
 
-window.addEventListener('load',checkSession);
+// Инициализация
+window.addEventListener('load', async () => {
+    showLoader('Подключение к серверу...');
+    await checkSession();
+    hideLoader();
+});
 })();
 </script>
 </body>
