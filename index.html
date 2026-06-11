@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {--bg:#04060f;--surface:rgba(8,12,26,0.8);--surface-raised:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.1);--green:#00dda0;--yellow:#ffb020;--red:#ff3358;--blue:#4da6ff;--text-1:#eef2ff;--text-2:#8892aa;--text-3:#404866}
+        :root{--bg:#04060f;--surface:rgba(8,12,26,0.8);--surface-raised:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.1);--green:#00dda0;--yellow:#ffb020;--red:#ff3358;--blue:#4da6ff;--text-1:#eef2ff;--text-2:#8892aa;--text-3:#404866}
         *{box-sizing:border-box;margin:0;padding:0}
         body{background:var(--bg);color:var(--text-1);font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden}
         body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:0}
@@ -158,9 +158,9 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
-const SUPABASE_URL='https://pcvdrmtwlzoztohhsfyy.supabase.co';
-const SUPABASE_ANON_KEY='sb_publishable_w8JmXWdSUtKzOZGi2SBZpQ_ylc6cesL';
+const MAINTENANCE_MODE=false;
+const SUPABASE_URL='https://vuzcudxulhqkrkniulsl.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const PRESETS={success:{theme:'success',pill:{cls:'pill-success',text:'Все системы работают'},banner:null,defaultTitle:'Инфраструктура в норме',defaultMessage:'Критических сбоев и плановых технических работ не зафиксировано.'},maintenance:{theme:'info',pill:{cls:'pill-info',text:'Техническое обслуживание'},banner:null,defaultTitle:'Плановые технические работы',defaultMessage:'Инженеры проводят модернизацию серверного ПО.'},critical:{theme:'critical',pill:{cls:'pill-critical',text:'Критический сбой'},banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'},defaultTitle:'Аварийное отключение узла',defaultMessage:'Узел в Финляндии недоступен. Трафик перенаправлен.'},warning:{theme:'warning',pill:{cls:'pill-warning',text:'Повышенная нагрузка'},banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'},defaultTitle:'Замедление сетевых узлов',defaultMessage:'Зафиксирована повышенная нагрузка на все три узла.'}};
 const NODE_NAMES={node1:{name:'Финляндия',code:'HEL-1',flag:'🇫🇮'},node2:{name:'Нидерланды',code:'AMS-1',flag:'🇳🇱'},node3:{name:'Франция',code:'PR-1',flag:'🇫🇷'}};
