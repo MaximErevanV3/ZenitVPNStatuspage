@@ -161,7 +161,7 @@
         .map-container{height:200px;border-radius:12px;overflow:hidden;margin-bottom:20px;border:1px solid var(--border)}
         .map-container .leaflet-container{background:var(--surface);height:100%;width:100%}
 
-        /* SLA блок */
+        /* SLA блок — только процент */
         .sla-block {
             background: var(--surface-raised);
             border: 1px solid var(--border);
@@ -171,7 +171,6 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            flex-wrap: wrap;
         }
         .sla-value {
             font-size: 28px;
@@ -184,20 +183,6 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-3);
-        }
-        .sla-chart {
-            flex: 1;
-            min-width: 200px;
-            height: 60px;
-            display: flex;
-            align-items: flex-end;
-            gap: 3px;
-        }
-        .sla-bar {
-            flex: 1;
-            border-radius: 3px 3px 0 0;
-            transition: height 0.3s;
-            min-width: 6px;
         }
 
         /* кнопка переключения темы */
@@ -213,7 +198,6 @@
             .servers-grid{grid-template-columns:1fr}.incident-title{font-size:20px}
             .meta-strip{flex-direction:column}.meta-cell{border-right:none;border-bottom:1px solid var(--border)}
             .meta-cell:last-child{border-bottom:none}.topbar{flex-direction:column;align-items:flex-start;gap:8px}
-            .sla-block{flex-direction:column;align-items:flex-start}
         }
     </style>
 </head>
@@ -435,7 +419,6 @@ function renderStatus(d){
     Object.entries(n).forEach(([i,s])=>{
         let node=NODE_NAMES[i];
         if(!node)return;
-        // fallback для неизвестного статуса
         if(!STATUS_LABELS[s]) s = 'warning';
         let card=document.createElement('div');
         card.className='server-card status-'+s;
@@ -455,53 +438,34 @@ async function loadHistory(){
             let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':'var(--green)';
             return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title"><a href="incident.html?id='+inc.id+'">'+(inc.title||'Без названия')+'</a></div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>';
         }).join('');
-        // Строим SLA после загрузки истории
+        // SLA
         renderSLA(i || []);
     }catch(e){console.error(e);c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>'}
 }
 
-// SLA и график
 function renderSLA(incidents) {
     const days = 30;
     const now = new Date();
     const dayMap = {};
-    // создаём карту последних 30 дней, все без нарушений по умолчанию
     for (let i = 0; i < days; i++) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
-        const key = d.toISOString().slice(0,10); // YYYY-MM-DD
-        dayMap[key] = false; // false = нет нарушений
+        const key = d.toISOString().slice(0,10);
+        dayMap[key] = false;
     }
-    // отмечаем дни, когда были активные инциденты со статусом не success
     incidents.forEach(inc => {
         if (inc.status !== 'success' && inc.is_active) {
             const d = new Date(inc.created_at);
             const key = d.toISOString().slice(0,10);
             if (dayMap.hasOwnProperty(key)) {
-                dayMap[key] = true; // нарушение
+                dayMap[key] = true;
             }
         }
     });
-    // сортируем дни по возрастанию
-    const sortedDays = Object.keys(dayMap).sort();
-    const totalDays = sortedDays.length;
-    const badDays = sortedDays.filter(d => dayMap[d]).length;
+    const totalDays = Object.keys(dayMap).length;
+    const badDays = Object.keys(dayMap).filter(d => dayMap[d]).length;
     const slaPercent = totalDays > 0 ? ((totalDays - badDays) / totalDays * 100).toFixed(1) : 100;
-
-    // отображаем SLA значение
     document.getElementById('slaValue').textContent = slaPercent + '%';
-    // строим столбцы
-    const chart = document.getElementById('slaChart');
-    chart.innerHTML = '';
-    sortedDays.forEach(day => {
-        const bar = document.createElement('div');
-        bar.className = 'sla-bar';
-        const isBad = dayMap[day];
-        bar.style.backgroundColor = isBad ? 'var(--red)' : 'var(--green)';
-        bar.style.height = '100%'; // все одинаковой высоты
-        bar.title = day + (isBad ? ' ⚠️' : ' ✅');
-        chart.appendChild(bar);
-    });
 }
 
 function showLoader(){document.getElementById('loader').classList.remove('hidden');document.getElementById('loaderSpinner').style.display='block';document.getElementById('loaderText').style.display='block';document.getElementById('loaderSubtext').style.display='block';document.getElementById('loaderError').classList.remove('visible')}
@@ -597,13 +561,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
 <p class="incident-body" id="incBody">Критических сбоев и плановых технических работ не зафиксировано.</p>
 <div class="meta-strip"><div class="meta-cell"><div class="meta-label">ID инцидента</div><div class="meta-value" id="incID">—</div></div><div class="meta-cell"><div class="meta-label">Обновлено</div><div class="meta-value" id="incTime">—</div></div><div class="meta-cell"><div class="meta-label">Всего узлов</div><div class="meta-value">3 / 3</div></div></div>
 <div id="map" class="map-container"></div>
-<!-- SLA блок -->
+<!-- SLA только процент -->
 <div class="sla-block" id="slaBlock">
     <div>
         <div class="sla-label">SLA за 30 дней</div>
         <div class="sla-value" id="slaValue">—</div>
     </div>
-    <div class="sla-chart" id="slaChart"></div>
 </div>
 <div class="servers-header"><span class="servers-label">Состояние узлов</span><span class="servers-count" id="nodesOnlineCount">3 из 3 онлайн</span></div>
 <div class="servers-grid" id="serversGrid">
