@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -189,6 +189,49 @@
             background: #e02a4a;
         }
 
+        /* Окно технического обслуживания */
+        .maintenance-overlay {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(4,6,15,0.7);
+            backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 20px;
+        }
+        .maintenance-overlay.hidden {
+            display: none;
+        }
+        .maintenance-card {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 18px;
+            padding: 48px 36px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+        }
+        .maintenance-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .maintenance-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-1);
+            margin-bottom: 12px;
+        }
+        .maintenance-message {
+            font-size: 14px;
+            color: var(--text-2);
+            line-height: 1.6;
+        }
+
+        /* блюр фона (при обслуживании) */
+        .blur-content {
+            filter: blur(6px);
+            pointer-events: none;
+            user-select: none;
+        }
+
         @media (max-width: 580px) {
             .card-body { padding: 24px 20px 20px; } .card-footer { padding: 12px 20px; }
             .servers-grid { grid-template-columns: 1fr; } .incident-title { font-size: 20px; }
@@ -200,6 +243,17 @@
 <body>
 <div class="bg-layer"><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div><div class="bg-orb bg-orb-3"></div></div>
 <div class="bg-grid"></div>
+
+<!-- Экран технического обслуживания -->
+<div id="maintenanceOverlay" class="maintenance-overlay hidden">
+ <div class="maintenance-card">
+    <div class="maintenance-icon">🔧</div>
+    <h2 class="maintenance-title">Техническое обслуживание</h2>
+    <p class="maintenance-message">
+        На данный момент сайт недоступен, попробуйте зайти позже.
+    </p>
+</div>
+</div>
 
 <!-- Экран загрузки -->
 <div id="loader" class="loader-overlay">
@@ -214,6 +268,9 @@
 
 <script>
     (function() {
+        // ⚙️ ТУМБЛЕР ТЕХНИЧЕСКОГО ОБСЛУЖИВАНИЯ
+        const MAINTENANCE_MODE = true; // поставь true, чтобы включить заглушку
+
         const SUPABASE_URL = 'https://syndicuffeucieugxffp.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_QN1jgXY5XplG4Cy7s9nF5A_ygesez21';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -258,9 +315,22 @@
         const STATUS_LABELS = { online:'Online', offline:'Offline', warning:'Degraded', maintenance:'Maintenance' };
         const UPTIME_VALUES = { online:'99.8%', offline:'0.0%', warning:'81.3%', maintenance:'100%' };
 
-        const LOADER_TIMEOUT = 120000; // 2 минуты
+        const LOADER_TIMEOUT = 120000;
         let timeoutId = null;
 
+        // ---------- РЕЖИМ ОБСЛУЖИВАНИЯ ----------
+        function enableMaintenance() {
+            document.getElementById('maintenanceOverlay').classList.remove('hidden');
+            document.querySelector('.container').classList.add('blur-content');
+            document.getElementById('loader').classList.add('hidden');
+        }
+
+        function disableMaintenance() {
+            document.getElementById('maintenanceOverlay').classList.add('hidden');
+            document.querySelector('.container').classList.remove('blur-content');
+        }
+
+        // ---------- ОСНОВНЫЕ ФУНКЦИИ ----------
         function safeStatus(rawStatus) {
             if (typeof rawStatus === 'string' && PRESETS[rawStatus]) return rawStatus;
             return 'success';
@@ -377,22 +447,22 @@
         }
 
         async function refreshData() {
-            // очищаем предыдущий таймаут
-            if (timeoutId) clearTimeout(timeoutId);
+            if (MAINTENANCE_MODE) {
+                enableMaintenance();
+                return;
+            }
+            disableMaintenance();
 
+            if (timeoutId) clearTimeout(timeoutId);
             showLoader();
 
-            // таймаут 2 минуты
             timeoutId = setTimeout(() => {
                 showErrorState();
-                console.error('Таймаут загрузки данных');
             }, LOADER_TIMEOUT);
 
             try {
                 const { data: activeIncidents, error } = await supabase
                     .from('incidents').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1);
-
-                // если успели загрузить — отменяем таймаут
                 clearTimeout(timeoutId);
 
                 if (error) {
@@ -411,7 +481,6 @@
             }
         }
 
-        // глобальная функция для кнопки повтора
         window.retryLoad = function() {
             refreshData();
         };
@@ -421,7 +490,6 @@
 </script>
 
 <div class="container">
-    <!-- остальная вёрстка без изменений -->
     <div class="topbar">
         <div class="logo">
             <div class="logo-shield">
@@ -459,7 +527,6 @@
             </div>
             <div class="servers-header"><span class="servers-label">Состояние узлов</span><span class="servers-count" id="nodesOnlineCount">3 из 3 онлайн</span></div>
             <div class="servers-grid" id="serversGrid">
-                <!-- карточки-заглушки -->
                 <div class="server-card status-online"><div class="server-top"><div class="server-flag">🇫🇮</div><div class="server-dot"></div></div><div class="server-name">Финляндия</div><div class="server-code">HEL-1</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>99.8%</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">Online</div></div>
                 <div class="server-card status-online"><div class="server-top"><div class="server-flag">🇳🇱</div><div class="server-dot"></div></div><div class="server-name">Нидерланды</div><div class="server-code">AMS-1</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>99.8%</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">Online</div></div>
                 <div class="server-card status-online"><div class="server-top"><div class="server-flag">🇫🇷</div><div class="server-dot"></div></div><div class="server-name">Франция</div><div class="server-code">PR-1</div><div class="uptime-bar-wrap"><div class="uptime-bar-label"><span>uptime</span><span>99.8%</span></div><div class="uptime-bar-track"><div class="uptime-bar-fill"></div></div></div><div class="status-label-text">Online</div></div>
