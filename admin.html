@@ -59,7 +59,13 @@
 <div class="card">
 <h2>📝 Создать инцидент</h2>
 <label>Тип инцидента</label>
-<select id="incStatus"><option value="maintenance">Тех. обслуживание</option><option value="critical">Критический сбой</option><option value="warning">Предупреждение</option><option value="success">Информация (всё работает)</option></select>
+<select id="incStatus">
+    <option value="maintenance">Тех. обслуживание</option>
+    <option value="critical">Критический сбой</option>
+    <option value="warning">Предупреждение</option>
+    <option value="success">Информация (всё работает)</option>
+    <option value="whitelist">Белые списки</option>
+</select>
 <label>Заголовок</label>
 <input type="text" id="incTitle" placeholder="Краткий заголовок" />
 <label>Описание</label>
@@ -104,6 +110,7 @@ const PROXY_NAMES = {
     'zenitvpn-proxy': 'Cloudflare Workers'
 };
 
+const ALLOWED_NODE_STATUSES = ['online','offline','warning','maintenance'];
 const API_TIMEOUT = 15000;
 
 let supabase = null;
@@ -179,7 +186,6 @@ window.signOut=async()=>{await supabase.auth.signOut();showLogin()};
 window.createIncident=async()=>{
 document.getElementById('createError').textContent='';document.getElementById('createSuccess').textContent='';
 let status=document.getElementById('incStatus').value,title=document.getElementById('incTitle').value,message=document.getElementById('incMessage').value;
-// Собираем узлы из селектов
 let nodes = {
     node1: document.getElementById('node1').value,
     node2: document.getElementById('node2').value,
@@ -190,7 +196,6 @@ try {
     await withTimeout(supabase.from('incidents').update({is_active:false}).eq('is_active',true), API_TIMEOUT, 'Сервер не отвечает');
     await withTimeout(supabase.from('incidents').insert([{title,message,status,affected_nodes:nodes,is_active:true}]), API_TIMEOUT, 'Сервер не отвечает');
     document.getElementById('incTitle').value='';document.getElementById('incMessage').value='';
-    // сбрасываем селекты на online
     document.getElementById('node1').value='online';
     document.getElementById('node2').value='online';
     document.getElementById('node3').value='online';
