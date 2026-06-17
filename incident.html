@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -63,6 +63,7 @@
         .badge-warning { background: rgba(255,176,32,0.08); border-color: rgba(255,176,32,0.2); color: var(--yellow); }
         .badge-critical { background: rgba(255,51,88,0.08); border-color: rgba(255,51,88,0.2); color: var(--red); }
         .badge-info { background: rgba(77,166,255,0.08); border-color: rgba(77,166,255,0.2); color: var(--blue); }
+        .badge-whitelist { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); color: #ffffff; }
         .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
         h1 { font-size: 24px; font-weight: 800; margin-bottom: 12px; color: var(--text-1); }
         .description { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 28px; white-space: pre-wrap; }
@@ -142,13 +143,15 @@
         success: 'Всё работает',
         maintenance: 'Обслуживание',
         critical: 'Критический сбой',
-        warning: 'Предупреждение'
+        warning: 'Предупреждение',
+        whitelist: 'Белые списки'
     };
     const STATUS_CLASSES = {
         success: 'badge-success',
         maintenance: 'badge-info',
         critical: 'badge-critical',
-        warning: 'badge-warning'
+        warning: 'badge-warning',
+        whitelist: 'badge-whitelist'
     };
     const NODE_NAMES = {
         node1: { name: 'Финляндия', flag: '🇫🇮' },
