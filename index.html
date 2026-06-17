@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -67,6 +67,8 @@
         .card.theme-warning{border-color:rgba(255,176,32,0.2);box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 80px rgba(255,176,32,0.05)}
         .card.theme-critical{border-color:rgba(255,51,88,0.22);box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 80px rgba(255,51,88,0.06)}
         .card.theme-info{border-color:rgba(77,166,255,0.2);box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 80px rgba(77,166,255,0.05)}
+        /* whitelist – белая тема */
+        .card.theme-whitelist{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25);box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 80px rgba(255,255,255,0.1)}
         .alert-strip{display:none;align-items:center;gap:10px;padding:11px 28px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid transparent}
         .alert-strip.visible{display:flex}
         .alert-strip.strip-critical{background:rgba(255,51,88,0.07);border-bottom-color:rgba(255,51,88,0.15);color:var(--red)}
@@ -79,6 +81,7 @@
         .pill-warning{background:rgba(255,176,32,0.08);border-color:rgba(255,176,32,0.2);color:var(--yellow)}
         .pill-critical{background:rgba(255,51,88,0.08);border-color:rgba(255,51,88,0.2);color:var(--red)}
         .pill-info{background:rgba(77,166,255,0.08);border-color:rgba(77,166,255,0.2);color:var(--blue)}
+        .pill-whitelist{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);color:#ffffff}
         .pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:livepulse 2s ease-in-out infinite}
         .incident-title{font-size:24px;font-weight:800;line-height:1.2;letter-spacing:-0.5px;color:var(--text-1);margin-bottom:10px}
         .incident-title a{color:inherit;text-decoration:none;transition:opacity 0.2s}
@@ -161,37 +164,14 @@
         .map-container{height:200px;border-radius:12px;overflow:hidden;margin-bottom:20px;border:1px solid var(--border)}
         .map-container .leaflet-container{background:var(--surface);height:100%;width:100%}
 
-        /* SLA блок — только процент */
-        .sla-block {
-            background: var(--surface-raised);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .sla-value {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--green);
-            line-height: 1;
-        }
-        .sla-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-3);
-        }
+        /* SLA блок */
+        .sla-block{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+        .sla-value{font-size:28px;font-weight:800;color:var(--green);line-height:1}
+        .sla-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3)}
 
         /* кнопка переключения темы */
-        .theme-toggle{
-            background:transparent;border:1px solid var(--border);
-            border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-            cursor:pointer;color:var(--text-2);font-size:16px;transition:all 0.3s;margin-right:8px;
-        }
-        .theme-toggle:hover{background:var(--surface-raised);border-color:var(--border-strong);}
+        .theme-toggle{background:transparent;border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);font-size:16px;transition:all 0.3s;margin-right:8px}
+        .theme-toggle:hover{background:var(--surface-raised);border-color:var(--border-strong)}
 
         @media(max-width:580px){
             .card-body{padding:24px 20px 20px}.card-footer{padding:12px 20px}
@@ -360,7 +340,13 @@ function stopUpdateTimer() {
     }
 }
 
-const PRESETS={success:{theme:'success',pill:{cls:'pill-success',text:'Все системы работают'},banner:null,defaultTitle:'Инфраструктура в норме',defaultMessage:'Критических сбоев и плановых технических работ не зафиксировано.'},maintenance:{theme:'info',pill:{cls:'pill-info',text:'Техническое обслуживание'},banner:null,defaultTitle:'Плановые технические работы',defaultMessage:'Инженеры проводят модернизацию серверного ПО.'},critical:{theme:'critical',pill:{cls:'pill-critical',text:'Критический сбой'},banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'},defaultTitle:'Аварийное отключение узла',defaultMessage:'Узел в Финляндии недоступен. Трафик перенаправлен.'},warning:{theme:'warning',pill:{cls:'pill-warning',text:'Повышенная нагрузка'},banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'},defaultTitle:'Замедление сетевых узлов',defaultMessage:'Зафиксирована повышенная нагрузка на все три узла.'}};
+const PRESETS={
+    success:{theme:'success',pill:{cls:'pill-success',text:'Все системы работают'},banner:null,defaultTitle:'Инфраструктура в норме',defaultMessage:'Критических сбоев и плановых технических работ не зафиксировано.'},
+    maintenance:{theme:'info',pill:{cls:'pill-info',text:'Техническое обслуживание'},banner:null,defaultTitle:'Плановые технические работы',defaultMessage:'Инженеры проводят модернизацию серверного ПО.'},
+    critical:{theme:'critical',pill:{cls:'pill-critical',text:'Критический сбой'},banner:{cls:'strip-critical',text:'Зафиксирован критический сбой'},defaultTitle:'Аварийное отключение узла',defaultMessage:'Узел в Финляндии недоступен. Трафик перенаправлен.'},
+    warning:{theme:'warning',pill:{cls:'pill-warning',text:'Повышенная нагрузка'},banner:{cls:'strip-warning',text:'Повышенная нагрузка на сеть'},defaultTitle:'Замедление сетевых узлов',defaultMessage:'Зафиксирована повышенная нагрузка на все три узла.'},
+    whitelist:{theme:'whitelist',pill:{cls:'pill-whitelist',text:'Белые списки'},banner:null,defaultTitle:'Белые списки активны',defaultMessage:'Сервис работает в режиме белых списков.'}
+};
 const NODE_NAMES={node1:{name:'Финляндия',code:'HEL-1',flag:'🇫🇮'},node2:{name:'Нидерланды',code:'AMS-1',flag:'🇳🇱'},node3:{name:'Франция',code:'PR-1',flag:'🇫🇷'}};
 const STATUS_LABELS={online:'Online',offline:'Offline',warning:'Degraded',maintenance:'Maintenance'};
 const UPTIME_VALUES={online:'99.8%',offline:'0.0%',warning:'81.3%',maintenance:'100%'};
@@ -435,10 +421,9 @@ async function loadHistory(){
         let{data:i,error:e}=await supabase.from('incidents').select('*').order('created_at',{ascending:false}).limit(30);
         if(e){c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>';return}
         c.innerHTML=(i||[]).map(inc=>{
-            let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':'var(--green)';
+            let d=new Date(inc.created_at),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),st=PRESETS[inc.status]?.pill?.text||inc.status||'Неизвестно',dc=inc.status==='critical'?'var(--red)':inc.status==='warning'?'var(--yellow)':inc.status==='maintenance'?'var(--blue)':inc.status==='whitelist'?'var(--text-1)':'var(--green)';
             return'<div class="history-item"><div class="history-dot" style="background:'+dc+'"></div><div class="history-content"><div class="history-title"><a href="incident.html?id='+inc.id+'">'+(inc.title||'Без названия')+'</a></div><div class="history-meta">'+ds+' • '+st+' '+(inc.is_active?'(активно)':'')+'</div></div></div>';
         }).join('');
-        // SLA
         renderSLA(i || []);
     }catch(e){console.error(e);c.innerHTML='<p style="color:var(--text-3);font-size:12px;">Ошибка загрузки истории</p>'}
 }
@@ -561,7 +546,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
 <p class="incident-body" id="incBody">Критических сбоев и плановых технических работ не зафиксировано.</p>
 <div class="meta-strip"><div class="meta-cell"><div class="meta-label">ID инцидента</div><div class="meta-value" id="incID">—</div></div><div class="meta-cell"><div class="meta-label">Обновлено</div><div class="meta-value" id="incTime">—</div></div><div class="meta-cell"><div class="meta-label">Всего узлов</div><div class="meta-value">3 / 3</div></div></div>
 <div id="map" class="map-container"></div>
-<!-- SLA только процент -->
 <div class="sla-block" id="slaBlock">
     <div>
         <div class="sla-label">SLA за 30 дней</div>
@@ -584,4 +568,4 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </div>
 </div>
 </body>
-</html>
+    </html>
