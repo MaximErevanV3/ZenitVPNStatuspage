@@ -176,7 +176,7 @@
         .maintenance-message{font-size:15px;color:var(--text-2);line-height:1.7}
         .blur-content{filter:blur(8px);pointer-events:none;user-select:none}
         .map-container{
-            height:260px; /* стало выше */
+            height:260px;
             border-radius:16px;
             overflow:hidden;
             margin-bottom:24px;
@@ -309,18 +309,14 @@ function initMap() {
 
 function updateMapMarkers(nodes) {
     if (!map) initMap();
-    // плавно удаляем старые маркеры
+    // удаляем старые маркеры
     for (let key in markers) {
-        const m = markers[key];
-        m.setOpacity(0);
-        setTimeout(() => {
-            if (map && map.hasLayer(m)) map.removeLayer(m);
-        }, 300);
+        map.removeLayer(markers[key]);
         delete markers[key];
     }
     lastNodes = nodes;
-    // добавляем новые с задержкой и анимацией
-    Object.entries(nodes).forEach(([id, status], index) => {
+    // добавляем новые
+    Object.entries(nodes).forEach(([id, status]) => {
         const coords = NODE_COORDS[id];
         if (!coords) return;
         let color = '#00dda0';
@@ -328,9 +324,8 @@ function updateMapMarkers(nodes) {
         else if (status === 'offline') color = '#ff3358';
         else if (status === 'maintenance') color = '#4da6ff';
         
-        // Создаём кастомную иконку с пульсацией при появлении
         const marker = L.circleMarker([coords.lat, coords.lng], {
-            radius: 0, // начинаем с 0
+            radius: 10,
             fillColor: color,
             color: '#fff',
             weight: 2,
@@ -338,37 +333,10 @@ function updateMapMarkers(nodes) {
             fillOpacity: 0.9
         }).addTo(map);
         
-        // Анимация радиуса
-        let start = null;
-        const duration = 600;
-        const finalRadius = 10;
-        function animateMarker(timestamp) {
-            if (!start) start = timestamp;
-            const progress = Math.min((timestamp - start) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3); // ease-out
-            marker.setRadius(finalRadius * eased);
-            if (progress < 1) {
-                requestAnimationFrame(animateMarker);
-            }
-        }
-        requestAnimationFrame(animateMarker);
-        
-        const tooltip = L.tooltip({
-            permanent: false,
+        marker.bindTooltip(NODE_NAMES[id]?.name || id, {
+            className: 'leaflet-tooltip',
             direction: 'top',
-            offset: L.point(0, -10),
-            opacity: 0.9
-        }).setContent(NODE_NAMES[id]?.name || id);
-        marker.bindTooltip(tooltip);
-        
-        // hover эффект
-        marker.on('mouseover', function() {
-            this.setRadius(14);
-            this.setStyle({ fillOpacity: 1 });
-        });
-        marker.on('mouseout', function() {
-            this.setRadius(finalRadius);
-            this.setStyle({ fillOpacity: 0.9 });
+            offset: [0, -10]
         });
         
         markers[id] = marker;
