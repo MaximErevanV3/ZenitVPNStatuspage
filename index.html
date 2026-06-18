@@ -167,15 +167,26 @@
         .loader-error.visible{display:block}
         .loader-retry-btn{margin-top:20px;background:var(--red);color:white;border:none;padding:12px 32px;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.35s}
         .loader-retry-btn:hover{background:#e02a4a;transform:translateY(-2px);box-shadow:0 6px 18px rgba(255,51,88,0.35)}
-        .maintenance-overlay{position:fixed;inset:0;z-index:10000;background:radial-gradient(ellipse at center, rgba(4,6,15,0.6) 0%, rgba(4,6,15,0.9) 100%);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px}
+
+        /* maintenance overlay */
+        .maintenance-overlay{position:fixed;inset:0;z-index:10000;background:radial-gradient(ellipse at center, rgba(4,6,15,0.6) 0%, rgba(4,6,15,0.9) 100%);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;overflow:hidden}
         .maintenance-overlay.hidden{display:none}
-        .maintenance-card{background:var(--surface);border:1px solid var(--border-strong);border-radius:28px;padding:60px 48px;text-align:center;max-width:560px;box-shadow:0 40px 100px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.05) inset;backdrop-filter:blur(30px)}
-        .maintenance-icon{font-size:64px;margin-bottom:24px;animation:gentle-float 5s ease-in-out infinite}
-        @keyframes gentle-float{0%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(-6px,-4px) rotate(-2deg)}50%{transform:translate(5px,5px) rotate(2deg)}75%{transform:translate(-4px,2px) rotate(-1deg)}100%{transform:translate(0,0) rotate(0deg)}}
+        .maintenance-bg-gears{position:absolute;inset:0;pointer-events:none}
+        .bg-gear{position:absolute;opacity:0.06;animation:gearSpin linear infinite}
+        .bg-gear:nth-child(1){width:200px;height:200px;top:10%;left:5%;animation-duration:60s}
+        .bg-gear:nth-child(2){width:150px;height:150px;top:60%;left:80%;animation-duration:80s;animation-direction:reverse}
+        .bg-gear:nth-child(3){width:120px;height:120px;top:30%;left:70%;animation-duration:70s}
+        .bg-gear:nth-child(4){width:100px;height:100px;top:70%;left:20%;animation-duration:90s;animation-direction:reverse}
+        @keyframes gearSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .maintenance-card{background:var(--surface);border:1px solid var(--border-strong);border-radius:28px;padding:60px 48px;text-align:center;max-width:560px;box-shadow:0 40px 100px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.05) inset;backdrop-filter:blur(30px);z-index:1}
+        .maintenance-icon-container{display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+        .maintenance-svg-gear{width:70px;height:70px;animation:gearRotate 8s linear infinite}
+        @keyframes gearRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         .maintenance-title{font-size:30px;font-weight:800;color:var(--text-1);margin-bottom:18px}
         .maintenance-message{font-size:16px;color:var(--text-2);line-height:1.7;margin-bottom:8px}
         .maintenance-retry-btn{margin-top:24px;background:var(--blue);color:white;border:none;padding:12px 32px;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;transition:all 0.35s;font-family:'Inter',sans-serif;letter-spacing:0.5px}
         .maintenance-retry-btn:hover{background:#3d8edb;transform:translateY(-2px);box-shadow:0 6px 18px rgba(77,166,255,0.35)}
+
         .blur-content{filter:blur(8px);pointer-events:none;user-select:none}
         .map-container{
             height:260px;
@@ -223,8 +234,21 @@
 <div class="bg-grid"></div>
 
 <div id="maintenanceOverlay" class="maintenance-overlay hidden">
+    <!-- Фоновые шестерёнки -->
+    <div class="maintenance-bg-gears">
+        <svg class="bg-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <svg class="bg-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <svg class="bg-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <svg class="bg-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+    </div>
     <div class="maintenance-card">
-        <div class="maintenance-icon">🔧</div>
+        <div class="maintenance-icon-container">
+            <!-- SVG шестерёнка -->
+            <svg class="maintenance-svg-gear" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+            </svg>
+        </div>
         <h2 class="maintenance-title">Техническое обслуживание</h2>
         <p class="maintenance-message">На данный момент сайт недоступен, попробуйте зайти позже.</p>
         <button class="maintenance-retry-btn" onclick="location.reload()">Попробовать снова</button>
@@ -243,7 +267,7 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
+const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
 const PROXY_URLS = [
@@ -613,4 +637,4 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </div>
 </div>
 </body>
-</html>
+        </html>
