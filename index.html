@@ -167,13 +167,15 @@
         .loader-error.visible{display:block}
         .loader-retry-btn{margin-top:20px;background:var(--red);color:white;border:none;padding:12px 32px;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.35s}
         .loader-retry-btn:hover{background:#e02a4a;transform:translateY(-2px);box-shadow:0 6px 18px rgba(255,51,88,0.35)}
-        .maintenance-overlay{position:fixed;inset:0;z-index:10000;background:rgba(4,6,15,0.8);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px}
+        .maintenance-overlay{position:fixed;inset:0;z-index:10000;background:radial-gradient(ellipse at center, rgba(4,6,15,0.6) 0%, rgba(4,6,15,0.9) 100%);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px}
         .maintenance-overlay.hidden{display:none}
-        .maintenance-card{background:var(--surface);border:1px solid var(--border-strong);border-radius:24px;padding:56px 44px;text-align:center;max-width:540px;box-shadow:var(--card-shadow)}
-        .maintenance-icon{font-size:56px;margin-bottom:22px;animation:gentle-float 5s ease-in-out infinite}
+        .maintenance-card{background:var(--surface);border:1px solid var(--border-strong);border-radius:28px;padding:60px 48px;text-align:center;max-width:560px;box-shadow:0 40px 100px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.05) inset;backdrop-filter:blur(30px)}
+        .maintenance-icon{font-size:64px;margin-bottom:24px;animation:gentle-float 5s ease-in-out infinite}
         @keyframes gentle-float{0%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(-6px,-4px) rotate(-2deg)}50%{transform:translate(5px,5px) rotate(2deg)}75%{transform:translate(-4px,2px) rotate(-1deg)}100%{transform:translate(0,0) rotate(0deg)}}
-        .maintenance-title{font-size:28px;font-weight:800;color:var(--text-1);margin-bottom:16px}
-        .maintenance-message{font-size:15px;color:var(--text-2);line-height:1.7}
+        .maintenance-title{font-size:30px;font-weight:800;color:var(--text-1);margin-bottom:18px}
+        .maintenance-message{font-size:16px;color:var(--text-2);line-height:1.7;margin-bottom:8px}
+        .maintenance-retry-btn{margin-top:24px;background:var(--blue);color:white;border:none;padding:12px 32px;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;transition:all 0.35s;font-family:'Inter',sans-serif;letter-spacing:0.5px}
+        .maintenance-retry-btn:hover{background:#3d8edb;transform:translateY(-2px);box-shadow:0 6px 18px rgba(77,166,255,0.35)}
         .blur-content{filter:blur(8px);pointer-events:none;user-select:none}
         .map-container{
             height:260px;
@@ -212,6 +214,7 @@
             .servers-grid{grid-template-columns:1fr}.incident-title{font-size:24px}
             .meta-strip{flex-direction:column}.meta-cell{border-right:none;border-bottom:1px solid var(--border)}
             .meta-cell:last-child{border-bottom:none}.topbar{flex-direction:column;align-items:flex-start;gap:12px}
+            .maintenance-card{padding:40px 24px}.maintenance-title{font-size:24px}
         }
     </style>
 </head>
@@ -224,6 +227,7 @@
         <div class="maintenance-icon">🔧</div>
         <h2 class="maintenance-title">Техническое обслуживание</h2>
         <p class="maintenance-message">На данный момент сайт недоступен, попробуйте зайти позже.</p>
+        <button class="maintenance-retry-btn" onclick="location.reload()">Попробовать снова</button>
     </div>
 </div>
 
@@ -239,7 +243,7 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
+const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
 const PROXY_URLS = [
@@ -309,13 +313,11 @@ function initMap() {
 
 function updateMapMarkers(nodes) {
     if (!map) initMap();
-    // удаляем старые маркеры
     for (let key in markers) {
         map.removeLayer(markers[key]);
         delete markers[key];
     }
     lastNodes = nodes;
-    // добавляем новые
     Object.entries(nodes).forEach(([id, status]) => {
         const coords = NODE_COORDS[id];
         if (!coords) return;
