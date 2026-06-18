@@ -46,7 +46,7 @@
         body{background:var(--bg);color:var(--text-1);font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden;transition:background 0.4s,color 0.4s}
         body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:0;opacity:0.6}
         .bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-        .bg-orb{position:absolute;border-radius:50%;filter:blur(140px);animation:float 15s ease-in-out infinite alternate;will-change:transform}
+        .bg-orb{position:absolute;border-radius:50%;filter:blur(140px);animation:float 15s ease-in-out infinite alternate}
         .bg-orb-1{width:700px;height:700px;background:rgba(77,166,255,0.05);top:-250px;left:-200px;animation-delay:0s}
         .bg-orb-2{width:500px;height:500px;background:rgba(0,221,160,0.04);bottom:-200px;right:-100px;animation-delay:-7s}
         .bg-orb-3{width:300px;height:300px;background:rgba(167,139,250,0.035);top:40%;left:50%;transform:translateX(-50%);animation-delay:-4s}
@@ -60,12 +60,12 @@
         .logo-name{font-size:13.5px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-1)}
         .logo-name b{color:var(--blue)}
         .topbar-right{display:flex;align-items:center;gap:14px}
-        .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:livepulse 2.8s ease-in-out infinite;box-shadow:0 0 14px var(--green);will-change:transform,opacity}
+        .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:livepulse 2.8s ease-in-out infinite;box-shadow:0 0 14px var(--green)}
         @keyframes livepulse{0%,100%{opacity:.4;box-shadow:0 0 0 0 rgba(0,221,160,0.6)}50%{opacity:1;box-shadow:0 0 0 12px rgba(0,221,160,0)}}
         .topbar-time{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
-        .admin-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:11px;font-size:11.5px;font-weight:600;letter-spacing:0.6px;background:rgba(77,166,255,0.13);border:1px solid rgba(77,166,255,0.35);color:var(--blue);text-decoration:none;transition:all 0.25s;font-family:'Inter',sans-serif;will-change:transform}
+        .admin-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:11px;font-size:11.5px;font-weight:600;letter-spacing:0.6px;background:rgba(77,166,255,0.13);border:1px solid rgba(77,166,255,0.35);color:var(--blue);text-decoration:none;transition:all 0.25s;font-family:'Inter',sans-serif}
         .admin-btn:hover{background:rgba(77,166,255,0.24);border-color:rgba(77,166,255,0.55);transform:translateY(-2px);box-shadow:0 6px 18px rgba(77,166,255,0.2)}
-        .card{background:var(--surface);border:1px solid var(--border);border-radius:24px;backdrop-filter:blur(70px);-webkit-backdrop-filter:blur(70px);overflow:hidden;box-shadow:var(--card-shadow);transition:border-color 0.4s ease,box-shadow 0.4s ease,background 0.3s;will-change:transform}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:24px;backdrop-filter:blur(70px);-webkit-backdrop-filter:blur(70px);overflow:hidden;box-shadow:var(--card-shadow);transition:border-color 0.4s ease,box-shadow 0.4s ease,background 0.3s}
         .card.theme-success{border-color:rgba(0,221,160,0.22);box-shadow:var(--card-shadow),0 0 110px rgba(0,221,160,0.08)}
         .card.theme-warning{border-color:rgba(255,176,32,0.3);box-shadow:var(--card-shadow),0 0 110px rgba(255,176,32,0.1)}
         .card.theme-critical{border-color:rgba(255,51,88,0.34);box-shadow:var(--card-shadow),0 0 110px rgba(255,51,88,0.14)}
@@ -79,7 +79,7 @@
         .strip-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;animation:pulse-strip 1.6s ease-in-out infinite}
         @keyframes pulse-strip{0%,100%{opacity:.5}50%{opacity:1;box-shadow:0 0 14px 5px currentColor}}
         .card-body{padding:38px 42px 34px}
-        .status-pill{display:inline-flex;align-items:center;gap:9px;padding:9px 20px;border-radius:100px;font-size:11.5px;font-weight:700;letter-spacing:0.9px;text-transform:uppercase;margin-bottom:26px;border:1px solid transparent;transition:all 0.25s;backdrop-filter:blur(12px);will-change:transform}
+        .status-pill{display:inline-flex;align-items:center;gap:9px;padding:9px 20px;border-radius:100px;font-size:11.5px;font-weight:700;letter-spacing:0.9px;text-transform:uppercase;margin-bottom:26px;border:1px solid transparent;transition:all 0.25s;backdrop-filter:blur(12px)}
         .status-pill:hover{transform:scale(1.04)}
         .pill-success{background:rgba(0,221,160,0.14);border-color:rgba(0,221,160,0.26);color:var(--green);box-shadow:0 0 30px rgba(0,221,160,0.12)}
         .pill-warning{background:rgba(255,176,32,0.14);border-color:rgba(255,176,32,0.32);color:var(--yellow);box-shadow:0 0 30px rgba(255,176,32,0.12)}
@@ -101,7 +101,7 @@
         .servers-label{font-size:11.5px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--text-3)}
         .servers-count{font-size:11.5px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
         .servers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px}
-        .server-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:18px;padding:22px 20px;position:relative;overflow:hidden;transition:all 0.3s cubic-bezier(0.22,1,0.36,1);animation:cardAppear 0.5s cubic-bezier(0.22,1,0.36,1) both;will-change:transform}
+        .server-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:18px;padding:22px 20px;position:relative;overflow:hidden;transition:all 0.3s cubic-bezier(0.22,1,0.36,1);animation:cardAppear 0.5s cubic-bezier(0.22,1,0.36,1) both}
         .server-card::before{content:'';position:absolute;inset:0;border-radius:18px;background:radial-gradient(circle at 50% 0%,currentColor 0%,transparent 70%);opacity:0;transition:opacity 0.3s}
         .server-card:hover{transform:translateY(-4px);border-color:var(--border-strong);box-shadow:0 12px 28px rgba(0,0,0,0.4)}
         .server-card:hover::before{opacity:0.05}
@@ -168,7 +168,7 @@
         .loader-retry-btn{margin-top:22px;background:var(--red);color:white;border:none;padding:13px 36px;border-radius:14px;font-weight:600;font-size:15px;cursor:pointer;transition:all 0.3s}
         .loader-retry-btn:hover{background:#e02a4a;transform:translateY(-2px);box-shadow:0 8px 22px rgba(255,51,88,0.4)}
 
-        /* maintenance overlay */
+        /* maintenance overlay (не меняем) */
         .maintenance-overlay{position:fixed;inset:0;z-index:10000;background:radial-gradient(ellipse at center, rgba(4,6,15,0.6) 0%, rgba(4,6,15,0.9) 100%);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;overflow:hidden}
         .maintenance-overlay.hidden{display:none}
         .maintenance-bg-gears{position:absolute;inset:0;pointer-events:none}
@@ -265,21 +265,20 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
+const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
+// Порядок прокси: прямой → Cloudflare Workers → CORS-прокси
 const PROXY_URLS = [
-    'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co'),
-    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co'),
-    'https://vuzcudxulhqkrkniulsl.supabase.co',
-    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev'
+    'https://vuzcudxulhqkrkniulsl.supabase.co',                          // Прямой доступ
+    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev',           // Cloudflare Workers
+    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co') // CORS-прокси
 ];
 
 const PROXY_NAMES = {
-    'codetabs.com': 'CodeTabs Proxy',
-    'corsproxy.io': 'CORS-прокси',
     'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
-    'zenitvpn-proxy': 'Cloudflare Workers'
+    'zenitvpn-proxy': 'Cloudflare Workers',
+    'corsproxy.io': 'CORS-прокси'
 };
 
 let supabase = null;
@@ -426,9 +425,10 @@ async function findWorkingUrl(){
     updateFooterProxy('Поиск сервера...');
     for(let url of PROXY_URLS){
         try{
-            let testUrl = (url.includes('codetabs.com') || url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
+            let testUrl = (url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
             let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
-            if(resp.ok || resp.status===401 || resp.status===400){
+            // Считаем успешными статусы 200, 401, 400, 403
+            if(resp.ok || resp.status===401 || resp.status===400 || resp.status===403){
                 let name = getProxyName(url);
                 console.log('✅ Рабочий URL:', url, '—', name);
                 updateFooterProxy(name);
