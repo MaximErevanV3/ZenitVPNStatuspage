@@ -175,9 +175,28 @@
         .maintenance-title{font-size:28px;font-weight:800;color:var(--text-1);margin-bottom:16px}
         .maintenance-message{font-size:15px;color:var(--text-2);line-height:1.7}
         .blur-content{filter:blur(8px);pointer-events:none;user-select:none}
-        .map-container{height:240px;border-radius:16px;overflow:hidden;margin-bottom:24px;border:1px solid var(--border);transition:border-color 0.3s}
-        .map-container:hover{border-color:var(--border-strong)}
-        .map-container .leaflet-container{background:var(--surface);height:100%;width:100%}
+        .map-container{
+            height:260px; /* стало выше */
+            border-radius:16px;
+            overflow:hidden;
+            margin-bottom:24px;
+            border:1px solid var(--border);
+            transition:border-color 0.3s, box-shadow 0.3s;
+            box-shadow:0 4px 20px rgba(0,0,0,0.3);
+        }
+        .map-container:hover{border-color:var(--border-strong);box-shadow:0 6px 30px rgba(0,0,0,0.5);}
+        .map-container .leaflet-container{background:var(--surface);height:100%;width:100%;}
+        .leaflet-tooltip{
+            background:var(--surface);
+            border:1px solid var(--border-strong);
+            color:var(--text-1);
+            font-family:'Inter',sans-serif;
+            font-weight:600;
+            font-size:12px;
+            padding:4px 8px;
+            border-radius:6px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3);
+        }
 
         /* SLA блок */
         .sla-block{background:var(--surface-raised);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:20px}
@@ -220,7 +239,7 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
+const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
 const PROXY_URLS = [
@@ -290,27 +309,68 @@ function initMap() {
 
 function updateMapMarkers(nodes) {
     if (!map) initMap();
+    // плавно удаляем старые маркеры
     for (let key in markers) {
-        map.removeLayer(markers[key]);
+        const m = markers[key];
+        m.setOpacity(0);
+        setTimeout(() => {
+            if (map && map.hasLayer(m)) map.removeLayer(m);
+        }, 300);
         delete markers[key];
     }
     lastNodes = nodes;
-    Object.entries(nodes).forEach(([id, status]) => {
+    // добавляем новые с задержкой и анимацией
+    Object.entries(nodes).forEach(([id, status], index) => {
         const coords = NODE_COORDS[id];
         if (!coords) return;
         let color = '#00dda0';
         if (status === 'warning') color = '#ffb020';
         else if (status === 'offline') color = '#ff3358';
         else if (status === 'maintenance') color = '#4da6ff';
+        
+        // Создаём кастомную иконку с пульсацией при появлении
         const marker = L.circleMarker([coords.lat, coords.lng], {
-            radius: 10,
+            radius: 0, // начинаем с 0
             fillColor: color,
             color: '#fff',
             weight: 2,
             opacity: 1,
             fillOpacity: 0.9
         }).addTo(map);
-        marker.bindTooltip(NODE_NAMES[id]?.name || id);
+        
+        // Анимация радиуса
+        let start = null;
+        const duration = 600;
+        const finalRadius = 10;
+        function animateMarker(timestamp) {
+            if (!start) start = timestamp;
+            const progress = Math.min((timestamp - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+            marker.setRadius(finalRadius * eased);
+            if (progress < 1) {
+                requestAnimationFrame(animateMarker);
+            }
+        }
+        requestAnimationFrame(animateMarker);
+        
+        const tooltip = L.tooltip({
+            permanent: false,
+            direction: 'top',
+            offset: L.point(0, -10),
+            opacity: 0.9
+        }).setContent(NODE_NAMES[id]?.name || id);
+        marker.bindTooltip(tooltip);
+        
+        // hover эффект
+        marker.on('mouseover', function() {
+            this.setRadius(14);
+            this.setStyle({ fillOpacity: 1 });
+        });
+        marker.on('mouseout', function() {
+            this.setRadius(finalRadius);
+            this.setStyle({ fillOpacity: 0.9 });
+        });
+        
         markers[id] = marker;
     });
 }
@@ -582,4 +642,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </div>
 </div>
 </div>
- </html>
+</body>
+</html>
