@@ -12,10 +12,10 @@
     <style>
         :root {
             --bg: #04060f;
-            --surface: rgba(8, 12, 26, 0.8);
+            --surface: rgba(8, 12, 26, 0.7);
             --surface-raised: rgba(255,255,255,0.04);
-            --border: rgba(255,255,255,0.07);
-            --border-strong: rgba(255,255,255,0.12);
+            --border: rgba(255,255,255,0.08);
+            --border-strong: rgba(255,255,255,0.14);
             --green: #00dda0;
             --yellow: #ffb020;
             --red: #ff3358;
@@ -23,12 +23,12 @@
             --text-1: #eef2ff;
             --text-2: #8892aa;
             --text-3: #4a4f6a;
-            --card-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03) inset;
+            --card-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05) inset;
         }
 
         body.light-theme {
             --bg: #f0f2f5;
-            --surface: rgba(255,255,255,0.9);
+            --surface: rgba(255,255,255,0.85);
             --surface-raised: rgba(0,0,0,0.03);
             --border: rgba(0,0,0,0.08);
             --border-strong: rgba(0,0,0,0.15);
@@ -43,34 +43,135 @@
         }
 
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:var(--bg);color:var(--text-1);font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden;transition:background 0.4s,color 0.4s}
-        body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:0;opacity:0.6}
+        body{
+            background:var(--bg);
+            color:var(--text-1);
+            font-family:'Inter',system-ui,sans-serif;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+            overflow-x:hidden;
+            transition:background 0.4s,color 0.4s;
+            position:relative;
+        }
+        /* Анимированный градиентный фон */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(77,166,255,0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0,221,160,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 60% 80%, rgba(255,51,88,0.08) 0%, transparent 50%);
+            animation: gradientMove 20s ease-in-out infinite alternate;
+        }
+        @keyframes gradientMove {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+            100% {
+                transform: scale(1.2) translate(-20px, 10px);
+            }
+        }
+        body::before{
+            content:'';
+            position:fixed;
+            inset:0;
+            background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);
+            pointer-events:none;
+            z-index:1;
+            opacity:0.6;
+        }
         .bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
         .bg-orb{position:absolute;border-radius:50%;filter:blur(140px);animation:float 15s ease-in-out infinite alternate}
         .bg-orb-1{width:700px;height:700px;background:rgba(77,166,255,0.05);top:-250px;left:-200px;animation-delay:0s}
         .bg-orb-2{width:500px;height:500px;background:rgba(0,221,160,0.04);bottom:-200px;right:-100px;animation-delay:-7s}
         .bg-orb-3{width:300px;height:300px;background:rgba(167,139,250,0.035);top:40%;left:50%;transform:translateX(-50%);animation-delay:-4s}
         @keyframes float{0%{transform:translate(0,0) scale(1)}100%{transform:translate(50px,-40px) scale(1.1)}}
-        .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%)}
-        .container{width:100%;max-width:700px;position:relative;z-index:1;animation:fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+        .bg-grid{
+            position:fixed;inset:0;z-index:1;pointer-events:none;
+            background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+            background-size:48px 48px;
+            mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 30%,transparent 100%);
+        }
+        .container{
+            width:100%;
+            max-width:700px;
+            position:relative;
+            z-index:2;
+            animation: fadeInUp 0.8s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
         .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:0 4px}
         .logo{display:flex;align-items:center;gap:10px}
-        .logo-shield{width:32px;height:32px;background:linear-gradient(135deg,rgba(77,166,255,0.22),rgba(77,166,255,0.08));border:1px solid rgba(77,166,255,0.28);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--blue)}
+        .logo-shield{
+            width:32px;height:32px;
+            background:linear-gradient(135deg,rgba(77,166,255,0.22),rgba(77,166,255,0.08));
+            border:1px solid rgba(77,166,255,0.28);
+            border-radius:9px;
+            display:flex;align-items:center;justify-content:center;
+            color:var(--blue);
+        }
         .logo-name{font-size:13.5px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-1)}
         .logo-name b{color:var(--blue)}
         .topbar-right{display:flex;align-items:center;gap:14px}
-        .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:livepulse 2.8s ease-in-out infinite;box-shadow:0 0 14px var(--green)}
+        .live-dot{
+            width:8px;height:8px;
+            border-radius:50%;
+            background:var(--green);
+            animation:livepulse 2.8s ease-in-out infinite;
+            box-shadow:0 0 14px var(--green);
+        }
         @keyframes livepulse{0%,100%{opacity:.4;box-shadow:0 0 0 0 rgba(0,221,160,0.6)}50%{opacity:1;box-shadow:0 0 0 12px rgba(0,221,160,0)}}
         .topbar-time{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
-        .admin-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:11px;font-size:11.5px;font-weight:600;letter-spacing:0.6px;background:rgba(77,166,255,0.13);border:1px solid rgba(77,166,255,0.35);color:var(--blue);text-decoration:none;transition:all 0.25s;font-family:'Inter',sans-serif}
-        .admin-btn:hover{background:rgba(77,166,255,0.24);border-color:rgba(77,166,255,0.55);transform:translateY(-2px);box-shadow:0 6px 18px rgba(77,166,255,0.2)}
-        .card{background:var(--surface);border:1px solid var(--border);border-radius:24px;backdrop-filter:blur(70px);-webkit-backdrop-filter:blur(70px);overflow:hidden;box-shadow:var(--card-shadow);transition:border-color 0.4s ease,box-shadow 0.4s ease,background 0.3s}
+        .admin-btn{
+            display:inline-flex;align-items:center;gap:7px;
+            padding:8px 18px;border-radius:11px;
+            font-size:11.5px;font-weight:600;letter-spacing:0.6px;
+            background:rgba(77,166,255,0.13);
+            border:1px solid rgba(77,166,255,0.35);
+            color:var(--blue);
+            text-decoration:none;
+            transition:all 0.25s;
+            font-family:'Inter',sans-serif;
+        }
+        .admin-btn:hover{
+            background:rgba(77,166,255,0.24);
+            border-color:rgba(77,166,255,0.55);
+            transform:translateY(-2px);
+            box-shadow:0 6px 18px rgba(77,166,255,0.2);
+        }
+        .card{
+            background:var(--surface);
+            border:1px solid var(--border);
+            border-radius:24px;
+            backdrop-filter:blur(80px);
+            -webkit-backdrop-filter:blur(80px);
+            overflow:hidden;
+            box-shadow:var(--card-shadow);
+            transition:border-color 0.4s ease,box-shadow 0.4s ease,background 0.3s;
+        }
         .card.theme-success{border-color:rgba(0,221,160,0.22);box-shadow:var(--card-shadow),0 0 110px rgba(0,221,160,0.08)}
         .card.theme-warning{border-color:rgba(255,176,32,0.3);box-shadow:var(--card-shadow),0 0 110px rgba(255,176,32,0.1)}
         .card.theme-critical{border-color:rgba(255,51,88,0.34);box-shadow:var(--card-shadow),0 0 110px rgba(255,51,88,0.14)}
         .card.theme-info{border-color:rgba(77,166,255,0.3);box-shadow:var(--card-shadow),0 0 110px rgba(77,166,255,0.1)}
         .card.theme-whitelist{background:rgba(255,255,255,0.13);border-color:rgba(255,255,255,0.38);box-shadow:var(--card-shadow),0 0 110px rgba(255,255,255,0.18)}
+        /* ... остальные стили без изменений ... */
         .alert-strip{display:none;align-items:center;gap:10px;padding:13px 30px;font-size:11px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;border-bottom:1px solid transparent;background-size:200% auto;animation:gradientShift 5s linear infinite}
         .alert-strip.visible{display:flex}
         .alert-strip.strip-critical{background:linear-gradient(90deg,rgba(255,51,88,0.13),rgba(255,51,88,0.24),rgba(255,51,88,0.13));border-bottom-color:rgba(255,51,88,0.22);color:var(--red)}
@@ -86,7 +187,17 @@
         .pill-critical{background:rgba(255,51,88,0.14);border-color:rgba(255,51,88,0.32);color:var(--red);box-shadow:0 0 30px rgba(255,51,88,0.12)}
         .pill-info{background:rgba(77,166,255,0.14);border-color:rgba(77,166,255,0.32);color:var(--blue);box-shadow:0 0 30px rgba(77,166,255,0.12)}
         .pill-whitelist{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.4);color:#ffffff;box-shadow:0 0 30px rgba(255,255,255,0.12)}
-        .pill-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:livepulse 2s ease-in-out infinite}
+        .pill-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+        .pill-success .pill-dot{animation:pulse-success 2s ease-in-out infinite}
+        .pill-warning .pill-dot{animation:pulse-warning 2s ease-in-out infinite}
+        .pill-critical .pill-dot{animation:pulse-critical 2s ease-in-out infinite}
+        .pill-info .pill-dot{animation:pulse-info 2s ease-in-out infinite}
+        .pill-whitelist .pill-dot{animation:pulse-whitelist 2s ease-in-out infinite}
+        @keyframes pulse-success{0%,100%{opacity:.4;box-shadow:0 0 0 0 rgba(0,221,160,0.6)}50%{opacity:1;box-shadow:0 0 0 10px rgba(0,221,160,0.3)}}
+        @keyframes pulse-warning{0%,100%{opacity:.4;box-shadow:0 0 0 0 rgba(255,176,32,0.6)}50%{opacity:1;box-shadow:0 0 0 10px rgba(255,176,32,0.3)}}
+        @keyframes pulse-critical{0%,100%{opacity:.4;box-shadow:0 0 0 0 rgba(255,51,88,0.6)}50%{opacity:1;box-shadow:0 0 0 10px rgba(255,51,88,0.3)}}
+        @keyframes pulse-info{0%,100%{opacity:.4;box-shadow:0 0 0 0 rgba(77,166,255,0.6)}50%{opacity:1;box-shadow:0 0 0 10px rgba(77,166,255,0.3)}}
+        @keyframes pulse-whitelist{0%,100%{opacity:.4;box-shadow:0 0 0 0 rgba(255,255,255,0.6)}50%{opacity:1;box-shadow:0 0 0 10px rgba(255,255,255,0.3)}}
         .incident-title{font-size:30px;font-weight:800;line-height:1.2;letter-spacing:-0.6px;color:var(--text-1);margin-bottom:14px}
         .incident-title a{color:inherit;text-decoration:none;transition:opacity 0.2s;position:relative}
         .incident-title a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:4px;background:var(--blue);transition:width 0.3s;border-radius:3px}
@@ -168,7 +279,7 @@
         .loader-retry-btn{margin-top:22px;background:var(--red);color:white;border:none;padding:13px 36px;border-radius:14px;font-weight:600;font-size:15px;cursor:pointer;transition:all 0.3s}
         .loader-retry-btn:hover{background:#e02a4a;transform:translateY(-2px);box-shadow:0 8px 22px rgba(255,51,88,0.4)}
 
-        /* maintenance overlay (не меняем) */
+        /* maintenance overlay */
         .maintenance-overlay{position:fixed;inset:0;z-index:10000;background:radial-gradient(ellipse at center, rgba(4,6,15,0.6) 0%, rgba(4,6,15,0.9) 100%);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;overflow:hidden}
         .maintenance-overlay.hidden{display:none}
         .maintenance-bg-gears{position:absolute;inset:0;pointer-events:none}
@@ -265,14 +376,14 @@
 
 <script>
 (function(){
-const MAINTENANCE_MODE=true;
+const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
-// Порядок прокси: прямой → Cloudflare Workers → CORS-прокси
+// Прокси: прямой → Cloudflare Workers → CORS-прокси
 const PROXY_URLS = [
-    'https://vuzcudxulhqkrkniulsl.supabase.co',                          // Прямой доступ
-    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev',           // Cloudflare Workers
-    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co') // CORS-прокси
+    'https://vuzcudxulhqkrkniulsl.supabase.co',
+    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev',
+    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
 ];
 
 const PROXY_NAMES = {
@@ -427,7 +538,6 @@ async function findWorkingUrl(){
         try{
             let testUrl = (url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
             let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
-            // Считаем успешными статусы 200, 401, 400, 403
             if(resp.ok || resp.status===401 || resp.status===400 || resp.status===403){
                 let name = getProxyName(url);
                 console.log('✅ Рабочий URL:', url, '—', name);
