@@ -159,12 +159,16 @@
 <script>
 (function() {
     const SUPABASE_ANON_KEY = 'sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
+    // Только прямой доступ и Cloudflare Workers – corsproxy исключён
     const PROXY_URLS = [
-        'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co'),
         'https://vuzcudxulhqkrkniulsl.supabase.co',
         'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev'
     ];
-    const API_TIMEOUT = 15000; // 15 секунд
+
+    const PROXY_NAMES = {
+        'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
+        'zenitvpn-proxy': 'Cloudflare Workers'
+    };
 
     const STATUS_LABELS = {
         success: 'Всё работает', maintenance: 'Обслуживание', critical: 'Критический сбой',
@@ -179,14 +183,6 @@
         node2: { name: 'Нидерланды', flag: '🇳🇱' },
         node3: { name: 'Франция', flag: '🇫🇷' }
     };
-
-    // Утилита таймаута
-    function withTimeout(promise, ms, errorMessage = 'Время ожидания истекло') {
-        return Promise.race([
-            promise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error(errorMessage)), ms))
-        ]);
-    }
 
     function applyTheme(theme) {
         if (theme === 'light') { document.body.classList.add('light-theme'); }
@@ -207,27 +203,32 @@
         applyTheme(saved);
     }
 
+    function getProxyName(url) {
+        for (let key in PROXY_NAMES) {
+            if (url.includes(key)) return PROXY_NAMES[key];
+        }
+        return 'Неизвестный прокси';
+    }
+
     async function findWorkingUrl() {
         for (let url of PROXY_URLS) {
             try {
-                let testUrl = (url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
-                let resp = await fetch(testUrl, { method: 'HEAD', signal: AbortSignal.timeout(5000) });
+                // Для всех URL проверяем доступность через HEAD к /rest/v1/
+                let resp = await fetch(url + '/rest/v1/', { method: 'HEAD', signal: AbortSignal.timeout(5000) });
                 if (resp.ok || resp.status === 401 || resp.status === 400 || resp.status === 403) {
+                    console.log('✅ Выбран прокси:', getProxyName(url));
                     return url;
                 }
-            } catch (e) {}
+            } catch (e) { console.log('❌ Прокси недоступен:', url); }
         }
+        // fallback – первый из списка
         return PROXY_URLS[0];
     }
 
     async function getIncident(id) {
         const workingUrl = await findWorkingUrl();
         const supabase = window.supabase.createClient(workingUrl, SUPABASE_ANON_KEY);
-        const { data, error } = await withTimeout(
-            supabase.from('incidents').select('*').eq('id', id).single(),
-            API_TIMEOUT,
-            'Сервер не отвечает'
-        );
+        const { data, error } = await supabase.from('incidents').select('*').eq('id', id).single();
         if (error) throw error;
         return data;
     }
@@ -290,7 +291,7 @@
         const id = params.get('id');
         if (!id) { showError('Инцидент не указан'); return; }
         try {
-            const inc = await withTimeout(getIncident(id), API_TIMEOUT, 'Загрузка инцидента заняла слишком много времени');
+            const inc = await getIncident(id);
             renderIncident(inc);
         } catch (e) {
             console.error(e);
