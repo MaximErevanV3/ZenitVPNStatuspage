@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenitVPN — Карта узлов</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #04060f;
+            --surface: rgba(8, 12, 26, 0.8);
+            --border: rgba(255,255,255,0.1);
+            --green: #00dda0;
+            --yellow: #ffb020;
+            --red: #ff3358;
+            --blue: #4da6ff;
+            --text-1: #eef2ff;
+            --text-2: #8892aa;
+        }
+
+        body.light-theme {
+            --bg: #f0f2f5;
+            --surface: rgba(255,255,255,0.9);
+            --border: rgba(0,0,0,0.15);
+            --green: #00a878;
+            --yellow: #d48c00;
+            --red: #c62828;
+            --blue: #2563eb;
+            --text-1: #1a1a2e;
+            --text-2: #4a4a6a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg); color: var(--text-1);
+            font-family: 'Inter', system-ui, sans-serif;
+            height: 100vh; width: 100vw; overflow: hidden;
+            transition: background 0.4s, color 0.4s;
+        }
+        #map {
+            height: 100%; width: 100%;
+            position: absolute; top: 0; left: 0; z-index: 1;
+        }
+        .top-bar {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            display: flex; align-items: center; gap: 12px;
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 14px;
+            padding: 10px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .top-bar a {
+            color: var(--blue); text-decoration: none;
+            font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .theme-btn {
+            background: transparent; border: 1px solid var(--border);
+            border-radius: 8px; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-2); font-size: 16px;
+            transition: all 0.3s;
+        }
+        .theme-btn:hover { background: rgba(255,255,255,0.1); }
+        .leaflet-popup-content-wrapper {
+            background: var(--surface) !important;
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border);
+            border-radius: 14px !important;
+            color: var(--text-1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            font-family: 'Inter', sans-serif;
+            padding: 0;
+            overflow: hidden;
+        }
+        .leaflet-popup-content {
+            margin: 0;
+            padding: 20px 24px;
+            line-height: 1.5;
+            font-size: 14px;
+            min-width: 240px;
+        }
+        .leaflet-popup-content h3 {
+            font-size: 18px; font-weight: 700; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .leaflet-popup-content .status-dot {
+            width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+        }
+        .leaflet-popup-content .info-line {
+            display: flex; justify-content: space-between;
+            margin-bottom: 6px; font-size: 13px; color: var(--text-2);
+        }
+        .leaflet-popup-content .info-line span:last-child {
+            font-weight: 600; color: var(--text-1);
+        }
+        .leaflet-popup-content .incidents-list {
+            margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;
+        }
+        .leaflet-popup-content .incidents-list .incident-item {
+            font-size: 12px; margin-bottom: 5px;
+            display: flex; justify-content: space-between;
+        }
+        .leaflet-popup-content .incident-item .inc-status {
+            font-weight: 600; text-transform: uppercase; font-size: 10px;
+        }
+        .leaflet-popup-tip-container { display: none; }
+        @media (max-width: 600px) {
+            .top-bar { top: 10px; left: 10px; padding: 8px 14px; }
+            .leaflet-popup-content { min-width: 200px; padding: 14px 18px; }
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div class="top-bar">
+    <a href="index.html">← На главную</a>
+    <button id="themeToggleBtn" class="theme-btn" title="Переключить тему">🌙</button>
+</div>
+
+<script>
+(function() {
+    const SUPABASE_ANON_KEY = 'sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
+    const PROXY_URLS = [
+        'https://vuzcudxulhqkrkniulsl.supabase.co',
+        'https://zenitvpn-proxy.cloudzenit.workers.dev',
+        'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
+    ];
+
+    const NODE_COORDS = {
+        node1: { lat: 60.1695, lng: 24.9354, name: 'Финляндия', code: 'HEL-1', flag: '🇫🇮' },
+        node2: { lat: 52.3676, lng: 4.9041, name: 'Нидерланды', code: 'AMS-1', flag: '🇳🇱' },
+        node3: { lat: 48.8566, lng: 2.3522, name: 'Франция', code: 'PR-1', flag: '🇫🇷' }
+    };
+
+    const STATUS_LABELS = { online: 'Online', offline: 'Offline', warning: 'Degraded', maintenance: 'Maintenance' };
+    const UPTIME_VALUES = { online: '99.8%', offline: '0.0%', warning: '81.3%', maintenance: '100%' };
+
+    let map = L.map('map').setView([54.5, 15], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 10
+    }).addTo(map);
+
+    // --- тема ---
+    function applyTheme(theme) {
+        if (theme === 'light') { document.body.classList.add('light-theme'); }
+        else { document.body.classList.remove('light-theme'); }
+        localStorage.setItem('zenitvpn_theme', theme);
+        updateThemeIcon(theme);
+    }
+    function toggleTheme() {
+        const isLight = document.body.classList.contains('light-theme');
+        applyTheme(isLight ? 'dark' : 'light');
+    }
+    function updateThemeIcon(theme) {
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+    }
+    function initTheme() {
+        const saved = localStorage.getItem('zenitvpn_theme') || 'dark';
+        applyTheme(saved);
+    }
+
+    // --- прокси ---
+    async function findWorkingUrl() {
+        for (let url of PROXY_URLS) {
+            try {
+                let resp = await fetch(url + '/rest/v1/', { method: 'HEAD', signal: AbortSignal.timeout(5000) });
+                if (resp.ok || resp.status === 401 || resp.status === 400 || resp.status === 403) return url;
+            } catch (e) {}
+        }
+        return PROXY_URLS[0];
+    }
+
+    // --- данные ---
+    async function loadData() {
+        const workingUrl = await findWorkingUrl();
+        const supabase = window.supabase.createClient(workingUrl, SUPABASE_ANON_KEY);
+
+        // активный инцидент
+        const { data: active } = await supabase.from('incidents')
+            .select('*').eq('is_active', true)
+            .order('created_at', { ascending: false }).limit(1);
+
+        // последние 20 инцидентов для истории узлов
+        const { data: incidents } = await supabase.from('incidents')
+            .select('*').order('created_at', { ascending: false }).limit(20);
+
+        const activeIncident = active?.[0] || null;
+        const allIncidents = incidents || [];
+
+        // Определяем статусы узлов
+        let nodes = { node1: 'online', node2: 'online', node3: 'online' };
+        if (activeIncident && activeIncident.affected_nodes) {
+            nodes = activeIncident.affected_nodes;
+        }
+
+        // Строим маркеры
+        Object.entries(NODE_COORDS).forEach(([id, coord]) => {
+            const status = nodes[id] || 'online';
+            const color = status === 'online' ? '#00dda0' : status === 'warning' ? '#ffb020' : status === 'offline' ? '#ff3358' : '#4da6ff';
+
+            // Последние 3 инцидента, затронувшие этот узел (статус узла не online)
+            const nodeIncidents = allIncidents.filter(inc => {
+                if (!inc.affected_nodes || !inc.affected_nodes[id]) return false;
+                return inc.affected_nodes[id] !== 'online';
+            }).slice(0, 3);
+
+            const marker = L.circleMarker([coord.lat, coord.lng], {
+                radius: 12,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+
+            // Формируем HTML всплывающего окна
+            let popupHTML = `
+                <h3>${coord.flag} ${coord.name} <span class="status-dot" style="background:${color}"></span></h3>
+                <div class="info-line"><span>Код узла</span><span>${coord.code}</span></div>
+                <div class="info-line"><span>Статус</span><span>${STATUS_LABELS[status] || status}</span></div>
+                <div class="info-line"><span>Uptime</span><span>${UPTIME_VALUES[status] || '??'}</span></div>
+            `;
+
+            if (nodeIncidents.length > 0) {
+                popupHTML += '<div class="incidents-list"><strong style="font-size:12px;color:var(--text-2);">Последние инциденты:</strong>';
+                nodeIncidents.forEach(inc => {
+                    const d = new Date(inc.created_at).toLocaleDateString('ru-RU', { day:'numeric', month:'short' });
+                    const st = inc.status === 'critical' ? 'Критический' : inc.status === 'warning' ? 'Предупреждение' : 'Обслуживание';
+                    popupHTML += `<div class="incident-item"><span>${d} – ${inc.title}</span><span class="inc-status" style="color:${inc.status === 'critical' ? 'var(--red)' : inc.status === 'warning' ? 'var(--yellow)' : 'var(--blue)'}">${st}</span></div>`;
+                });
+                popupHTML += '</div>';
+            } else {
+                popupHTML += '<div class="incidents-list" style="font-size:12px;color:var(--text-2);">Нет недавних инцидентов</div>';
+            }
+
+            marker.bindPopup(popupHTML, { maxWidth: 300, className: 'custom-popup' });
+        });
+    }
+
+    initTheme();
+    document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+    loadData();
+})();
+</script>
+</body>
+</html>
