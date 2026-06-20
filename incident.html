@@ -159,15 +159,16 @@
 <script>
 (function() {
     const SUPABASE_ANON_KEY = 'sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
-    // Только прямой доступ и Cloudflare Workers – corsproxy исключён
     const PROXY_URLS = [
         'https://vuzcudxulhqkrkniulsl.supabase.co',
-        'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev'
+        'https://zenitvpn-proxy.cloudzenit.workers.dev',
+        'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
     ];
 
     const PROXY_NAMES = {
         'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
-        'zenitvpn-proxy': 'Cloudflare Workers'
+        'cloudzenit': 'Cloudflare Workers',
+        'corsproxy.io': 'CORS-прокси'
     };
 
     const STATUS_LABELS = {
@@ -213,7 +214,6 @@
     async function findWorkingUrl() {
         for (let url of PROXY_URLS) {
             try {
-                // Для всех URL проверяем доступность через HEAD к /rest/v1/
                 let resp = await fetch(url + '/rest/v1/', { method: 'HEAD', signal: AbortSignal.timeout(5000) });
                 if (resp.ok || resp.status === 401 || resp.status === 400 || resp.status === 403) {
                     console.log('✅ Выбран прокси:', getProxyName(url));
@@ -221,7 +221,6 @@
                 }
             } catch (e) { console.log('❌ Прокси недоступен:', url); }
         }
-        // fallback – первый из списка
         return PROXY_URLS[0];
     }
 
