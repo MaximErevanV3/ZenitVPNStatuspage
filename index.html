@@ -56,7 +56,6 @@
             transition:background 0.4s,color 0.4s;
             position:relative;
         }
-        /* Анимированный градиентный фон */
         body::after {
             content: '';
             position: fixed;
@@ -70,12 +69,8 @@
             animation: gradientMove 20s ease-in-out infinite alternate;
         }
         @keyframes gradientMove {
-            0% {
-                transform: scale(1) translate(0, 0);
-            }
-            100% {
-                transform: scale(1.2) translate(-20px, 10px);
-            }
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.2) translate(-20px, 10px); }
         }
         body::before{
             content:'';
@@ -106,16 +101,8 @@
             animation: fadeInUp 0.8s cubic-bezier(0.22,1,0.36,1) both;
         }
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-                filter: blur(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-                filter: blur(0);
-            }
+            from { opacity: 0; transform: translateY(40px); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
         .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:0 4px}
         .logo{display:flex;align-items:center;gap:10px}
@@ -171,7 +158,6 @@
         .card.theme-critical{border-color:rgba(255,51,88,0.34);box-shadow:var(--card-shadow),0 0 110px rgba(255,51,88,0.14)}
         .card.theme-info{border-color:rgba(77,166,255,0.3);box-shadow:var(--card-shadow),0 0 110px rgba(77,166,255,0.1)}
         .card.theme-whitelist{background:rgba(255,255,255,0.13);border-color:rgba(255,255,255,0.38);box-shadow:var(--card-shadow),0 0 110px rgba(255,255,255,0.18)}
-        /* ... остальные стили без изменений ... */
         .alert-strip{display:none;align-items:center;gap:10px;padding:13px 30px;font-size:11px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;border-bottom:1px solid transparent;background-size:200% auto;animation:gradientShift 5s linear infinite}
         .alert-strip.visible{display:flex}
         .alert-strip.strip-critical{background:linear-gradient(90deg,rgba(255,51,88,0.13),rgba(255,51,88,0.24),rgba(255,51,88,0.13));border-bottom-color:rgba(255,51,88,0.22);color:var(--red)}
@@ -379,17 +365,19 @@
 const MAINTENANCE_MODE=false;
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
-// Прокси: прямой → Cloudflare Workers → CORS-прокси
+// Прокси: прямой → Cloudflare Workers → CORS-прокси → резерв
 const PROXY_URLS = [
     'https://vuzcudxulhqkrkniulsl.supabase.co',
-    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev',
-    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
+    'https://zenitvpn-proxy.cloudzenit.workers.dev',
+    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co'),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
 ];
 
 const PROXY_NAMES = {
     'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
-    'zenitvpn-proxy': 'Cloudflare Workers',
-    'corsproxy.io': 'CORS-прокси'
+    'cloudzenit': 'Cloudflare Workers',
+    'corsproxy.io': 'CORS-прокси',
+    'allorigins': 'Резервный прокси'
 };
 
 let supabase = null;
@@ -538,6 +526,7 @@ async function findWorkingUrl(){
         try{
             let testUrl = (url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
             let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
+            // 200, 401, 400, 403 считаем успехом
             if(resp.ok || resp.status===401 || resp.status===400 || resp.status===403){
                 let name = getProxyName(url);
                 console.log('✅ Рабочий URL:', url, '—', name);
