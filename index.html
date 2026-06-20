@@ -101,8 +101,16 @@
             animation: fadeInUp 0.8s cubic-bezier(0.22,1,0.36,1) both;
         }
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(40px); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
         }
         .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:0 4px}
         .logo{display:flex;align-items:center;gap:10px}
@@ -312,6 +320,18 @@
         .sla-block{background:var(--surface-raised);border:1px solid var(--border);border-radius:18px;padding:22px 26px;margin-bottom:26px;display:flex;align-items:center;gap:22px}
         .sla-value{font-size:34px;font-weight:800;color:var(--green);line-height:1}
         .sla-label{font-size:11.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3)}
+
+        /* ссылка на карту узлов */
+        .map-link {
+            display: inline-block;
+            margin-bottom: 18px;
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .map-link:hover { opacity: 0.7; text-decoration: underline; }
 
         /* кнопка переключения темы */
         .theme-toggle{background:transparent;border:1px solid var(--border);border-radius:13px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);font-size:19px;transition:all 0.4s;margin-right:14px}
@@ -526,7 +546,6 @@ async function findWorkingUrl(){
         try{
             let testUrl = (url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
             let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
-            // 200, 401, 400, 403 считаем успехом
             if(resp.ok || resp.status===401 || resp.status===400 || resp.status===403){
                 let name = getProxyName(url);
                 console.log('✅ Рабочий URL:', url, '—', name);
@@ -714,6 +733,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 <p class="incident-body" id="incBody">Критических сбоев и плановых технических работ не зафиксировано.</p>
 <div class="meta-strip"><div class="meta-cell"><div class="meta-label">ID инцидента</div><div class="meta-value" id="incID">—</div></div><div class="meta-cell"><div class="meta-label">Обновлено</div><div class="meta-value" id="incTime">—</div></div><div class="meta-cell"><div class="meta-label">Всего узлов</div><div class="meta-value">3 / 3</div></div></div>
 <div id="map" class="map-container"></div>
+<a href="map.html" class="map-link">🗺️ Открыть карту узлов</a>
 <div class="sla-block" id="slaBlock">
     <div>
         <div class="sla-label">SLA за 30 дней</div>
