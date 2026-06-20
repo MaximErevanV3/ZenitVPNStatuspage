@@ -99,15 +99,15 @@
 const SUPABASE_ANON_KEY='sb_publishable_v7HvLsYBsknR6LbMZmEDNA_Di32JcCk';
 
 const PROXY_URLS = [
-    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co'),
     'https://vuzcudxulhqkrkniulsl.supabase.co',
-    'https://zenitvpn-proxy.maximsmirnov35vologda.workers.dev'
+    'https://zenitvpn-proxy.cloudzenit.workers.dev',
+    'https://corsproxy.io/?' + encodeURIComponent('https://vuzcudxulhqkrkniulsl.supabase.co')
 ];
 
 const PROXY_NAMES = {
-    'corsproxy.io': 'CORS-прокси',
     'vuzcudxulhqkrkniulsl.supabase.co': 'Прямой доступ',
-    'zenitvpn-proxy': 'Cloudflare Workers'
+    'cloudzenit': 'Cloudflare Workers',
+    'corsproxy.io': 'CORS-прокси'
 };
 
 const ALLOWED_NODE_STATUSES = ['online','offline','warning','maintenance'];
@@ -140,9 +140,9 @@ async function findWorkingUrl(){
     updateProxyNote('Поиск сервера...');
     for(let url of PROXY_URLS){
         try{
-            let testUrl = url.includes('corsproxy.io') || url.includes('allorigins') ? url + '/rest/v1/' : url + '/rest/v1/';
+            let testUrl = (url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
             let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
-            if(resp.ok || resp.status===401 || resp.status===400){
+            if(resp.ok || resp.status===401 || resp.status===400 || resp.status===403){
                 let name = getProxyName(url);
                 console.log('✅ Админка: рабочий URL:', url, '—', name);
                 updateProxyNote(name);
