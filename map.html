@@ -83,6 +83,7 @@
             line-height: 1.5;
             font-size: 14px;
             min-width: 240px;
+            max-width: 90vw; /* адаптив */
         }
         .leaflet-popup-content h3 {
             font-size: 18px; font-weight: 700; margin-bottom: 10px;
@@ -104,14 +105,26 @@
         .leaflet-popup-content .incidents-list .incident-item {
             font-size: 12px; margin-bottom: 5px;
             display: flex; justify-content: space-between;
+            gap: 8px;
         }
         .leaflet-popup-content .incident-item .inc-status {
             font-weight: 600; text-transform: uppercase; font-size: 10px;
         }
         .leaflet-popup-tip-container { display: none; }
+
+        /* адаптивные отступы */
         @media (max-width: 600px) {
-            .top-bar { top: 10px; left: 10px; padding: 8px 14px; }
-            .leaflet-popup-content { min-width: 200px; padding: 14px 18px; }
+            .top-bar { 
+                top: 10px; left: 10px; padding: 8px 14px; 
+                border-radius: 12px;
+            }
+            .top-bar a { font-size: 12px; }
+            .theme-btn { width: 28px; height: 28px; font-size: 14px; }
+            .leaflet-popup-content { 
+                min-width: 200px; padding: 14px 18px; 
+                font-size: 13px;
+            }
+            .leaflet-popup-content h3 { font-size: 16px; }
         }
     </style>
 </head>
@@ -137,10 +150,37 @@
         node3: { lat: 48.8566, lng: 2.3522, name: 'Франция', code: 'PR-1', flag: '🇫🇷' }
     };
 
-    const STATUS_LABELS = { online: 'Online', offline: 'Offline', warning: 'Degraded', maintenance: 'Maintenance' };
-    const UPTIME_VALUES = { online: '99.8%', offline: '0.0%', warning: '81.3%', maintenance: '100%' };
+    // Добавлены все статусы, включая whitelist
+    const STATUS_LABELS = { 
+        online: 'Online', 
+        offline: 'Offline', 
+        warning: 'Degraded', 
+        maintenance: 'Maintenance',
+        whitelist: 'Белые списки'
+    };
+    const UPTIME_VALUES = { 
+        online: '99.8%', 
+        offline: '0.0%', 
+        warning: '81.3%', 
+        maintenance: '100%',
+        whitelist: '100%'
+    };
 
-    let map = L.map('map').setView([54.5, 15], 4);
+    // Цвета маркеров и обводок
+    const STATUS_COLORS = {
+        online: '#00dda0',
+        warning: '#ffb020',
+        offline: '#ff3358',
+        maintenance: '#4da6ff',
+        whitelist: '#ffffff'       // белый для белых списков
+    };
+
+    let map = L.map('map', {
+        center: [54.5, 15],
+        zoom: 4,
+        zoomControl: true,
+        attributionControl: false
+    });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
         subdomains: 'abcd',
@@ -183,28 +223,32 @@
         const workingUrl = await findWorkingUrl();
         const supabase = window.supabase.createClient(workingUrl, SUPABASE_ANON_KEY);
 
-        // активный инцидент
         const { data: active } = await supabase.from('incidents')
             .select('*').eq('is_active', true)
             .order('created_at', { ascending: false }).limit(1);
-
-        // последние 20 инцидентов для истории узлов
         const { data: incidents } = await supabase.from('incidents')
             .select('*').order('created_at', { ascending: false }).limit(20);
 
         const activeIncident = active?.[0] || null;
         const allIncidents = incidents || [];
 
-        // Определяем статусы узлов
         let nodes = { node1: 'online', node2: 'online', node3: 'online' };
         if (activeIncident && activeIncident.affected_nodes) {
             nodes = activeIncident.affected_nodes;
         }
 
-        // Строим маркеры
+        // Очищаем старые маркеры (если перезагрузка)
+        map.eachLayer(layer => {
+            if (layer instanceof L.CircleMarker) map.removeLayer(layer);
+        });
+
         Object.entries(NODE_COORDS).forEach(([id, coord]) => {
-            const status = nodes[id] || 'online';
-            const color = status === 'online' ? '#00dda0' : status === 'warning' ? '#ffb020' : status === 'offline' ? '#ff3358' : '#4da6ff';
+            let status = nodes[id] || 'online';
+            // fallback на случай недопустимого статуса
+            if (!STATUS_LABELS[status]) status = 'warning';
+
+            const color = STATUS_COLORS[status] || '#00dda0';
+            const borderColor = status === 'whitelist' ? '#333' : '#fff'; // тёмная обводка для белого маркера
 
             // Последние 3 инцидента, затронувшие этот узел (статус узла не online)
             const nodeIncidents = allIncidents.filter(inc => {
@@ -215,17 +259,16 @@
             const marker = L.circleMarker([coord.lat, coord.lng], {
                 radius: 12,
                 fillColor: color,
-                color: '#fff',
+                color: borderColor,
                 weight: 2,
                 opacity: 1,
                 fillOpacity: 0.9
             }).addTo(map);
 
-            // Формируем HTML всплывающего окна
             let popupHTML = `
                 <h3>${coord.flag} ${coord.name} <span class="status-dot" style="background:${color}"></span></h3>
                 <div class="info-line"><span>Код узла</span><span>${coord.code}</span></div>
-                <div class="info-line"><span>Статус</span><span>${STATUS_LABELS[status] || status}</span></div>
+                <div class="info-line"><span>Статус</span><span>${STATUS_LABELS[status]}</span></div>
                 <div class="info-line"><span>Uptime</span><span>${UPTIME_VALUES[status] || '??'}</span></div>
             `;
 
@@ -233,8 +276,19 @@
                 popupHTML += '<div class="incidents-list"><strong style="font-size:12px;color:var(--text-2);">Последние инциденты:</strong>';
                 nodeIncidents.forEach(inc => {
                     const d = new Date(inc.created_at).toLocaleDateString('ru-RU', { day:'numeric', month:'short' });
-                    const st = inc.status === 'critical' ? 'Критический' : inc.status === 'warning' ? 'Предупреждение' : 'Обслуживание';
-                    popupHTML += `<div class="incident-item"><span>${d} – ${inc.title}</span><span class="inc-status" style="color:${inc.status === 'critical' ? 'var(--red)' : inc.status === 'warning' ? 'var(--yellow)' : 'var(--blue)'}">${st}</span></div>`;
+                    let statusText = inc.status;
+                    if (inc.status === 'critical') statusText = 'Критический';
+                    else if (inc.status === 'warning') statusText = 'Предупреждение';
+                    else if (inc.status === 'maintenance') statusText = 'Обслуживание';
+                    else if (inc.status === 'whitelist') statusText = 'Белые списки';
+                    else if (inc.status === 'success') statusText = 'Успешно';
+                    
+                    let statusColor = 'var(--blue)';
+                    if (inc.status === 'critical') statusColor = 'var(--red)';
+                    else if (inc.status === 'warning') statusColor = 'var(--yellow)';
+                    else if (inc.status === 'whitelist') statusColor = 'var(--text-1)'; // белый/основной текст
+                    
+                    popupHTML += `<div class="incident-item"><span>${d} – ${inc.title}</span><span class="inc-status" style="color:${statusColor}">${statusText}</span></div>`;
                 });
                 popupHTML += '</div>';
             } else {
