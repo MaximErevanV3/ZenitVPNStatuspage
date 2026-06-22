@@ -44,6 +44,11 @@
         #map {
             height: 100%; width: 100%;
             position: absolute; top: 0; left: 0; z-index: 1;
+            background: var(--bg); /* фикс белых полос */
+        }
+        /* фикс белых полос для контейнера Leaflet */
+        .leaflet-container {
+            background: var(--bg) !important;
         }
         .top-bar {
             position: absolute; top: 20px; left: 20px; z-index: 1000;
@@ -150,7 +155,6 @@
         node3: { lat: 48.8566, lng: 2.3522, name: 'Франция', code: 'PR-1', flag: '🇫🇷' }
     };
 
-    // Добавлены все статусы, включая whitelist
     const STATUS_LABELS = { 
         online: 'Online', 
         offline: 'Offline', 
@@ -166,13 +170,12 @@
         whitelist: '100%'
     };
 
-    // Цвета маркеров и обводок
     const STATUS_COLORS = {
         online: '#00dda0',
         warning: '#ffb020',
         offline: '#ff3358',
         maintenance: '#4da6ff',
-        whitelist: '#ffffff'       // белый для белых списков
+        whitelist: '#ffffff'
     };
 
     let map = L.map('map', {
@@ -187,7 +190,6 @@
         maxZoom: 10
     }).addTo(map);
 
-    // --- тема ---
     function applyTheme(theme) {
         if (theme === 'light') { document.body.classList.add('light-theme'); }
         else { document.body.classList.remove('light-theme'); }
@@ -207,7 +209,6 @@
         applyTheme(saved);
     }
 
-    // --- прокси ---
     async function findWorkingUrl() {
         for (let url of PROXY_URLS) {
             try {
@@ -218,7 +219,6 @@
         return PROXY_URLS[0];
     }
 
-    // --- данные ---
     async function loadData() {
         const workingUrl = await findWorkingUrl();
         const supabase = window.supabase.createClient(workingUrl, SUPABASE_ANON_KEY);
@@ -237,20 +237,18 @@
             nodes = activeIncident.affected_nodes;
         }
 
-        // Очищаем старые маркеры (если перезагрузка)
+        // Очищаем старые маркеры
         map.eachLayer(layer => {
             if (layer instanceof L.CircleMarker) map.removeLayer(layer);
         });
 
         Object.entries(NODE_COORDS).forEach(([id, coord]) => {
             let status = nodes[id] || 'online';
-            // fallback на случай недопустимого статуса
             if (!STATUS_LABELS[status]) status = 'warning';
 
             const color = STATUS_COLORS[status] || '#00dda0';
-            const borderColor = status === 'whitelist' ? '#333' : '#fff'; // тёмная обводка для белого маркера
+            const borderColor = status === 'whitelist' ? '#333' : '#fff';
 
-            // Последние 3 инцидента, затронувшие этот узел (статус узла не online)
             const nodeIncidents = allIncidents.filter(inc => {
                 if (!inc.affected_nodes || !inc.affected_nodes[id]) return false;
                 return inc.affected_nodes[id] !== 'online';
@@ -286,7 +284,7 @@
                     let statusColor = 'var(--blue)';
                     if (inc.status === 'critical') statusColor = 'var(--red)';
                     else if (inc.status === 'warning') statusColor = 'var(--yellow)';
-                    else if (inc.status === 'whitelist') statusColor = 'var(--text-1)'; // белый/основной текст
+                    else if (inc.status === 'whitelist') statusColor = 'var(--text-1)';
                     
                     popupHTML += `<div class="incident-item"><span>${d} – ${inc.title}</span><span class="inc-status" style="color:${statusColor}">${statusText}</span></div>`;
                 });
