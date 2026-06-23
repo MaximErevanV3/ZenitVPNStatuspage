@@ -316,26 +316,42 @@
             box-shadow:0 4px 12px rgba(0,0,0,0.3);
         }
 
+        /* Ссылка на карту */
+        .map-link {
+            display: block;
+            text-align: right;
+            font-size: 11px;
+            color: var(--blue);
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: opacity 0.2s;
+        }
+        .map-link:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+
         /* SLA блок */
         .sla-block{background:var(--surface-raised);border:1px solid var(--border);border-radius:18px;padding:22px 26px;margin-bottom:26px;display:flex;align-items:center;gap:22px}
         .sla-value{font-size:34px;font-weight:800;color:var(--green);line-height:1}
         .sla-label{font-size:11.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3)}
 
-        /* ссылка на карту узлов */
-        .map-link {
-            display: inline-block;
-            margin-bottom: 18px;
-            color: var(--blue);
-            font-size: 12px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: opacity 0.2s;
-        }
-        .map-link:hover { opacity: 0.7; text-decoration: underline; }
-
         /* кнопка переключения темы */
         .theme-toggle{background:transparent;border:1px solid var(--border);border-radius:13px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);font-size:19px;transition:all 0.4s;margin-right:14px}
         .theme-toggle:hover{background:var(--surface-raised);border-color:var(--border-strong);transform:rotate(20deg) scale(1.08)}
+
+        /* Ссылка на графики */
+        .footer-link {
+            color: var(--blue);
+            text-decoration: none;
+            font-size: 10.5px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: opacity 0.2s;
+        }
+        .footer-link:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
 
         @media(max-width:580px){
             .card-body{padding:30px 26px 26px}.card-footer{padding:18px 26px}
@@ -546,6 +562,7 @@ async function findWorkingUrl(){
         try{
             let testUrl = (url.includes('corsproxy.io') || url.includes('allorigins')) ? url + '/rest/v1/' : url + '/rest/v1/';
             let resp = await fetch(testUrl, {method:'HEAD',signal:AbortSignal.timeout(5000)});
+            // 200, 401, 400, 403 считаем успехом
             if(resp.ok || resp.status===401 || resp.status===400 || resp.status===403){
                 let name = getProxyName(url);
                 console.log('✅ Рабочий URL:', url, '—', name);
@@ -733,7 +750,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 <p class="incident-body" id="incBody">Критических сбоев и плановых технических работ не зафиксировано.</p>
 <div class="meta-strip"><div class="meta-cell"><div class="meta-label">ID инцидента</div><div class="meta-value" id="incID">—</div></div><div class="meta-cell"><div class="meta-label">Обновлено</div><div class="meta-value" id="incTime">—</div></div><div class="meta-cell"><div class="meta-label">Всего узлов</div><div class="meta-value">3 / 3</div></div></div>
 <div id="map" class="map-container"></div>
-<a href="map.html" class="map-link">🗺️ Открыть карту узлов</a>
+<a href="map.html" class="map-link">Открыть карту узлов →</a>
 <div class="sla-block" id="slaBlock">
     <div>
         <div class="sla-label">SLA за 30 дней</div>
@@ -749,7 +766,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
 <div class="history-section"><div class="servers-header"><span class="servers-label">История инцидентов</span></div><div class="history-list" id="historyList"><p style="color:var(--text-3);font-size:12px;">Загрузка истории...</p></div></div>
 </div>
 <div class="card-footer">
-    <span class="footer-left">ZenitVPN Монитор | Прокси: Проверка...</span>
+    <span class="footer-left">
+        ZenitVPN Монитор | Прокси: Проверка... 
+        | <a href="uptime.html" class="footer-link">📈 Графики uptime</a>
+    </span>
     <span class="footer-center" id="updateCounter">ещё не обновлялось</span>
     <div class="footer-right"><div class="footer-badge"><div class="footer-badge-dot" style="background:var(--green);animation:glow-g 2s ease-in-out infinite"></div><span>Автовыбор сервера</span></div></div>
 </div>
