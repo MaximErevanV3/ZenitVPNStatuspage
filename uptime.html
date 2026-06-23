@@ -422,6 +422,7 @@
         renderChart(uptimeData);
     }
 
+    // Инициализация темы ДО построения графика
     initTheme();
     document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
 
@@ -435,8 +436,9 @@
         });
     });
 
-    loadPeriod(30);
+    // Загружаем график после того, как тема применена
+    setTimeout(() => loadPeriod(30), 50);
 })();
 </script>
 </body>
-</html>
+    </html>
