@@ -300,6 +300,8 @@
         const blue = '#4da6ff';
         const yellow = '#ffb020';
         const green = '#00dda0';
+        const gridColor = getComputedStyle(document.body).getPropertyValue('--border').trim() || 'rgba(255,255,255,0.08)';
+        const textColor = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#8892aa';
 
         chartInstance = new Chart(ctx, {
             type: 'line',
@@ -351,7 +353,7 @@
                 plugins: {
                     legend: {
                         labels: {
-                            color: 'var(--text-2)',
+                            color: textColor,
                             font: { family: 'Inter', size: 12 },
                             usePointStyle: true,
                             pointStyleWidth: 8
@@ -359,9 +361,9 @@
                     },
                     tooltip: {
                         backgroundColor: 'rgba(8, 12, 26, 0.9)',
-                        titleColor: 'var(--text-1)',
-                        bodyColor: 'var(--text-2)',
-                        borderColor: 'var(--border-strong)',
+                        titleColor: '#eef2ff',
+                        bodyColor: '#8892aa',
+                        borderColor: 'rgba(255,255,255,0.14)',
                         borderWidth: 1,
                         cornerRadius: 10,
                         padding: 12,
@@ -377,19 +379,19 @@
                 },
                 scales: {
                     x: {
-                        ticks: { color: 'var(--text-3)', font: { family: 'JetBrains Mono', size: 10 } },
-                        grid: { color: 'rgba(255,255,255,0.05)' }
+                        ticks: { color: textColor, font: { family: 'JetBrains Mono', size: 10 } },
+                        grid: { color: gridColor }
                     },
                     y: {
                         min: 0,
                         max: 1.2,
                         ticks: {
-                            color: 'var(--text-3)',
+                            color: textColor,
                             callback: (value) => value === 1 ? 'Online' : value === 0 ? 'Off' : '',
                             stepSize: 1,
                             font: { family: 'JetBrains Mono', size: 10 }
                         },
-                        grid: { color: 'rgba(255,255,255,0.05)' }
+                        grid: { color: gridColor }
                     }
                 },
                 interaction: { intersect: false, mode: 'index' }
@@ -404,9 +406,13 @@
 
     function updateChartTheme() {
         if (!chartInstance) return;
-        chartInstance.options.plugins.legend.labels.color = getComputedStyle(document.body).getPropertyValue('--text-2');
-        chartInstance.options.scales.x.ticks.color = getComputedStyle(document.body).getPropertyValue('--text-3');
-        chartInstance.options.scales.y.ticks.color = getComputedStyle(document.body).getPropertyValue('--text-3');
+        const textColor = getComputedStyle(document.body).getPropertyValue('--text-2').trim() || '#8892aa';
+        const gridColor = getComputedStyle(document.body).getPropertyValue('--border').trim() || 'rgba(255,255,255,0.08)';
+        chartInstance.options.plugins.legend.labels.color = textColor;
+        chartInstance.options.scales.x.ticks.color = textColor;
+        chartInstance.options.scales.y.ticks.color = textColor;
+        chartInstance.options.scales.x.grid.color = gridColor;
+        chartInstance.options.scales.y.grid.color = gridColor;
         chartInstance.update();
     }
 
