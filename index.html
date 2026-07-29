@@ -3,348 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Access Denied — Secure Node</title>
+    <title>Access Restricted</title>
     <style>
         :root {
-            --bg-deep: #02040a;
-            --card-surface: rgba(6, 10, 23, 0.45);
-            --neon-cyan: #00f2ff;
-            --neon-magenta: #ff0055;
-            --neon-blue: #3b82f6;
-            --border-color: rgba(59, 130, 246, 0.12);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
+            --bg-color: #f4f5f6;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --text-main: #1a1a1a;
+            --text-muted: #666666;
+            --accent: #4f46e5;
+            --border: rgba(0, 0, 0, 0.08);
+            --blur: 20px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0b0f19;
+                --card-bg: rgba(15, 23, 42, 0.65);
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --accent: #6366f1;
+                --border: rgba(255, 255, 255, 0.08);
+            }
         }
 
         body {
-            background-color: var(--bg-deep);
-            color: var(--text-primary);
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            perspective: 1200px;
-        }
-
-        /* Динамический фон */
-        .bg-matrix {
-            position: absolute;
-            inset: 0;
-            background-image: radial-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-            background-size: 24px 24px;
-            z-index: 1;
-        }
-
-        .neon-blur-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(140px);
-            z-index: 1;
-            opacity: 0.25;
-            pointer-events: none;
-        }
-        .orb-1 { width: 450px; height: 450px; background: var(--neon-blue); top: -10%; left: -5%; }
-        .orb-2 { width: 400px; height: 400px; background: var(--neon-magenta); bottom: -10%; right: -5%; }
-
-        /* Неоновый след за мышью */
-        .cursor-glow {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(0, 242, 255, 0.06) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 2;
-            transform: translate(-50%, -50%);
-            transition: width 0.2s, height 0.2s;
-        }
-
-        /* 3D Матрица карточки */
-        .perspective-wrapper {
-            position: relative;
-            z-index: 10;
-            will-change: transform;
-            transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .cyber-card {
-            background: var(--card-surface);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 56px 44px;
-            width: 440px;
+            padding: 20px;
             box-sizing: border-box;
-            text-align: center;
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            position: relative;
         }
 
-        /* Сканер / Защитный узел */
-        .status-node {
-            width: 84px;
-            height: 84px;
-            margin: 0 auto 32px;
+        /* Анимированный фоновый градиент */
+        .bg-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+            top: 20%;
+            left: 20%;
+            z-index: 1;
+            animation: floatGlow 10s infinite alternate ease-in-out;
+        }
+
+        @keyframes floatGlow {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 50px); }
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--border);
+            padding: 40px 32px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            z-index: 2;
+            box-sizing: border-box;
+        }
+
+        /* Элемент радара / глобуса */
+        .geo-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .pulse-ring {
+        .radar-pulse {
             position: absolute;
-            inset: -4px;
-            border: 2px solid var(--neon-magenta);
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--accent);
             border-radius: 50%;
-            opacity: 0;
-            animation: corePulse 2.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            opacity: 0.2;
+            animation: pulse 2s infinite ease-out;
         }
-        .delay-1 { animation-delay: 0.8s; }
 
-        .node-core {
-            width: 56px;
-            height: 56px;
-            background: rgba(255, 0, 85, 0.05);
-            border: 1px solid var(--neon-magenta);
+        .radar-core {
+            width: 48px;
+            height: 48px;
+            background: var(--accent);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--neon-magenta);
-            box-shadow: 0 0 25px rgba(255, 0, 85, 0.25);
-            transition: all 0.4s ease;
+            color: white;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
         }
 
-        @keyframes corePulse {
+        @keyframes pulse {
             0% { transform: scale(0.6); opacity: 0.8; }
             100% { transform: scale(1.4); opacity: 0; }
         }
 
-        /* Эффект сканирования (переключение класса) */
-        .scanning-mode .node-core {
-            color: var(--neon-cyan);
-            border-color: var(--neon-cyan);
-            background: rgba(0, 242, 255, 0.05);
-            box-shadow: 0 0 25px rgba(0, 242, 255, 0.35);
-        }
-        .scanning-mode .pulse-ring {
-            border-color: var(--neon-cyan);
-        }
-
-        /* Эффект цифровых помех (Glitch text) */
-        h1.glitch-text {
-            font-size: 25px;
-            font-weight: 800;
-            margin: 0 0 16px;
-            letter-spacing: -0.03em;
-            position: relative;
-            color: var(--text-primary);
-        }
-
-        h1.glitch-text:hover::before, h1.glitch-text:hover::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-deep);
-        }
-        h1.glitch-text:hover::before {
-            left: 2px; text-shadow: -1px 0 var(--neon-cyan);
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim 5s infinite linear alternate-reverse;
-        }
-        h1.glitch-text:hover::after {
-            left: -2px; text-shadow: -1px 0 var(--neon-magenta);
-            clip: rect(85px, 450px, 140px, 0);
-            animation: glitch-anim2 5s infinite linear alternate-reverse;
-        }
-
-        @keyframes glitch-anim {
-            0% { clip: rect(31px, 9999px, 94px, 0); }
-            10% { clip: rect(112px, 9999px, 76px, 0); }
-            100% { clip: rect(85px, 9999px, 5px, 0); }
-        }
-        @keyframes glitch-anim2 {
-            0% { clip: rect(76px, 9999px, 116px, 0); }
-            11% { clip: rect(23px, 9999px, 98px, 0); }
-            100% { clip: rect(9px, 9999px, 45px, 0); }
-        }
-
-        .description {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin: 0 0 36px;
-        }
-
-        /* Дата-панель */
-        .telemetry-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 36px;
-        }
-
-        .telemetry-box {
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 14px;
-            padding: 14px 18px;
-            text-align: left;
-        }
-
-        .meta-label {
-            display: block;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-        }
-
-        .meta-value {
-            display: block;
-            font-size: 14px;
+        h1 {
+            font-size: 22px;
             font-weight: 600;
-            font-family: monospace;
-            color: var(--text-primary);
+            margin: 0 0 12px 0;
+            letter-spacing: -0.02em;
         }
 
-        /* Высокотехнологичная кнопка */
-        .cyber-btn {
-            position: relative;
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            color: white;
+        p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0 0 24px 0;
+        }
+
+        /* Блок информации о пользователе */
+        .user-meta {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 28px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .user-meta { background: rgba(255, 255, 255, 0.02); }
+        }
+
+        .meta-item strong {
+            display: block;
+            color: var(--text-main);
+            margin-top: 2px;
+        }
+
+        /* Интерактивная кнопка */
+        .btn {
+            background: var(--text-main);
+            color: var(--bg-color);
             border: none;
-            padding: 18px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            border-radius: 14px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 12px;
             cursor: pointer;
+            transition: all 0.2s ease;
             width: 100%;
-            overflow: hidden;
-            box-shadow: 0 4px 25px rgba(59, 130, 246, 0.25);
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .cyber-btn:hover {
-            box-shadow: 0 4px 35px rgba(59, 130, 246, 0.45);
+        .btn:hover {
+            opacity: 0.9;
             transform: translateY(-1px);
         }
 
-        .btn-glare {
-            position: absolute;
-            top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-            transition: 0.5s;
+        .btn:active {
+            transform: translateY(0);
         }
-        .cyber-btn:hover .btn-glare { left: 100%; }
+
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Интерактивные фоновые эффекты -->
-    <div class="bg-matrix"></div>
-    <div class="neon-blur-orb orb-1"></div>
-    <div class="neon-blur-orb orb-2"></div>
-    <div class="cursor-glow" id="cursorGlow"></div>
+    <div class="bg-glow"></div>
 
-    <!-- Основная 3D Капсула -->
-    <div class="perspective-wrapper" id="wrapper">
-        <div class="cyber-card">
-            
-            <!-- Анимированный узел статуса безопасности -->
-            <div class="status-node" id="statusNode">
-                <div class="pulse-ring"></div>
-                <div class="pulse-ring delay-1"></div>
-                <div class="node-core">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                </div>
+    <div class="card">
+        <div class="geo-icon">
+            <div class="radar-pulse"></div>
+            <div class="radar-core">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
             </div>
-
-            <!-- Заголовок с глитч-эффектом -->
-            <h1 class="glitch-text" data-text="The service is unavailable in your region.">The service is unavailable in your region.</h1>
-            <p class="description">Your connection protocol routing has been intercepted from an unauthorized geographic perimeter. Platform operations are offline for this node.</p>
-
-            <!-- Панель вывода системных данных -->
-            <div class="telemetry-grid">
-                <div class="telemetry-box">
-                    <span class="meta-label">Terminal IP</span>
-                    <span class="meta-value" id="node-ip">0.0.0.0</span>
-                </div>
-                <div class="telemetry-box">
-                    <span class="meta-label">Geozone ID</span>
-                    <span class="meta-value" id="node-geo">FETCHING</span>
-                </div>
-            </div>
-
-            <!-- Защищенная кибер-кнопка -->
-            <button class="cyber-btn" onclick="executeSystemScan(this)">
-                <span class="btn-glare"></span>
-                <span class="btn-text">RE-SCAN CONNECTION</span>
-            </button>
-
         </div>
+
+        <h1>The service is unavailable in your region.</h1>
+        <p>Access to this resource is restricted based on your current location. If you think this is a mistake, try changing your network connection.</p>
+
+        <div class="user-meta">
+            <div class="meta-item">Your IP: <strong id="user-ip">Loading...</strong></div>
+            <div class="meta-item">Location: <strong id="user-geo">Detecting...</strong></div>
+        </div>
+
+        <button class="btn" onclick="checkConnection(this)">
+            <span class="spinner" id="btn-spinner"></span>
+            <span id="btn-text">Check Connection Again</span>
+        </button>
     </div>
-// Конфигурация селекторов элементов
-const wrapperNode = document.getElementById('wrapper');
-const glowNode = document.getElementById('cursorGlow');
-const statusNode = document.getElementById('statusNode');
 
-// 1. Интерактивный 3D-трекинг (Parallax Card)
-document.addEventListener('mousemove', (event) => {
-    const halfWidth = window.innerWidth / 2;
-    const halfHeight = window.innerHeight / 2;
-    
-    const rotateX = (halfHeight - event.pageY) / 30;
-    const rotateY = (window.innerWidth / 2 - event.pageX) / -30;
+    <script>
+        // Автоматическое определение IP и локации через публичное API
+        async function fetchGeoData() {
+            try {
+                const response = await fetch('https://ipapi.co');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('user-ip').textContent = data.ip || 'Unknown';
+                    document.getElementById('user-geo').textContent = data.country_name || 'Restricted';
+                } else {
+                    throw new Error();
+                }
+            } catch (error) {
+                document.getElementById('user-ip').textContent = 'Hidden';
+                document.getElementById('user-geo').textContent = 'Unknown';
+            }
+        }
 
-    // Исправлено: добавлены корректные косые кавычки для сборки строки
-    wrapperNode.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    glowNode.style.left = `${event.pageX}px`;
-    glowNode.style.top = `${event.pageY}px`;
-});
+        // Анимация кнопки при нажатии
+        function checkConnection(button) {
+            const spinner = document.getElementById('btn-spinner');
+            const text = document.getElementById('btn-text');
+            
+            button.disabled = true;
+            spinner.style.display = 'block';
+            text.textContent = 'Reconnecting...';
 
-document.addEventListener('mouseleave', () => {
-    wrapperNode.style.transform = 'rotateX(0deg) rotateY(0deg)';
-});
+            setTimeout(() => {
+                button.disabled = false;
+                spinner.style.display = 'none';
+                text.textContent = 'Check Connection Again';
+                fetchGeoData(); // Обновляем данные при ручной проверке
+            }, 2000);
+        }
 
-// 2. Извлечение сетевой телеметрии
-async function loadNetworkTelemetry() {
-    try {
-        // Исправлено: добавлен полный HTTPS адрес к API локации
-        const response = await fetch('https://ipapi.co');
-        if (!response.ok) throw new Error('Gateway timeout');
-        
-        const payload = await response.json();
-        document.getElementById('node-ip').textContent = payload.ip || '127.0.0.1';
-        document.getElementById('node-geo').textContent = (payload.country_code || 'RESTR').toUpperCase();
-    } catch (err) {
-        document.getElementById('node-ip').textContent = 'MASKED_NODE';
-        document.getElementById('node-geo').textContent = 'UNKNOWN';
-    }
-}
-
-// 3. Симуляция тактического сканирования соединения
-function executeSystemScan(buttonInstance) {
-    const textLayer = buttonInstance.querySelector('.btn-text');
-    
-    buttonInstance.style.pointerEvents = 'none';
-    statusNode.classList.add('scanning-mode');
-    textLayer.textContent = 'CONNECTING TO OVERLAY NETWORK...';
-    
-    setTimeout(() => {
-        buttonInstance.style.pointerEvents = 'auto';
-        statusNode.classList.remove('scanning-mode');
-        textLayer.textContent = 'RE-SCAN CONNECTION';
-        
-        loadNetworkTelemetry();
-    }, 2200);
-}
-
-// Первичный запуск процесса
-loadNetworkTelemetry();
+        // Запуск детекции при загрузке
+        fetchGeoData();
+    </script>
+</body>
+</html>
