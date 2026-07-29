@@ -290,5 +290,61 @@
 
         </div>
     </div>
+// Конфигурация селекторов элементов
+const wrapperNode = document.getElementById('wrapper');
+const glowNode = document.getElementById('cursorGlow');
+const statusNode = document.getElementById('statusNode');
 
-// Конфигурация селекторов элементовconst wrapperNode = document.getElementById('wrapper');const glowNode = document.getElementById('cursorGlow');const statusNode = document.getElementById('statusNode');// 1. Интерактивный 3D-трекинг (Parallax Card)document.addEventListener('mousemove', (event) => {const halfWidth = window.innerWidth / 2;const halfHeight = window.innerHeight / 2;const rotateX = (halfHeight - event.pageY) / 30;const rotateY = (window.innerWidth / 2 - event.pageX) / -30;wrapperNode.style.transform = rotateX(${rotateX}deg) rotateY(${rotateY}deg);glowNode.style.left = ${event.pageX}px;glowNode.style.top = ${event.pageY}px;});document.addEventListener('mouseleave', () => {wrapperNode.style.transform = 'rotateX(0deg) rotateY(0deg)';});// 2. Извлечение сетевой телеметрииasync function loadNetworkTelemetry() {try {const response = await fetch('ipapi.co');if (!response.ok) throw new Error('Gateway timeout');const payload = await response.json();document.getElementById('node-ip').textContent = payload.ip || '127.0.0.1';document.getElementById('node-geo').textContent = (payload.country_code || 'RESTR').toUpperCase();} catch (err) {document.getElementById('node-ip').textContent = 'MASKED_NODE';document.getElementById('node-geo').textContent = 'UNKNOWN';}}// 3. Симуляция тактического сканирования соединенияfunction executeSystemScan(buttonInstance) {const textLayer = buttonInstance.querySelector('.btn-text');buttonInstance.style.pointerEvents = 'none';statusNode.classList.add('scanning-mode');textLayer.textContent = 'CONNECTING TO OVERLAY NETWORK...';setTimeout(() => {buttonInstance.style.pointerEvents = 'auto';statusNode.classList.remove('scanning-mode');textLayer.textContent = 'RE-SCAN CONNECTION';loadNetworkTelemetry();}, 2200);}// Первичный запуск процессаloadNetworkTelemetry();
+// 1. Интерактивный 3D-трекинг (Parallax Card)
+document.addEventListener('mousemove', (event) => {
+    const halfWidth = window.innerWidth / 2;
+    const halfHeight = window.innerHeight / 2;
+    
+    const rotateX = (halfHeight - event.pageY) / 30;
+    const rotateY = (window.innerWidth / 2 - event.pageX) / -30;
+
+    // Исправлено: добавлены корректные косые кавычки для сборки строки
+    wrapperNode.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    glowNode.style.left = `${event.pageX}px`;
+    glowNode.style.top = `${event.pageY}px`;
+});
+
+document.addEventListener('mouseleave', () => {
+    wrapperNode.style.transform = 'rotateX(0deg) rotateY(0deg)';
+});
+
+// 2. Извлечение сетевой телеметрии
+async function loadNetworkTelemetry() {
+    try {
+        // Исправлено: добавлен полный HTTPS адрес к API локации
+        const response = await fetch('https://ipapi.co');
+        if (!response.ok) throw new Error('Gateway timeout');
+        
+        const payload = await response.json();
+        document.getElementById('node-ip').textContent = payload.ip || '127.0.0.1';
+        document.getElementById('node-geo').textContent = (payload.country_code || 'RESTR').toUpperCase();
+    } catch (err) {
+        document.getElementById('node-ip').textContent = 'MASKED_NODE';
+        document.getElementById('node-geo').textContent = 'UNKNOWN';
+    }
+}
+
+// 3. Симуляция тактического сканирования соединения
+function executeSystemScan(buttonInstance) {
+    const textLayer = buttonInstance.querySelector('.btn-text');
+    
+    buttonInstance.style.pointerEvents = 'none';
+    statusNode.classList.add('scanning-mode');
+    textLayer.textContent = 'CONNECTING TO OVERLAY NETWORK...';
+    
+    setTimeout(() => {
+        buttonInstance.style.pointerEvents = 'auto';
+        statusNode.classList.remove('scanning-mode');
+        textLayer.textContent = 'RE-SCAN CONNECTION';
+        
+        loadNetworkTelemetry();
+    }, 2200);
+}
+
+// Первичный запуск процесса
+loadNetworkTelemetry();
